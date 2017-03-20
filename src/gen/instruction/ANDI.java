@@ -126,7 +126,9 @@ public class ANDI implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 		
-		long data = cpu.readAddressingMode(Size.byt, mode, register);
+		Operation o = cpu.resolveAddressingMode(Size.byt, mode, register);
+		long data = o.getAddressingMode().getByte(o);
+		
 		long toAnd  = (cpu.bus.read(cpu.PC + 2)) << 8;
 		 	 toAnd |= (cpu.bus.read(cpu.PC + 3));
 		 	 toAnd = toAnd & 0xFF;	//	ocupa 2 bytes, pero solo se toma el ultimo
@@ -143,7 +145,9 @@ public class ANDI implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 		
-		long data = cpu.readAddressingMode(Size.word, mode, register);
+		Operation o = cpu.resolveAddressingMode(Size.word, mode, register);
+		long data = o.getAddressingMode().getWord(o);
+		
 		long toAnd  = (cpu.bus.read(cpu.PC + 2)) << 8;
 		 	 toAnd |= (cpu.bus.read(cpu.PC + 3));
 		
@@ -159,7 +163,9 @@ public class ANDI implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 		
-		long data = cpu.readAddressingMode(Size.longW, mode, register);
+		Operation o = cpu.resolveAddressingMode(Size.longW, mode, register);
+		long data = o.getAddressingMode().getLong(o);
+		
 		long toAnd  = (cpu.bus.read(cpu.PC + 2)) << 24;
 		 	 toAnd |= (cpu.bus.read(cpu.PC + 3)) << 16;
 		     toAnd |= (cpu.bus.read(cpu.PC + 4)) << 8;

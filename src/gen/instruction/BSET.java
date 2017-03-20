@@ -143,27 +143,22 @@ public class BSET implements GenInstructionHandler {
 		
 		cpu.PC += 2;
 		
-		long data = cpu.readAddressingMode(Size.byt, mode, register);
+		Operation o = cpu.resolveAddressingMode(Size.byt, mode, register);
+		long data = o.getAddressingMode().getByte(o);
+		
 		calcFlags(data, (int) numberBit);
 	
 		data = cpu.bitSet((int) data, (int) numberBit);
+		o.setData(data);
 		
-		cpu.writeAddressingMode(Size.byt, cpu.PC, data, mode, register);
-		cpu.PC -=2; // FIXME HACK HORRIBLE
+		cpu.writeKnownAddressingMode(o, data, Size.byt);
 	}
 	
 	private void BSETImmediateLong(int opcode) {
 		throw new RuntimeException("");
 	}
 	
-	private void BSETMemoryByte(int opcode) {
-		throw new RuntimeException("");
-	}
 	
-	private void BCLRImmediateLong(int opcode) {
-		throw new RuntimeException("");
-	}
-
 	void calcFlags(long data, int bit) {
 		if (cpu.bitTest(data, bit)) {
 			cpu.clearZ();

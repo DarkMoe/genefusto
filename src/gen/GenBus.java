@@ -25,6 +25,9 @@ public class GenBus {
 			data = memory.readCartridge(address);
 			return data;
 			
+		} else if (address >= 0xA00000 && address <= 0xA0FFFF) {	//	Z80 addressing space
+			return z80.readMemory((int) (address - 0xA00000));
+			
 		} else if (address == 0xA10000 || address == 0xA10001) {	//	Version register (read-only word-long)
 			return 0xA0;	//	US:	A1A1 o A0A0 ?	EU:	C1C1	US SEGA CD:	8181	(las 2 direcciones devuelven lo mismo)
 			
@@ -156,8 +159,11 @@ public class GenBus {
 			
 			if (size == Size.byt) {
 				memory.writeRam(addr, data);
-			} else {
+			} else if (size == Size.word) {
 				memory.writeRam(addr, (data >> 8));
+				memory.writeRam(addr + 1, (data & 0xFF));
+			} else if (size == Size.longW) {
+				memory.writeRam(addr, (data >> 8));			//	FIXME, debe escribir 2 words
 				memory.writeRam(addr + 1, (data & 0xFF));
 			}
 			

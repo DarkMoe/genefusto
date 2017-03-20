@@ -4,55 +4,48 @@ import gen.Gen68;
 import gen.GenInstruction;
 import gen.Size;
 
-public class ADDQ implements GenInstructionHandler {
+public class EOR implements GenInstructionHandler {
 
 	final Gen68 cpu;
 	
-	public ADDQ(Gen68 cpu) {
+	public EOR(Gen68 cpu) {
 		this.cpu = cpu;
 	}
 
 //	NAME
-//	ADDQ -- Add 3-bit immediate quick
+//	EOR -- Exclusive logical OR
 //
 //SYNOPSIS
-//	ADDQ	#<data>,<ea>
+//	EOR	Dn,<ea>
 //
 //	Size = (Byte, Word, Long)
 //
 //FUNCTION
-//	Adds the immediate value of 1 to 8 to the operand at the
-//	destination location. The size of the operation may be specified as
-//	byte, word, or long. When adding to address registers, the condition
-//	codes are not altered, and the entire destination address register is
-//	used regardless of the operation size.
+//	Performs an exclusive OR operation on the destination operand
+//	with the source operand.
 //
 //FORMAT
 //	-----------------------------------------------------------------
 //	|15 |14 |13 |12 |11 |10 | 9 | 8 | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
-//	|---|---|---|---|-----------|---|-------|-----------|-----------|
-//	| 0 | 1 | 0 | 1 |    DATA   | 0 | SIZE  |    MODE   |  REGISTER |
+//	|---|---|---|---|-----------|-----------|-----------|-----------|
+//	| 1 | 0 | 1 | 1 |  REGISTER |  OP-MODE  |    MODE   | REGISTER  |
 //	----------------------------------------=========================
-//                                                          <ea>
+//	                                                  <ea>
 //
-//DATA
-//	000        ->represent value 8
-//	001 to 111 ->immediate data from 1 to 7
-//
-//SIZE
-//	00->one Byte operation
-//	01->one Word operation
-//	10->one Long operation
+//OP-MODE
+//	100	8 bits operation.
+//	101	16 bits operation.
+//	110	32 bits operation.
 //
 //REGISTER
-//	<ea> is always destination, addressing modes are the followings:
-//
+//	The data register specifies source Dn.
+//	<ea> specifies destination operand, addressing modes allowed are:
 //	--------------------------------- -------------------------------
 //	|Addressing Mode|Mode| Register | |Addressing Mode|Mode|Register|
 //	|-------------------------------| |-----------------------------|
 //	|      Dn       |000 |N° reg. Dn| |    Abs.W      |111 |  000   |
 //	|-------------------------------| |-----------------------------|
-//	|      An *     |001 |N° reg. An| |    Abs.L      |111 |  001   |
+//	|      An       | -  |    -     | |    Abs.L      |111 |  001   |
 //	|-------------------------------| |-----------------------------|
 //	|     (An)      |010 |N° reg. An| |   (d16,PC)    | -  |   -    |
 //	|-------------------------------| |-----------------------------|
@@ -70,53 +63,61 @@ public class ADDQ implements GenInstructionHandler {
 //	|-------------------------------|
 //	|([bd,An],Xi,od)|110 |N° reg. An|
 //	---------------------------------
-//	 * Word or Long only.
 //
 //RESULT
-//	X - Set the same as the carry bit.
-//	N - Set if the result is negative. Cleared otherwise.
-//	Z - Set if the result is zero. Cleared otherwise.
-//	V - Set if an overflow is generated. Cleared otherwise.
-//	C - Set if a carry is generated. Cleared otherwise.
+//	X - Not Affected
+//	N - Set to the value of the most significant bit.
+//	Z - Set if the result is zero.
+//	V - Always cleared
+//	C - Always cleared
 	
 	@Override
 	public void generate() {
-		int base = 0x5000;
+		int base = 0xB000;
 		GenInstruction ins = null;
 		
-		for (int s = 0; s < 3; s++) {
-			if (s == 0b00) {
+		for (int opMode = 0b100; opMode < 7; opMode++) {
+			if (opMode == 0b100) {
 				ins = new GenInstruction() {
+					
 					@Override
 					public void run(int opcode) {
-						ADDQByte(opcode);
+						EORByte(opcode);
 					}
+
 				};
-			} else if (s == 0b01) {
+			} else if (opMode == 0b101) {
 				ins = new GenInstruction() {
+					
 					@Override
 					public void run(int opcode) {
-						ADDQWord(opcode);
+						EORWord(opcode);
 					}
+
 				};
-			} else if (s == 0b10) {
+			} else if (opMode == 0b110) {
 				ins = new GenInstruction() {
+					
 					@Override
 					public void run(int opcode) {
-						ADDQLong(opcode);
+						EORLong(opcode);
 					}
+
 				};
 			}
+		
 			for (int m = 0; m < 8; m++) {
-				if (m == 1 && s == 0b00) {	// byte no tiene este modo
+				if (m == 1) {
 					continue;
 				}
+				
 				for (int r = 0; r < 8; r++) {
-					if (m == 0b111 & r > 0b001) {
+					if ((m == 7) && r > 0b001) {
 						continue;
 					}
-					for (int d = 0; d < 8; d++) {
-						int opcode = base + ((d << 9) | (s << 6) | (m << 3) | r);
+					
+					for (int register = 0; register < 8; register++) {
+						int opcode = base + (register << 9) | (opMode << 6) | ((m << 3) | r);
 						cpu.addInstruction(opcode, ins);
 					}
 				}
@@ -125,68 +126,68 @@ public class ADDQ implements GenInstructionHandler {
 		
 	}
 	
-	private void ADDQByte(int opcode) {
-		int dataToAdd = (opcode >> 9) & 0x7;
-		int mode = (opcode >> 3) & 0x7;
+	private void EORByte(int opcode) {
 		int register = (opcode & 0x7);
+		int mode = (opcode >> 3) & 0x7;
+		int dataReg = (opcode >> 9) & 0x7;
 		
-		if (dataToAdd == 0) {
-			dataToAdd = 8;
-		}
+		long toEor = cpu.D[dataReg] & 0xFF;
 		
 		Operation o = cpu.resolveAddressingMode(Size.byt, mode, register);
 		long data = o.getAddressingMode().getByte(o);
 		
-		long tot = (data + dataToAdd);
-		long total = tot & 0xFFFF_FFFFL;
+		long res = data ^ toEor;
+		cpu.writeKnownAddressingMode(o, res, Size.byt);
 		
-		cpu.writeKnownAddressingMode(o, total, Size.byt);
-		
-		calcFlags(tot, Size.byt.getMsb(), 0xFF);
+		calcFlags(res, Size.byt.getMsb());
 	}
-	
-	private void ADDQWord(int opcode) {
-		throw new RuntimeException("A");
-	}
-	
-	private void ADDQLong(int opcode) {
-		int dataToAdd = (opcode >> 9) & 0x7;
-		int mode = (opcode >> 3) & 0x7;
+
+	private void EORWord(int opcode) {
 		int register = (opcode & 0x7);
+		int mode = (opcode >> 3) & 0x7;
+		int dataReg = (opcode >> 9) & 0x7;
 		
-		if (dataToAdd == 0) {
-			dataToAdd = 8;
-		}
+		long toEor = cpu.D[dataReg] & 0xFFFF;
+		
+		Operation o = cpu.resolveAddressingMode(Size.word, mode, register);
+		long data = o.getAddressingMode().getWord(o);
+		
+		long res = data ^ toEor;
+		cpu.writeKnownAddressingMode(o, res, Size.word);
+		
+		calcFlags(res, Size.word.getMsb());
+	}
+	
+	private void EORLong(int opcode) {
+		int register = (opcode & 0x7);
+		int mode = (opcode >> 3) & 0x7;
+		int dataReg = (opcode >> 9) & 0x7;
+		
+		long toEor = cpu.D[dataReg];
 		
 		Operation o = cpu.resolveAddressingMode(Size.longW, mode, register);
 		long data = o.getAddressingMode().getLong(o);
 		
-		long tot = (data + dataToAdd);
-		long total = tot & 0xFFFF_FFFFL;
-
-		cpu.writeKnownAddressingMode(o, total, Size.longW);
+		long res = data ^ toEor;
+		cpu.writeKnownAddressingMode(o, res, Size.longW);
 		
-		calcFlags(tot, Size.longW.getMsb(), 0xFFFF_FFFFL);
+		calcFlags(res, Size.longW.getMsb());
 	}
 	
-	void calcFlags(long tot, int msb, long maxSize) {//TODO  overflow
-		if ((tot & maxSize) == 0) {
+	void calcFlags(long data, long msb) {
+		if (data == 0) {
 			cpu.setZ();
 		} else {
 			cpu.clearZ();
 		}
-		if (((tot & maxSize) & msb) > 0) {
+		if ((data & msb) > 0) {
 			cpu.setN();
 		} else {
 			cpu.clearN();
 		}
-		if (tot > maxSize) {
-			cpu.setC();
-			cpu.setX();
-		} else {
-			cpu.clearC();
-			cpu.clearX();
-		}
+		
+		cpu.clearV();
+		cpu.clearC();
 	}
 	
 }

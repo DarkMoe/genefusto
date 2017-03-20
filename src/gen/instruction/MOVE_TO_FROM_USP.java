@@ -2,7 +2,6 @@ package gen.instruction;
 
 import gen.Gen68;
 import gen.GenInstruction;
-import gen.Size;
 
 public class MOVE_TO_FROM_USP implements GenInstructionHandler {
 

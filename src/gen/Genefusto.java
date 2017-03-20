@@ -1,7 +1,20 @@
 package gen;
 
+import gen.addressing.AbsoluteLong;
+import gen.addressing.AbsoluteShort;
+import gen.addressing.AddressDisplacement;
+import gen.addressing.AddressRegisterDirect;
+import gen.addressing.AddressRegisterIndirect;
+import gen.addressing.AddressRegisterIndirectPostIncrement;
+import gen.addressing.AddressRegisterIndirectPreDecrement;
+import gen.addressing.AddressingMode;
+import gen.addressing.DataRegisterDirect;
+import gen.addressing.FullIndex;
+import gen.addressing.ImmediateData;
+import gen.addressing.PCIndirectDisplacement;
 import gen.instruction.ADD;
 import gen.instruction.ADDQ;
+import gen.instruction.AND;
 import gen.instruction.ANDI;
 import gen.instruction.ANDI_SR;
 import gen.instruction.ASR;
@@ -11,7 +24,9 @@ import gen.instruction.BSET;
 import gen.instruction.BTST;
 import gen.instruction.CLR;
 import gen.instruction.CMP;
+import gen.instruction.CMPI;
 import gen.instruction.DBcc;
+import gen.instruction.EOR;
 import gen.instruction.JSR;
 import gen.instruction.LEA;
 import gen.instruction.LSL;
@@ -25,6 +40,8 @@ import gen.instruction.NOP;
 import gen.instruction.NOT;
 import gen.instruction.OR;
 import gen.instruction.ORI;
+import gen.instruction.ORI_SR;
+import gen.instruction.RTE;
 import gen.instruction.RTS;
 import gen.instruction.SUB;
 import gen.instruction.SUBQ;
@@ -119,6 +136,7 @@ public class Genefusto {
 
         new ADD(cpu).generate();
         new ADDQ(cpu).generate();
+        new AND(cpu).generate();
         new ANDI(cpu).generate();
         new ANDI_SR(cpu).generate();
         new ASR(cpu).generate();
@@ -128,7 +146,9 @@ public class Genefusto {
         new BTST(cpu).generate();
         new CLR(cpu).generate();
         new CMP(cpu).generate();
+        new CMPI(cpu).generate();
         new DBcc(cpu).generate();
+        new EOR(cpu).generate();
         new JSR(cpu).generate();
         new LEA(cpu).generate();
         new LSL(cpu).generate();
@@ -142,12 +162,32 @@ public class Genefusto {
         new NOT(cpu).generate();
         new OR(cpu).generate();
         new ORI(cpu).generate();
+        new ORI_SR(cpu).generate();
+        new RTE(cpu).generate();
         new RTS(cpu).generate();
         new SUB(cpu).generate();
         new SUBQ(cpu).generate();
         new SWAP(cpu).generate();
         new TST(cpu).generate();
         
+        System.out.println(cpu.totalInstructions);
+        
+		cpu.addressingModes = new AddressingMode[] {
+			new DataRegisterDirect(cpu),
+			new AddressRegisterDirect(cpu),
+			new AddressRegisterIndirect(cpu),
+			new AddressRegisterIndirectPostIncrement(cpu),
+			new AddressRegisterIndirectPreDecrement(cpu),
+			new AddressDisplacement(cpu),
+			null,
+			
+			new AbsoluteShort(cpu),
+			new AbsoluteLong(cpu),
+			new PCIndirectDisplacement(cpu),
+			new FullIndex(cpu),
+			new ImmediateData(cpu),
+		};
+		
     	try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) { }
@@ -339,8 +379,8 @@ public class Genefusto {
         }
     }
 
-//    String basePath = "C:\\Users\\Zotac\\workspace\\raul\\src\\gen\\";
-	String basePath = "C:\\dev\\workspace\\test\\src\\gen\\";
+    String basePath = "C:\\Users\\Zotac\\workspace\\raul\\src\\gen\\";
+//	String basePath = "C:\\dev\\workspace\\test\\src\\gen\\";
     
     class MyRunnable implements Runnable {
         File file;
@@ -357,6 +397,7 @@ public class Genefusto {
                 memory.cartridge = FileLoader.readFile(file);
             }
         
+            cpu.reset();
             cpu.initialize();
             vdp.init();
             
@@ -377,7 +418,7 @@ public class Genefusto {
             	vdp.dma();
             }
         } catch (RuntimeException e) {
-            throw e;http://oldwww.nvg.ntnu.no/amiga/MC680x0_Sections/cmpi.HTML
+            throw e;
         }
     }
 

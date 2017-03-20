@@ -162,8 +162,8 @@ public class BCC implements GenInstructionHandler {
 		case 0b0111:
 			taken = cpu.isZ();
 			break;
-			default:
-				throw new RuntimeException("not impl " + cc);
+		default:
+			throw new RuntimeException("not impl " + cc);
 		}
 
 		long offset = cpu.bus.read(cpu.PC + 2) << 8;

@@ -218,6 +218,7 @@ public class MOVEM implements GenInstructionHandler {
 	private void MOVEMMemToRegsLong(int opcode) {
 		int mode = (opcode >> 3) & 0x7;
 		int register = opcode & 0x7;
+		Operation o;
 		long data;
 		
 		int registerListMaskA = (int) cpu.bus.read(cpu.PC + 2);	// TODO ojo q con pre decrement es al reves la interpretacion
@@ -225,14 +226,16 @@ public class MOVEM implements GenInstructionHandler {
 		
 		for (int i = 0; i < 8; i++) {
 			if (((registerListMaskD) & (1 << i)) != 0) {
-				data = cpu.readAddressingMode(Size.longW, mode, register);
+				o = cpu.resolveAddressingMode(Size.longW, mode, register);
+				data = o.getAddressingMode().getLong(o);
 				
 				cpu.D[i] = data;
 			}
 		}
 		for (int i = 0; i < 8; i++) {
 			if (((registerListMaskA) & (1 << i)) != 0) {
-				data = cpu.readAddressingMode(Size.longW, mode, register);
+				o = cpu.resolveAddressingMode(Size.longW, mode, register);
+				data = o.getAddressingMode().getLong(o);
 				
 				cpu.A[i] = data;
 			}

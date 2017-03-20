@@ -100,10 +100,10 @@ public class OR implements GenInstructionHandler {
 	@Override
 	public void generate() {
 		int base = 0x8000;
-		GenInstruction ins;
+		GenInstruction ins = null;
 		
-		for (int s = 0; s < 3; s++) {
-			if (s == 0b00) {
+		for (int opMode = 0; opMode < 3; opMode++) {
+			if (opMode == 0b000) {
 				ins = new GenInstruction() {
 					
 					@Override
@@ -112,7 +112,7 @@ public class OR implements GenInstructionHandler {
 					}
 
 				};
-			} else if (s == 0b01) {
+			} else if (opMode == 0b001) {
 				ins = new GenInstruction() {
 					
 					@Override
@@ -121,7 +121,7 @@ public class OR implements GenInstructionHandler {
 					}
 
 				};
-			} else {
+			} else if (opMode == 0b010) {
 				ins = new GenInstruction() {
 					
 					@Override
@@ -143,7 +143,7 @@ public class OR implements GenInstructionHandler {
 					}
 					
 					for (int register = 0; register < 8; register++) {
-						int opcode = base + (register << 9) | (s << 6) | ((m << 3) | r);
+						int opcode = base + (register << 9) | (opMode << 6) | ((m << 3) | r);
 						cpu.addInstruction(opcode, ins);
 					}
 				}
@@ -161,7 +161,9 @@ public class OR implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int destRegister = (opcode >> 9) & 0x7;
 		
-		long data = cpu.readAddressingMode(Size.word, mode, register);
+		Operation o = cpu.resolveAddressingMode(Size.word, mode, register);
+		long data = o.getAddressingMode().getWord(o);
+		
 		long res = (cpu.D[destRegister] & 0xFFFF) | data;
 		cpu.D[destRegister] = (cpu.D[destRegister] & 0xFFFF_0000L) | res;
 		

@@ -92,7 +92,8 @@ public class MOVE_TO_SR implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int register = opcode & 0x7;
 
-		long data = cpu.readAddressingMode(Size.word, mode, register);
+		Operation o = cpu.resolveAddressingMode(Size.word, mode, register);
+		long data = o.getAddressingMode().getWord(o);
 		
 		cpu.SR = (int) data;
 	}

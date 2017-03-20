@@ -120,45 +120,54 @@ public class ORI implements GenInstructionHandler {
 	}
 	
 	private void ORIByte(int opcode) {
-		Size size = Size.byt;
-		long data = cpu.readAddressingMode(0, size, 0b111, 0b100, false);	// forzar que traiga #data
+		long data = cpu.bus.read(cpu.PC + 2) << 8;
+			data |= cpu.bus.read(cpu.PC + 3);
+		data = data & 0xFF;
 		
 		int destReg = (opcode & 0x7);
 		int destMode = (opcode >> 3) & 0x7;
 		
 		data = cpu.D[destReg] | data;
 				
-		cpu.writeAddressingMode(size, cpu.PC + 2, data, destMode, destReg);
-				
-		calcFlags(data, size.getMsb());
+		cpu.writeAddressingMode(Size.byt, cpu.PC + 2, data, destMode, destReg);
+		
+		cpu.PC += 2;		
+		
+		calcFlags(data, Size.byt.getMsb());
 	}
 
 	private void ORIWord(int opcode) {
-		Size size = Size.word;
-		long data = cpu.readAddressingMode(0, size, 0b111, 0b100, false);	// forzar que traiga #data
+		long data = cpu.bus.read(cpu.PC + 2) << 8;
+			data |= cpu.bus.read(cpu.PC + 3);
 		
 		int destReg = (opcode & 0x7);
 		int destMode = (opcode >> 3) & 0x7;
 		
 		data = cpu.D[destReg] | data;
 				
-		cpu.writeAddressingMode(size, cpu.PC + 2, data, destMode, destReg);
-				
-		calcFlags(data, size.getMsb());
+		cpu.writeAddressingMode(Size.word, cpu.PC + 2, data, destMode, destReg);
+		
+		cpu.PC += 2;
+		
+		calcFlags(data, Size.word.getMsb());
 	}
 	
 	private void ORILong(int opcode) {
-		Size size = Size.longW;
-		long data = cpu.readAddressingMode(0, size, 0b111, 0b100, false);	// forzar que traiga #data
+		long data  = (cpu.bus.read(cpu.PC + 2)) << 24;
+	 	 	 data |= (cpu.bus.read(cpu.PC + 3)) << 16;
+	 	 	 data |= (cpu.bus.read(cpu.PC + 4)) << 8;
+	 	 	 data |= (cpu.bus.read(cpu.PC + 5));
 		
 		int destReg = (opcode & 0x7);
 		int destMode = (opcode >> 3) & 0x7;
 		
 		data = cpu.D[destReg] | data;
 				
-		cpu.writeAddressingMode(size, cpu.PC + 2, data, destMode, destReg);
+		cpu.writeAddressingMode(Size.longW, cpu.PC + 2, data, destMode, destReg);
 				
-		calcFlags(data, size.getMsb());
+		cpu.PC += 4;
+		
+		calcFlags(data, Size.longW.getMsb());
 	}
 	
 	void calcFlags(long data, long msb) {

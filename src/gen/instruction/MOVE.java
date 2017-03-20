@@ -159,7 +159,8 @@ public class MOVE implements GenInstructionHandler {
 		int sourceMode = (opcode >> 3) & 0x7;
 		int sourceReg = (opcode & 0x7);
 		
-		long data = cpu.readAddressingMode(cpu.PC + 2, Size.byt, sourceMode, sourceReg, true);
+		Operation o = cpu.resolveAddressingMode(cpu.PC + 2, Size.byt, sourceMode, sourceReg);
+		long data = o.getAddressingMode().getByte(o);
 		
 		cpu.writeAddressingMode(Size.byt, cpu.PC + 2, data, mode, register);
 		
@@ -172,7 +173,8 @@ public class MOVE implements GenInstructionHandler {
 		int sourceMode = (opcode >> 3) & 0x7;
 		int sourceReg = (opcode & 0x7);
 		
-		long data = cpu.readAddressingMode(cpu.PC + 2, Size.word, sourceMode, sourceReg, true);
+		Operation o = cpu.resolveAddressingMode(cpu.PC + 2, Size.word, sourceMode, sourceReg);
+		long data = o.getAddressingMode().getWord(o);
 		
 		cpu.writeAddressingMode(Size.word, cpu.PC + 2, data, mode, register);
 		
@@ -185,7 +187,8 @@ public class MOVE implements GenInstructionHandler {
 		int sourceMode = (opcode >> 3) & 0x7;
 		int sourceReg = (opcode & 0x7);
 		
-		long data = cpu.readAddressingMode(cpu.PC + 2, Size.longW, sourceMode, sourceReg, true);
+		Operation o = cpu.resolveAddressingMode(cpu.PC + 2, Size.longW, sourceMode, sourceReg);
+		long data = o.getAddressingMode().getLong(o);
 		
 		cpu.writeAddressingMode(Size.longW, cpu.PC + 2, data, mode, register);
 		

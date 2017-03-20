@@ -132,7 +132,9 @@ public class TST implements GenInstructionHandler {
 	private void TSTByte(int opcode) {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
-		long data = cpu.readAddressingMode(Size.byt, mode, register);
+		
+		Operation o = cpu.resolveAddressingMode(Size.byt, mode, register);
+		long data = o.getAddressingMode().getByte(o);
 		
 		calcFlags(data, Size.byt.getMsb());
 	}
@@ -140,7 +142,9 @@ public class TST implements GenInstructionHandler {
 	private void TSTWord(int opcode) {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
-		long data = cpu.readAddressingMode(Size.word, mode, register);
+		
+		Operation o = cpu.resolveAddressingMode(Size.word, mode, register);
+		long data = o.getAddressingMode().getWord(o);
 		
 		calcFlags(data, Size.word.getMsb());
 	}
@@ -148,7 +152,9 @@ public class TST implements GenInstructionHandler {
 	private void TSTLong(int opcode) {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
-		long data = cpu.readAddressingMode(Size.longW, mode, register);
+		
+		Operation o = cpu.resolveAddressingMode(Size.longW, mode, register);
+		long data = o.getAddressingMode().getLong(o);
 		
 		calcFlags(data, Size.longW.getMsb());
 	}

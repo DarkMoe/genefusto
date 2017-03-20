@@ -156,7 +156,8 @@ public class SUB implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 		
-		long data = cpu.readAddressingMode(Size.word, mode, register);
+		Operation o = cpu.resolveAddressingMode(Size.word, mode, register);
+		long data = o.getAddressingMode().getWord(o);
 		
 		long tot = (cpu.D[dataRegister] - data);
 		cpu.D[dataRegister] = ((cpu.D[dataRegister] & 0xFFFF_0000) | (tot & 0x0000_FFFFL)) & 0xFFFF_FFFFL;
@@ -169,7 +170,8 @@ public class SUB implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 		
-		long data = cpu.readAddressingMode(Size.longW, mode, register);
+		Operation o = cpu.resolveAddressingMode(Size.longW, mode, register);
+		long data = o.getAddressingMode().getLong(o);
 		
 		long tot = (cpu.D[dataRegister] - data);
 		cpu.D[dataRegister] = tot & 0xFFFF_FFFFL;

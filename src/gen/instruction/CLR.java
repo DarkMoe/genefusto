@@ -136,7 +136,10 @@ public class CLR implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int register = opcode & 0x7;
 		
-		cpu.writeAddressingMode(Size.word, cpu.PC + 2, 0, mode, register);
+		//	lectura dummy
+		Operation o = cpu.resolveAddressingMode(Size.word, mode, register);
+		long data = o.getAddressingMode().getWord(o);
+		cpu.writeKnownAddressingMode(o, 0, Size.word);
 		
 		calcFlags();
 	}
@@ -145,8 +148,10 @@ public class CLR implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int register = opcode & 0x7;
 		
-//		long data = cpu.readAddressingMode(Size.longW, mode, register);		comentado, si lee el dato, y es post increment, lo aumentaria 2 veces
-		cpu.writeAddressingMode(Size.longW, cpu.PC + 2, 0, mode, register);
+		//	lectura dummy
+		Operation o = cpu.resolveAddressingMode(Size.longW, mode, register);
+		long data = o.getAddressingMode().getLong(o);
+		cpu.writeKnownAddressingMode(o, 0, Size.longW);
 		
 		calcFlags();
 	}

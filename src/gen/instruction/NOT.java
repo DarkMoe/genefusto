@@ -128,7 +128,8 @@ public class NOT implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 		
-		long data = cpu.readAddressingMode(Size.word, mode, register);
+		Operation o = cpu.resolveAddressingMode(Size.word, mode, register);
+		long data = o.getAddressingMode().getWord(o);
 		data = (~data) & 0xFFFF;
 
 		cpu.writeAddressingMode(Size.word, 0, data, mode, register);

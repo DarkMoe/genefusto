@@ -93,7 +93,8 @@ public class JSR implements GenInstructionHandler {
 	private void JumpSR(int opcode) {
 		int mode = (opcode >> 3) & 0x7;
 		int register = opcode & 0x7;
-		long newPC = cpu.readAddressingMode(cpu.PC + 2, Size.longW, mode, register, false);
+		Operation o = cpu.resolveAddressingMode(cpu.PC + 2, Size.word, mode, register);
+		long newPC = o.getAddress();
 		
 		long oldPC = cpu.PC + 2;
 		

@@ -73,7 +73,7 @@ public class LEA implements GenInstructionHandler {
 			
 			@Override
 			public void run(int opcode) {
-				LEALong(opcode);
+				LEAWord(opcode);
 			}
 			
 		};
@@ -96,14 +96,15 @@ public class LEA implements GenInstructionHandler {
 		
 	}
 	
-	private void LEALong(int opcode) {
+	private void LEAWord(int opcode) {
 		int destReg = (opcode >> 9) & 0x7;
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 		
-		long data = cpu.readAddressingMode(cpu.PC + 2, Size.longW, mode, register, false);
+		Operation o = cpu.resolveAddressingMode(Size.word, mode, register);
+		long addr = o.getAddress();
 		
-		cpu.A[destReg] = data;
+		cpu.A[destReg] = addr;
 	}
 
 }

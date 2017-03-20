@@ -4,54 +4,53 @@ import gen.Gen68;
 import gen.GenInstruction;
 import gen.Size;
 
-public class ADD implements GenInstructionHandler {
+public class AND implements GenInstructionHandler {
 
 	final Gen68 cpu;
 	
-	public ADD(Gen68 cpu) {
+	public AND(Gen68 cpu) {
 		this.cpu = cpu;
 	}
-	
+
 //	NAME
-//	ADD -- Add integer
+//	AND -- Logical AND
 //
 //SYNOPSIS
-//	ADD	<ea>,Dn
-//	ADD	Dn,<ea>
+//	AND	<ea>,Dn
+//	AND	Dn,<ea>
 //
 //	Size = (Byte, Word, Long)
 //
 //FUNCTION
-//	Adds the source operand to the destination operand using
-//	binary addition, and stores the result in the destination location.
-//	The size of the operation may be specified as byte, word, or long.
-//	The mode of the instruction indicates which operand is the source and
-//	which is the destination as well as the operand size.
+//	Performs a bit-wise AND operation with the source operand and
+//	the destination operand and stores the result in the destination.
+//	The size of ther operation can be specified as byte, word, or long.
+//	The contents of an address register may not be used as an operand.
 //
 //FORMAT
 //	-----------------------------------------------------------------
 //	|15 |14 |13 |12 |11 |10 | 9 | 8 | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
 //	|---|---|---|---|-----------|-----------|-----------|-----------|
-//	| 1 | 1 | 0 | 1 |  REGISTER |  OP-MODE  |    MODE   |  REGISTER |
+//	| 1 | 1 | 0 | 0 |  REGISTER |  OP-MODE  |    MODE   |  REGISTER |
 //	----------------------------------------=========================
 //                                                          <ea>
 //
 //OP-MODE
 //	Byte	Word	Long
-//	~~~~	~~~~	~~~~
-//	000		001		010	(Dn) + (<ea>) -> Dn
-//	100		101		110	(<ea>) + (Dn) -> <ea>
+//	000		001		010		(Dn)AND(<ea>)-> Dn
+//	100		101		110		(<ea>)AND(Dn)-> <ea>
+//
 //
 //REGISTER
 //	One of the 8 datas registers
-//
 //	If <ea> is source, allowed addressing modes are:
+//
 //	--------------------------------- -------------------------------
 //	|Addressing Mode|Mode| Register | |Addressing Mode|Mode|Register|
 //	|-------------------------------| |-----------------------------|
 //	|      Dn       |000 |N° reg. Dn| |    Abs.W      |111 |  000   |
 //	|-------------------------------| |-----------------------------|
-//	|      An *     |001 |N° reg. An| |    Abs.L      |111 |  001   |
+//	|      An       | -  |     -    | |    Abs.L      |111 |  001   |
 //	|-------------------------------| |-----------------------------|
 //	|     (An)      |010 |N° reg. An| |   (d16,PC)    |111 |  010   |
 //	|-------------------------------| |-----------------------------|
@@ -69,9 +68,9 @@ public class ADD implements GenInstructionHandler {
 //	|-------------------------------|
 //	|([bd,An],Xi,od)|110 |N° reg. An|
 //	---------------------------------
-//	 * Word or Long only
 //
 //	If <ea> is destination, allowed addressing modes are:
+//
 //	--------------------------------- -------------------------------
 //	|Addressing Mode|Mode| Register | |Addressing Mode|Mode|Register|
 //	|-------------------------------| |-----------------------------|
@@ -95,53 +94,68 @@ public class ADD implements GenInstructionHandler {
 //	|-------------------------------|
 //	|([bd,An],Xi,od)|110 |N° reg. An|
 //	---------------------------------
-//	When destination is an Address Register, ADDA instruction is used.
+//	AND between two datas registers is allowed if you consider the
+//	syntax where Dn is at destination's place.
+//
+//	If you use this instruction with an immediate data, it does the
+//	same as instruction ANDI.
+//	
 //
 //RESULT
-//	X - Set the same as the carry bit.
-//	N - Set if the result is negative. Cleared otherwise.
-//	Z - Set if the result is zero. Cleared otherwise.
-//	V - Set if an overflow is generated. Cleared otherwise.
-//	C - Set if a carry is generated. Cleared otherwise.
+//	X - Not affected
+//	N - Set if the most-significant bit of the result was set. Cleared
+//	    otherwise.
+//	Z - Set if the result was zero. Cleared otherwise.
+//	V - Always cleared.
+//	C - Always cleared.
 	
 	@Override
 	public void generate() {
-		int base = 0xD000;
+		int base = 0xC000;
 		GenInstruction ins = null;
 		
 		for (int opMode = 0; opMode < 3; opMode++) {
 			if (opMode == 0b000) {
 				ins = new GenInstruction() {
+					
 					@Override
 					public void run(int opcode) {
-						ADDByte(opcode);
+						ANDSourceEAByte(opcode);
 					}
+
 				};
 			} else if (opMode == 0b001) {
 				ins = new GenInstruction() {
+					
 					@Override
 					public void run(int opcode) {
-						ADDWord(opcode);
+						ANDSourceEAWord(opcode);
 					}
+
 				};
 			} else if (opMode == 0b010) {
 				ins = new GenInstruction() {
+					
 					@Override
 					public void run(int opcode) {
-						ADDLong(opcode);
+						ANDSourceEALong(opcode);
 					}
+
 				};
 			}
-			for (int register = 0; register < 8; register++) {
-				for (int m = 0; m < 8; m++) {
-					if (m == 1 && opMode == 0b000) {	// byte size no tiene este modo
+		
+			for (int m = 0; m < 8; m++) {
+				if (m == 1) {
+					continue;
+				}
+				
+				for (int r = 0; r < 8; r++) {
+					if ((m == 7) && r > 0b100) {
 						continue;
 					}
-					for (int r = 0; r < 8; r++) {
-						if (m == 0b111 & r > 0b100) {
-							continue;
-						}
-						int opcode = base + ((register << 9) | (opMode << 6) | (m << 3) | r);
+					
+					for (int register = 0; register < 8; register++) {
+						int opcode = base + (register << 9) | (opMode << 6) | ((m << 3) | r);
 						cpu.addInstruction(opcode, ins);
 					}
 				}
@@ -150,46 +164,42 @@ public class ADD implements GenInstructionHandler {
 		
 	}
 	
-	private void ADDByte(int opcode) {
-		throw new RuntimeException("A");
+	private void ANDSourceEAByte(int opcode) {
+		throw new RuntimeException("");
 	}
-	
-	private void ADDWord(int opcode) {
-		int dataRegister = (opcode >> 9) & 0x7;
-		int mode = (opcode >> 3) & 0x7;
+
+	private void ANDSourceEAWord(int opcode) {
 		int register = (opcode & 0x7);
+		int mode = (opcode >> 3) & 0x7;
+		int destRegister = (opcode >> 9) & 0x7;
 		
 		Operation o = cpu.resolveAddressingMode(Size.word, mode, register);
 		long data = o.getAddressingMode().getWord(o);
 		
-		long tot = (cpu.D[dataRegister] + data);
-		cpu.D[dataRegister] = ((cpu.D[dataRegister] & 0xFFFF_0000) | (tot & 0x0000_FFFFL)) & 0xFFFF_FFFF;
+		long res = (cpu.D[destRegister] & 0xFFFF) & data;
+		cpu.D[destRegister] = (cpu.D[destRegister] & 0xFFFF_0000L) | res;
 		
-		calcFlags(tot, Size.word.getMsb(), 0xFFFF);
+		calcFlags(res, Size.word.getMsb());
 	}
 	
-	private void ADDLong(int opcode) {
-		throw new RuntimeException("C");
+	private void ANDSourceEALong(int opcode) {
+		throw new RuntimeException("");
 	}
 	
-	void calcFlags(long tot, int msb, long maxSize) {//TODO  overflow
-		if ((tot & maxSize) == 0) {
+	void calcFlags(long data, long msb) {
+		if (data == 0) {
 			cpu.setZ();
 		} else {
 			cpu.clearZ();
 		}
-		if ((tot & msb) > 0) {
+		if ((data & msb) > 0) {
 			cpu.setN();
 		} else {
 			cpu.clearN();
 		}
-		if (tot > maxSize) {
-			cpu.setC();
-			cpu.setX();
-		} else {
-			cpu.clearC();
-			cpu.clearX();
-		}
+		
+		cpu.clearV();
+		cpu.clearC();
 	}
 	
 }

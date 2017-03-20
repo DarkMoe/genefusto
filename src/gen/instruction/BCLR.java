@@ -172,7 +172,9 @@ public class BCLR implements GenInstructionHandler {
 		int destMode = (opcode >> 3) & 0x7;
 		int destReg = (opcode & 0x7);
 		
-		long data = cpu.readAddressingMode(Size.byt, destMode, destReg);
+		Operation o = cpu.resolveAddressingMode(Size.byt, destMode, destReg);
+		long data = o.getAddressingMode().getByte(o);
+		
 		long bitNumber = cpu.D[dataRegister] & 0xFF;
 		
 		cpu.PC += 2;
@@ -180,9 +182,9 @@ public class BCLR implements GenInstructionHandler {
 		calcFlags(data, (int) bitNumber);
 	
 		data = cpu.bitReset((int) data, (int) bitNumber);
+		o.setData(data);
 		
-		cpu.writeAddressingMode(Size.byt, cpu.PC, data, destMode, destReg);
-		cpu.PC -=2; // FIXME HACK HORRIBLE
+		cpu.writeKnownAddressingMode(o, data, Size.byt);
 	}
 	
 	private void BCLRRegisterLong(int opcode) {
@@ -190,7 +192,9 @@ public class BCLR implements GenInstructionHandler {
 		int destMode = (opcode >> 3) & 0x7;
 		int destReg = (opcode & 0x7);
 		
-		long data = cpu.readAddressingMode(Size.longW, destMode, destReg);
+		Operation o = cpu.resolveAddressingMode(Size.longW, destMode, destReg);
+		long data = o.getAddressingMode().getLong(o);
+		
 		long bitNumber = cpu.D[dataRegister];
 		
 		cpu.PC += 2;
@@ -198,9 +202,9 @@ public class BCLR implements GenInstructionHandler {
 		calcFlags(data, (int) bitNumber);
 	
 		data = cpu.bitReset((int) data, (int) bitNumber);
+		o.setData(data);
 		
-		cpu.writeAddressingMode(Size.longW, cpu.PC, data, destMode, destReg);
-		cpu.PC -=2; // FIXME HACK HORRIBLE
+		cpu.writeKnownAddressingMode(o, data, Size.longW);
 	}
 	
 	private void BCLRImmediateByte(int opcode) {
@@ -212,13 +216,15 @@ public class BCLR implements GenInstructionHandler {
 		
 		cpu.PC += 2;
 		
-		long data = cpu.readAddressingMode(cpu.PC + 2, Size.byt, destMode, destReg, true);
+		Operation o = cpu.resolveAddressingMode(cpu.PC + 2, Size.byt, destMode, destReg);
+		long data = o.getAddressingMode().getByte(o);
+		
 		calcFlags(data, (int) numberBit);
 	
 		data = cpu.bitReset((int) data, (int) numberBit);
+		o.setData(data);
 		
-		cpu.writeAddressingMode(Size.byt, cpu.PC, data, destMode, destReg);
-		cpu.PC -=2; // FIXME HACK HORRIBLE
+		cpu.writeKnownAddressingMode(o, data, Size.byt);
 	}
 	
 	private void BCLRImmediateLong(int opcode) {
@@ -230,13 +236,15 @@ public class BCLR implements GenInstructionHandler {
 		
 		cpu.PC += 2;
 		
-		long data = cpu.readAddressingMode(cpu.PC + 2, Size.longW, destMode, destReg, true);
+		Operation o = cpu.resolveAddressingMode(cpu.PC + 2, Size.longW, destMode, destReg);
+		long data = o.getAddressingMode().getLong(o);
+		
 		calcFlags(data, (int) numberBit);
 	
 		data = cpu.bitReset((int) data, (int) numberBit);
+		o.setData(data);
 		
-		cpu.writeAddressingMode(Size.longW, cpu.PC, data, destMode, destReg);
-		cpu.PC -=2; // FIXME HACK HORRIBLE
+		cpu.writeKnownAddressingMode(o, data, Size.longW);
 	}
 
 	void calcFlags(long data, int bit) {
