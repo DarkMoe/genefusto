@@ -252,7 +252,24 @@ public class LSL implements GenInstructionHandler {
 	}
 	
 	private void LSRRegisterWord(int opcode) {
-		throw new RuntimeException("AA");
+		int register = (opcode & 0x7);
+		boolean ir = cpu.bitTest(opcode, 5);
+		int numRegister = (opcode >> 9) & 0x7;
+		
+		long toShift;
+		if (!ir) {
+			if (numRegister == 0) {
+				numRegister = 8;
+			}
+			toShift = numRegister;
+		} else {
+			toShift = cpu.getD(numRegister);
+		}
+		
+		long res = cpu.getD(register) >> toShift;
+		cpu.setDWord(register, res);
+		
+		calcFlags(res, Size.WORD.getMsb(), 0xFFFF, 16);
 	}
 
 	private void LSRRegisterLong(int opcode) {

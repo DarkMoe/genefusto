@@ -120,7 +120,7 @@ public class MOVEA implements GenInstructionHandler {
 		if ((data & 0x8000) > 0) {
 			data |= 0xFFFF_0000;
 		}
-		cpu.setAWord(addrReg, data);
+		cpu.setALong(addrReg, data);
 	}
 
 	private void MOVEALong(int opcode) {

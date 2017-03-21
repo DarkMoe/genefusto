@@ -208,7 +208,11 @@ public class ASR implements GenInstructionHandler {
 		
 		long toShift;
 		if (!ir) {
-			toShift = numRegister;
+			if (numRegister == 0) {
+				toShift = 8;
+			} else {
+				toShift = numRegister;
+			}
 		} else {
 			toShift = cpu.getD(numRegister);
 		}
@@ -227,7 +231,11 @@ public class ASR implements GenInstructionHandler {
 		
 		long toShift;
 		if (!ir) {
-			toShift = numRegister;
+			if (numRegister == 0) {
+				toShift = 8;
+			} else {
+				toShift = numRegister;
+			}
 		} else {
 			toShift = cpu.getD(numRegister);
 		}
@@ -254,7 +262,11 @@ public class ASR implements GenInstructionHandler {
 		
 		long toShift;
 		if (!ir) {
-			toShift = numRegister;
+			if (numRegister == 0) {
+				toShift = 8;
+			} else {
+				toShift = numRegister;
+			}
 		} else {
 			toShift = cpu.getD(numRegister);
 		}
@@ -266,7 +278,7 @@ public class ASR implements GenInstructionHandler {
 		calcFlags(res, shiftee, Size.LONG.getMsb(), 0xFFFF_FFFFL);
 	}
 
-	void calcFlags(long data, long old, long msb, long maxSize) {	//TODO implement X C
+	void calcFlags(long data, long old, long msb, long maxSize) {
 		if ((data & maxSize) == 0) {
 			cpu.setZ();
 		} else {
@@ -282,6 +294,14 @@ public class ASR implements GenInstructionHandler {
 			cpu.setV();
 		} else {
 			cpu.clearV();
+		}
+		
+		if (data > maxSize) {
+			cpu.setC();
+			cpu.setX();
+		} else {
+			cpu.clearC();
+			cpu.clearX();
 		}
 	}
 	

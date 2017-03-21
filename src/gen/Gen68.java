@@ -661,36 +661,47 @@ public class Gen68 {
 			}
 		
 		} else if (mode == 0b110) {		//	 Address Register Indirect with Index (Base Displacement) Mode
-			throw new RuntimeException("NOO");
-			//			int ext = fetchPCWordSigned();
-//			displacement = signExtendByte(ext);
-//			idxRegNumber = (ext >> 12) & 0x07;
-//			idxSize = ((ext & 0x0800) == 0x0800 ? Size.Long : Size.Word);
-//			idxIsAddressReg = ((ext & 0x8000) == 0x8000);
-//			int idxVal;
-//			if(idxIsAddressReg)
-//			{
-//				if(idxSize == Size.Word)
-//				{
-//					idxVal = getAddrRegisterWordSigned(idxRegNumber);
-//				}
-//				else
-//				{
-//					idxVal = getAddrRegisterLong(idxRegNumber);
-//				}
-//			}
-//			else
-//			{
-//				if(idxSize == Size.Word)
-//				{
-//					idxVal = getDataRegisterWordSigned(idxRegNumber);
-//				}
-//				else
-//				{
-//					idxVal = getDataRegisterLong(idxRegNumber);
-//				}
-//			}
-//			address = getAddrRegisterLong(regNumber) + displacement + idxVal;
+			long exten  = (bus.read(PC + 2) << 8);
+		         exten |= (bus.read(PC + 3));
+			int displacement = (int) (exten & 0xFF);		// es 8 bits, siempre el ultimo byte ?
+			
+			if ((displacement & 0x80) > 0) { 	// sign extend
+				displacement = 0xFFFF_FF00 | displacement;
+			}
+			int idxRegNumber = (int) ((exten >> 12) & 0x07);
+			Size idxSize = ((exten & 0x0800) == 0x0800 ? Size.LONG : Size.WORD);
+			boolean idxIsAddressReg = ((exten & 0x8000) == 0x8000);
+			long idxVal;
+			if (idxIsAddressReg) {
+				if (idxSize == Size.WORD) {
+					idxVal = getA(idxRegNumber);
+					if ((data & 0x8000) > 0) {
+						idxVal = 0xFFFF_0000 | idxVal;
+					}
+				} else {
+					idxVal = getA(idxRegNumber);
+				}
+			} else {
+				if (idxSize == Size.WORD) {
+					idxVal = getD(idxRegNumber);
+					if ((data & 0x8000) > 0) {
+						idxVal = 0xFFFF_0000 | idxVal;
+					}
+				} else {
+					idxVal = getD(idxRegNumber);
+				}
+			}
+			
+			long address = getA(register) + displacement + idxVal;
+			if (size == Size.BYTE) {
+				bus.write(address, data, size);
+			} else if (size == Size.WORD) {
+				bus.write(address, data, size);
+			} else if (size == Size.LONG) {
+				bus.write(address, data, size);
+			}
+			
+			PC += 2;
 			
 		} else if (mode == 0b111) {
 			if (register == 0b000) {			//	Abs.W

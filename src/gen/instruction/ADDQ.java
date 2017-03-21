@@ -146,7 +146,31 @@ public class ADDQ implements GenInstructionHandler {
 	}
 	
 	private void ADDQWord(int opcode) {
-		throw new RuntimeException("A");
+		int dataToAdd = (opcode >> 9) & 0x7;
+		int mode = (opcode >> 3) & 0x7;
+		int register = (opcode & 0x7);
+		
+		if (dataToAdd == 0) {
+			dataToAdd = 8;
+		}
+		
+		//	direct address lo maneja distinto
+		if (mode == 1) {
+			long tot = (cpu.getA(register) + dataToAdd);
+			cpu.setALong(register, tot);
+			
+		} else {
+			Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
+			long data = o.getAddressingMode().getWord(o);
+			
+			long tot = (data + dataToAdd);
+			long total = tot & 0xFFFF_FFFFL;
+			
+			cpu.writeKnownAddressingMode(o, total, Size.WORD);
+			
+			calcFlags(tot, Size.WORD.getMsb(), 0xFFFF);
+		}
+		
 	}
 	
 	private void ADDQLong(int opcode) {
@@ -166,7 +190,10 @@ public class ADDQ implements GenInstructionHandler {
 
 		cpu.writeKnownAddressingMode(o, total, Size.LONG);
 		
-		calcFlags(tot, Size.LONG.getMsb(), 0xFFFF_FFFFL);
+		// if destination is An no cambian los flags
+		if (mode != 1) {
+			calcFlags(tot, Size.LONG.getMsb(), 0xFFFF_FFFFL);
+		}
 	}
 	
 	void calcFlags(long tot, int msb, long maxSize) {//TODO  overflow
