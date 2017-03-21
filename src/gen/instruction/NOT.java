@@ -128,14 +128,14 @@ public class NOT implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 		
-		Operation o = cpu.resolveAddressingMode(Size.word, mode, register);
+		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
 		long data = o.getAddressingMode().getWord(o);
 		data = (~data) & 0xFFFF;
 
-		cpu.writeAddressingMode(Size.word, 0, data, mode, register);
+		cpu.writeAddressingMode(Size.WORD, 0, data, mode, register);
 		// FIXME si es post o pre decrement se suma o resta doble, si es abs el PC se modifica 2 veces
 				
-		calcFlags(data, Size.word.getMsb());
+		calcFlags(data, Size.WORD.getMsb());
 	}
 
 	private void NOTLong(int opcode) {

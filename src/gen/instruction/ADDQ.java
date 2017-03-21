@@ -134,15 +134,15 @@ public class ADDQ implements GenInstructionHandler {
 			dataToAdd = 8;
 		}
 		
-		Operation o = cpu.resolveAddressingMode(Size.byt, mode, register);
+		Operation o = cpu.resolveAddressingMode(Size.BYTE, mode, register);
 		long data = o.getAddressingMode().getByte(o);
 		
 		long tot = (data + dataToAdd);
 		long total = tot & 0xFFFF_FFFFL;
 		
-		cpu.writeKnownAddressingMode(o, total, Size.byt);
+		cpu.writeKnownAddressingMode(o, total, Size.BYTE);
 		
-		calcFlags(tot, Size.byt.getMsb(), 0xFF);
+		calcFlags(tot, Size.BYTE.getMsb(), 0xFF);
 	}
 	
 	private void ADDQWord(int opcode) {
@@ -158,15 +158,15 @@ public class ADDQ implements GenInstructionHandler {
 			dataToAdd = 8;
 		}
 		
-		Operation o = cpu.resolveAddressingMode(Size.longW, mode, register);
+		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
 		long data = o.getAddressingMode().getLong(o);
 		
 		long tot = (data + dataToAdd);
 		long total = tot & 0xFFFF_FFFFL;
 
-		cpu.writeKnownAddressingMode(o, total, Size.longW);
+		cpu.writeKnownAddressingMode(o, total, Size.LONG);
 		
-		calcFlags(tot, Size.longW.getMsb(), 0xFFFF_FFFFL);
+		calcFlags(tot, Size.LONG.getMsb(), 0xFFFF_FFFFL);
 	}
 	
 	void calcFlags(long tot, int msb, long maxSize) {//TODO  overflow

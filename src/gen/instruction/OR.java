@@ -161,13 +161,13 @@ public class OR implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int destRegister = (opcode >> 9) & 0x7;
 		
-		Operation o = cpu.resolveAddressingMode(Size.word, mode, register);
+		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
 		long data = o.getAddressingMode().getWord(o);
 		
 		long res = (cpu.getD(destRegister) & 0xFFFF) | data;
 		cpu.setDWord(destRegister, res);
 		
-		calcFlags(res, Size.word.getMsb());
+		calcFlags(res, Size.WORD.getMsb());
 	}
 	
 	private void ORSourceEALong(int opcode) {

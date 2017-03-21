@@ -71,7 +71,7 @@ public class MOVEQ implements GenInstructionHandler {
 
 		cpu.setDLong(register, data);
 		
-		calcFlags(data, Size.longW.getMsb());
+		calcFlags(data, Size.LONG.getMsb());
 	}
 	
 	void calcFlags(long data, long msb) {

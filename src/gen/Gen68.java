@@ -2,7 +2,6 @@ package gen;
 
 import gen.addressing.AddressingMode;
 import gen.instruction.Operation;
-import m68k.cpu.Size;
 
 public class Gen68 {
 	
@@ -273,20 +272,20 @@ public class Gen68 {
 		oper.setAddressingMode(addressing);
 		
 		if (mode == 0b000) {	//	Dn
-			if (size == Size.byt) {		//	byte
+			if (size == Size.BYTE) {		//	byte
 				data = D[register] & 0xFF;
-			} else if (size == Size.word) {		//	word
+			} else if (size == Size.WORD) {		//	word
 				data = D[register] & 0xFFFF;
-			} else if (size == Size.longW) {		//	long
+			} else if (size == Size.LONG) {		//	long
 				data = D[register];
 			}
 			
 		} else if (mode == 0b001) {		//	An		Address Register Direct Mode 
-			if (size == Size.byt) {		//	byte
+			if (size == Size.BYTE) {		//	byte
 				data = A[register] & 0xFF;
-			} else if (size == Size.word) {		//	word
+			} else if (size == Size.WORD) {		//	word
 				data = A[register] & 0xFFFF;
-			} else if (size == Size.longW) {		//	long
+			} else if (size == Size.LONG) {		//	long
 				data = A[register];
 			}
 			
@@ -313,16 +312,16 @@ public class Gen68 {
 			addr = A[register];
 			oper.setAddress(addr);
 			
-			if (size == Size.byt) {	//	byte
+			if (size == Size.BYTE) {	//	byte
 //				data = bus.read(addr);
 				A[register]++;
 				
-			} else if (size == Size.word) {	//	word
+			} else if (size == Size.WORD) {	//	word
 //				data  = (bus.read(addr)     << 8);
 //				data |= (bus.read(addr + 1) << 0);
 				A[register] += 2;
 				
-			} else if (size == Size.longW) {	//	long
+			} else if (size == Size.LONG) {	//	long
 //				data  = (bus.read(addr)     << 24);
 //				data |= (bus.read(addr + 1) << 16);
 //				data |= (bus.read(addr + 2) << 8);
@@ -335,18 +334,18 @@ public class Gen68 {
 			addr = A[register];
 			oper.setAddress(addr);
 			
-			if (size == Size.byt) {	//	byte
+			if (size == Size.BYTE) {	//	byte
 				addr--;
 				A[register] = addr;
 //				data = bus.read(addr);
 				
-			} else if (size == Size.word) {	//	word
+			} else if (size == Size.WORD) {	//	word
 				addr -= 2;
 				A[register] = addr;
 //				data  = (bus.read(addr)     << 8);
 //				data |= (bus.read(addr + 1) << 0);
 				
-			} else if (size == Size.longW) {	//	long
+			} else if (size == Size.LONG) {	//	long
 				addr -= 4;
 				A[register] = addr;
 //				data  = (bus.read(addr)     << 24);
@@ -381,9 +380,9 @@ public class Gen68 {
 					addr |= 0xFFFF_0000;
 				}
 				
-				if (size == Size.byt) {
+				if (size == Size.BYTE) {
 //					data = bus.read(addr);
-				} else if (size == Size.word) {
+				} else if (size == Size.WORD) {
 //					data = (bus.read(addr) << 8);
 //					data |= bus.read(addr + 1);
 				} else {
@@ -426,11 +425,11 @@ public class Gen68 {
 					displacement = 0xFFFF_FF00 | displacement;
 				}
 				int idxRegNumber = (int) ((exten >> 12) & 0x07);
-				Size idxSize = ((exten & 0x0800) == 0x0800 ? Size.longW : Size.word);
+				Size idxSize = ((exten & 0x0800) == 0x0800 ? Size.LONG : Size.WORD);
 				boolean idxIsAddressReg = ((exten & 0x8000) == 0x8000);
 				
 				if (idxIsAddressReg) {
-					if (idxSize == Size.word) {
+					if (idxSize == Size.WORD) {
 						data = getA(idxRegNumber);
 						if ((data & 0x8000) > 0) {
 							data = 0xFFFF_0000 | data;
@@ -439,7 +438,7 @@ public class Gen68 {
 						data = getA(idxRegNumber);
 					}
 				} else {
-					if (idxSize == Size.word) {
+					if (idxSize == Size.WORD) {
 						data = getD(idxRegNumber);
 						if ((data & 0x8000) > 0) {
 							data = 0xFFFF_0000 | data;
@@ -458,20 +457,20 @@ public class Gen68 {
 				
 				oper.setAddress(PC + 2);
 				
-				if (size == Size.byt) {		//	aunque sea byte, siempre ocupa 2 bytes y cuenta el de la derecha
+				if (size == Size.BYTE) {		//	aunque sea byte, siempre ocupa 2 bytes y cuenta el de la derecha
 //					data  = (bus.read(PC + 2) << 8);
 //					data |= (bus.read(PC + 3) << 0);
 					
 //					data = data & 0xFF;
 					
 					PC += 2;
-				} else if (size == Size.word) {
+				} else if (size == Size.WORD) {
 //					data  = (bus.read(PC + 2) << 8);
 //					data |= (bus.read(PC + 3) << 0);
 					
 					PC += 2;
 					
-				} else if (size == Size.longW) {	// long
+				} else if (size == Size.LONG) {	// long
 //					data  = (bus.read(PC + 2) << 24);
 //					data |= (bus.read(PC + 3) << 16);
 //					data |= (bus.read(PC + 4) << 8);
@@ -511,11 +510,11 @@ public class Gen68 {
 		
 		o.setData(data);
 		
-		if (Size.byt == size) {
+		if (Size.BYTE == size) {
 			addressing.setByte(o);
-		} else if (Size.word == size) {
+		} else if (Size.WORD == size) {
 			addressing.setWord(o);
-		} else if (Size.longW == size) {
+		} else if (Size.LONG == size) {
 			addressing.setLong(o);
 		}
 		
@@ -581,17 +580,17 @@ public class Gen68 {
 		long addr;
 		
 		if (mode == 0b000) {	//	Dn
-			if (size == Size.byt) {
+			if (size == Size.BYTE) {
 				long old = D[register];
 				long v = (old & (0xFFFF_FF00)) | data;
 				D[register] = v;	// size = byte, se escribe el ultimo byte
 				
-			} else if (size == Size.word) {
+			} else if (size == Size.WORD) {
 				long old = D[register];
 				long v = (old & (0xFFFF_0000)) | data;
 				D[register] = v;	// size = word, se escribe los 2 ultimos bytes
 				
-			} else if (size == Size.longW) {
+			} else if (size == Size.LONG) {
 				D[register] = data;
 			}
 			
@@ -602,27 +601,27 @@ public class Gen68 {
 		} else if (mode == 0b010) {		//	(An)	Address Register Indirect Mode
 			addr = A[register];
 			
-			if (size == Size.longW) {
+			if (size == Size.LONG) {
 				bus.write(addr, (data >> 16), size);
 				bus.write(addr + 2, (data & 0xFFFF), size);
 				
-			} else if (size == Size.word) {
+			} else if (size == Size.WORD) {
 				bus.write(addr, (data & 0xFFFF), size);
 				
-			} else if (size == Size.byt) {
+			} else if (size == Size.BYTE) {
 				bus.write(addr, (data & 0xFF), size);
 			}
 			
 		} else if (mode == 0b011) {		//	(An)+	 Address Register Indirect with Postincrement Mode 
 			addr = A[register];
 			
-			if (size == Size.byt) {
+			if (size == Size.BYTE) {
 				bus.write(addr, data & 0xFF, size);
 				A[register]++;
-			} else if (size == Size.word) {
+			} else if (size == Size.WORD) {
 				bus.write(addr, data & 0xFFFF, size);
 				A[register] += 2;
-			} else if (size == Size.longW) {
+			} else if (size == Size.LONG) {
 				bus.write(addr, data >> 16, size);
 				bus.write(addr + 2, data & 0xFFFF, size);
 				A[register] += 4;
@@ -630,7 +629,7 @@ public class Gen68 {
 		} else if (mode == 0b100) {		//	-(An)
 			long address = A[register];
 			
-			if (size == Size.longW) {	//	long word
+			if (size == Size.LONG) {	//	long word
 				address = (address - 4) & 0xFFFF_FFFF;
 				A[register] = address;	// predecrement
 				
@@ -642,7 +641,7 @@ public class Gen68 {
 			}
 			
 		} else if (mode == 0b101) {		//	(d16,An)	Address with Displacement
-			if (size == Size.byt) {	//	byte
+			if (size == Size.BYTE) {	//	byte
 				long base = A[register];
 				long displac = (bus.read(offset) << 8);
 				displac 	|= (bus.read(offset + 1));
@@ -655,14 +654,15 @@ public class Gen68 {
 				
 				PC += 2;
 				
-			} else if (size == Size.word) {
+			} else if (size == Size.WORD) {
 				throw new RuntimeException("NOO");
-			} else if (size == Size.longW) {
+			} else if (size == Size.LONG) {
 				throw new RuntimeException("NOO");
 			}
 		
 		} else if (mode == 0b110) {		//	 Address Register Indirect with Index (Base Displacement) Mode
-//			int ext = fetchPCWordSigned();
+			throw new RuntimeException("NOO");
+			//			int ext = fetchPCWordSigned();
 //			displacement = signExtendByte(ext);
 //			idxRegNumber = (ext >> 12) & 0x07;
 //			idxSize = ((ext & 0x0800) == 0x0800 ? Size.Long : Size.Word);
@@ -701,11 +701,11 @@ public class Gen68 {
 					addr |= 0xFFFF_0000;
 				}
 				
-				if (size == Size.byt) {
+				if (size == Size.BYTE) {
 					bus.write(addr, data, size);
-				} else if (size == Size.word) {
+				} else if (size == Size.WORD) {
 					bus.write(addr, data, size);
-				} else if (size == Size.longW) {
+				} else if (size == Size.LONG) {
 					bus.write(addr, (data >> 16), size);
 					bus.write(addr + 2, data & 0xFFFF, size);
 				}
@@ -718,13 +718,13 @@ public class Gen68 {
 				addr |= (bus.read(offset + 2) << 8);
 				addr |= (bus.read(offset + 3) << 0);
 			
-				if (size == Size.byt) {
+				if (size == Size.BYTE) {
 					bus.write(addr, data & 0xFF, size);
 					
-				} else if (size == Size.word) {
+				} else if (size == Size.WORD) {
 					bus.write(addr, data & 0xFFFF, size);
 					
-				} else if (size == Size.longW) {
+				} else if (size == Size.LONG) {
 					bus.write(addr, data >> 16, size);
 					bus.write(addr + 2, data & 0xFFFF, size);
 					

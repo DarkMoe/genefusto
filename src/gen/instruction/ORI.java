@@ -129,11 +129,11 @@ public class ORI implements GenInstructionHandler {
 		
 		data = (cpu.getD(destReg) & 0xFF) | data;
 				
-		cpu.writeAddressingMode(Size.byt, cpu.PC + 2, data, destMode, destReg);
+		cpu.writeAddressingMode(Size.BYTE, cpu.PC + 2, data, destMode, destReg);
 		
 		cpu.PC += 2;		
 		
-		calcFlags(data, Size.byt.getMsb());
+		calcFlags(data, Size.BYTE.getMsb());
 	}
 
 	private void ORIWord(int opcode) {
@@ -145,11 +145,11 @@ public class ORI implements GenInstructionHandler {
 		
 		data = (cpu.getD(destReg) & 0xFFFF) | data;
 				
-		cpu.writeAddressingMode(Size.word, cpu.PC + 2, data, destMode, destReg);
+		cpu.writeAddressingMode(Size.WORD, cpu.PC + 2, data, destMode, destReg);
 		
 		cpu.PC += 2;
 		
-		calcFlags(data, Size.word.getMsb());
+		calcFlags(data, Size.WORD.getMsb());
 	}
 	
 	private void ORILong(int opcode) {
@@ -163,11 +163,11 @@ public class ORI implements GenInstructionHandler {
 		
 		data = cpu.getD(destReg) | data;
 				
-		cpu.writeAddressingMode(Size.longW, cpu.PC + 2, data, destMode, destReg);
+		cpu.writeAddressingMode(Size.LONG, cpu.PC + 2, data, destMode, destReg);
 				
 		cpu.PC += 4;
 		
-		calcFlags(data, Size.longW.getMsb());
+		calcFlags(data, Size.LONG.getMsb());
 	}
 	
 	void calcFlags(long data, long msb) {

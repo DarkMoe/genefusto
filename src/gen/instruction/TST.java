@@ -81,7 +81,7 @@ public class TST implements GenInstructionHandler {
 		for (int s = 0; s < 3; s++) {
 			if (s == 0) {
 				base = 0x4A00;
-				size = Size.byt;
+				size = Size.BYTE;
 				ins = new GenInstruction() {
 					@Override
 					public void run(int opcode) {
@@ -90,7 +90,7 @@ public class TST implements GenInstructionHandler {
 				};
 				
 			} else if (s == 0b01) {
-				size = Size.word;
+				size = Size.WORD;
 				base = 0x4A40;
 				ins = new GenInstruction() {
 					@Override
@@ -100,7 +100,7 @@ public class TST implements GenInstructionHandler {
 				};
 				
 			} else if (s == 0b10) {
-				size = Size.longW;
+				size = Size.LONG;
 				base = 0x4A80;
 				ins = new GenInstruction() {
 					@Override
@@ -112,7 +112,7 @@ public class TST implements GenInstructionHandler {
 			
 			for (int m = 0; m < 8; m++) {
 				for (int r = 0; r < 8; r++) {
-					if (size == Size.byt) {
+					if (size == Size.BYTE) {
 						if (m == 1) {
 							continue;
 						}
@@ -133,30 +133,30 @@ public class TST implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 		
-		Operation o = cpu.resolveAddressingMode(Size.byt, mode, register);
+		Operation o = cpu.resolveAddressingMode(Size.BYTE, mode, register);
 		long data = o.getAddressingMode().getByte(o);
 		
-		calcFlags(data, Size.byt.getMsb());
+		calcFlags(data, Size.BYTE.getMsb());
 	}
 	
 	private void TSTWord(int opcode) {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 		
-		Operation o = cpu.resolveAddressingMode(Size.word, mode, register);
+		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
 		long data = o.getAddressingMode().getWord(o);
 		
-		calcFlags(data, Size.word.getMsb());
+		calcFlags(data, Size.WORD.getMsb());
 	}
 	
 	private void TSTLong(int opcode) {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 		
-		Operation o = cpu.resolveAddressingMode(Size.longW, mode, register);
+		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
 		long data = o.getAddressingMode().getLong(o);
 		
-		calcFlags(data, Size.longW.getMsb());
+		calcFlags(data, Size.LONG.getMsb());
 	}
 	
 	void calcFlags(long data, long msb) {

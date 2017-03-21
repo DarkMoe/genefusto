@@ -94,13 +94,13 @@ public class BCC implements GenInstructionHandler {
 			taken = true;
 			
 			cpu.SSP--;
-			cpu.bus.write(cpu.SSP, oldPC & 0xFF, Size.byt);
+			cpu.bus.write(cpu.SSP, oldPC & 0xFF, Size.BYTE);
 			cpu.SSP--;
-			cpu.bus.write(cpu.SSP, (oldPC >> 8) & 0xFF, Size.byt);
+			cpu.bus.write(cpu.SSP, (oldPC >> 8) & 0xFF, Size.BYTE);
 			cpu.SSP--;
-			cpu.bus.write(cpu.SSP, (oldPC >> 16) & 0xFF, Size.byt);
+			cpu.bus.write(cpu.SSP, (oldPC >> 16) & 0xFF, Size.BYTE);
 			cpu.SSP--;
-			cpu.bus.write(cpu.SSP, (oldPC >> 24), Size.byt);
+			cpu.bus.write(cpu.SSP, (oldPC >> 24), Size.BYTE);
 			
 			cpu.setALong(7, cpu.SSP);
 			
@@ -145,13 +145,13 @@ public class BCC implements GenInstructionHandler {
 			taken = true;
 			
 			cpu.SSP--;
-			cpu.bus.write(cpu.SSP, oldPC & 0xFF, Size.byt);
+			cpu.bus.write(cpu.SSP, oldPC & 0xFF, Size.BYTE);
 			cpu.SSP--;
-			cpu.bus.write(cpu.SSP, (oldPC >> 8) & 0xFF, Size.byt);
+			cpu.bus.write(cpu.SSP, (oldPC >> 8) & 0xFF, Size.BYTE);
 			cpu.SSP--;
-			cpu.bus.write(cpu.SSP, (oldPC >> 16) & 0xFF, Size.byt);
+			cpu.bus.write(cpu.SSP, (oldPC >> 16) & 0xFF, Size.BYTE);
 			cpu.SSP--;
-			cpu.bus.write(cpu.SSP, (oldPC >> 24), Size.byt);
+			cpu.bus.write(cpu.SSP, (oldPC >> 24), Size.BYTE);
 			
 			cpu.setALong(7, cpu.SSP);
 			

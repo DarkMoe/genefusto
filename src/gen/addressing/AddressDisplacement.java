@@ -17,7 +17,7 @@ public class AddressDisplacement implements AddressingMode {
 		long addr = o.getAddress();
 		long data = o.getData();
 
-		cpu.bus.write(addr, data & 0xFF, Size.byt);
+		cpu.bus.write(addr, data & 0xFF, Size.BYTE);
 	}
 
 	@Override

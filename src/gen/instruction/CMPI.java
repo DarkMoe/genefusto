@@ -128,12 +128,12 @@ public class CMPI implements GenInstructionHandler {
 		
 		cpu.PC += 2;
 		
-		Operation o = cpu.resolveAddressingMode(Size.byt, mode, register);
+		Operation o = cpu.resolveAddressingMode(Size.BYTE, mode, register);
 		long toSub = o.getAddressingMode().getByte(o);
 		
 		long res = toSub - data;
 		
-		calcFlags(res, Size.byt.getMsb(), 0xFF);
+		calcFlags(res, Size.BYTE.getMsb(), 0xFF);
 	}
 	
 	private void CMPIWord(int opcode) {
@@ -145,12 +145,12 @@ public class CMPI implements GenInstructionHandler {
 		
 		cpu.PC += 2;
 		
-		Operation o = cpu.resolveAddressingMode(Size.word, mode, register);
+		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
 		long toSub = o.getAddressingMode().getWord(o);
 		long res = toSub - data;
 		
 		
-		calcFlags(res, Size.word.getMsb(), 0xFFFF);
+		calcFlags(res, Size.WORD.getMsb(), 0xFFFF);
 	}
 	
 	private void CMPILong(int opcode) {
@@ -164,11 +164,11 @@ public class CMPI implements GenInstructionHandler {
 		
 		cpu.PC += 4;
 		
-		Operation o = cpu.resolveAddressingMode(Size.longW, mode, register);
+		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
 		long toSub = o.getAddressingMode().getLong(o);
 		long res = toSub - data;
 		
-		calcFlags(res, Size.longW.getMsb(), 0xFFFF_FFFF);
+		calcFlags(res, Size.LONG.getMsb(), 0xFFFF_FFFF);
 	}
 	
 	void calcFlags(long data, int msb, long maxSize) {	// TODO V

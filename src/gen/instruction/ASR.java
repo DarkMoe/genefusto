@@ -217,7 +217,7 @@ public class ASR implements GenInstructionHandler {
 		long res = shiftee << toShift;
 		cpu.setDWord(register, res);
 					
-		calcFlags(res, shiftee, Size.word.getMsb(), 0xFFFF);
+		calcFlags(res, shiftee, Size.WORD.getMsb(), 0xFFFF);
 	}
 	
 	private void ASLLong(int opcode) {
@@ -236,7 +236,7 @@ public class ASR implements GenInstructionHandler {
 		long res = shiftee << toShift;
 		cpu.setDLong(register, res);
 					
-		calcFlags(res, shiftee, Size.longW.getMsb(), 0xFFFF_FFFFL);
+		calcFlags(res, shiftee, Size.LONG.getMsb(), 0xFFFF_FFFFL);
 	}
 	
 	private void ASRByte(int opcode) {
@@ -263,7 +263,7 @@ public class ASR implements GenInstructionHandler {
 		long res = shiftee >> toShift;
 		cpu.setDLong(register, res);
 					
-		calcFlags(res, shiftee, Size.longW.getMsb(), 0xFFFF_FFFFL);
+		calcFlags(res, shiftee, Size.LONG.getMsb(), 0xFFFF_FFFFL);
 	}
 
 	void calcFlags(long data, long old, long msb, long maxSize) {	//TODO implement X C

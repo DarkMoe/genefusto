@@ -135,15 +135,15 @@ public class SUBQ implements GenInstructionHandler {
 			dataToSub = 8;
 		}
 		
-		Operation o = cpu.resolveAddressingMode(Size.word, mode, register);
+		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
 		long data = o.getAddressingMode().getWord(o);
 		
 		long tot = (data - dataToSub);
 		long total = (data & 0xFFFF_0000L) | (tot & 0x0000_FFFF) & 0xFFFF_FFFFL;
 		
-		cpu.writeKnownAddressingMode(o, total, Size.word);
+		cpu.writeKnownAddressingMode(o, total, Size.WORD);
 		
-		calcFlags(tot, Size.word.getMsb(), 0xFFFF);
+		calcFlags(tot, Size.WORD.getMsb(), Size.WORD.getMax());
 	}
 	
 	private void SUBQLong(int opcode) {

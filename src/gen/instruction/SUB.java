@@ -156,13 +156,13 @@ public class SUB implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 		
-		Operation o = cpu.resolveAddressingMode(Size.word, mode, register);
+		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
 		long data = o.getAddressingMode().getWord(o);
 		
 		long tot = ((cpu.getD(dataRegister) & 0xFFFF) - data);
 		cpu.setDWord(dataRegister, tot);
 		
-		calcFlags(tot, Size.word.getMsb(), 0xFFFF);
+		calcFlags(tot, Size.WORD.getMsb(), Size.WORD.getMax());
 	}
 	
 	private void SUBLong(int opcode) {
@@ -170,13 +170,13 @@ public class SUB implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 		
-		Operation o = cpu.resolveAddressingMode(Size.longW, mode, register);
+		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
 		long data = o.getAddressingMode().getLong(o);
 		
 		long tot = (cpu.getD(dataRegister) - data);
 		cpu.setDLong(dataRegister, tot);
 		
-		calcFlags(tot, Size.longW.getMsb(), 0xFFFF_FFFFL);
+		calcFlags(tot, Size.LONG.getMsb(), 0xFFFF_FFFFL);
 	}
 	
 	void calcFlags(long tot, int msb, long maxSize) {//TODO  overflow

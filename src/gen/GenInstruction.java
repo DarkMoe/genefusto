@@ -7,11 +7,11 @@ public abstract class GenInstruction {
 	
 	Size mapSize(int siz) {
 		if (siz == 0b01) {
-			return Size.byt;
+			return Size.BYTE;
 		} else if (siz == 0b11) {
-			return Size.word;
+			return Size.WORD;
 		} else if (siz == 0b10) {
-			return Size.longW;
+			return Size.LONG;
 		}
 		return null;
 	}
@@ -22,11 +22,11 @@ public abstract class GenInstruction {
 //	10->one Long operation
 	Size mapAlternateSize(int size) {
 		if (size == 0b00) {
-			return Size.byt;
+			return Size.BYTE;
 		} else if (size == 0b01) {
-			return Size.word;
+			return Size.WORD;
 		} else if (size == 0b10) {
-			return Size.longW;
+			return Size.LONG;
 		}
 		return null;
 	}
@@ -38,11 +38,11 @@ public abstract class GenInstruction {
 //	100		101		110	(<ea>) - (Dn) -> <ea>
 	Size mapFromOpMode(int size) {
 		if (size == 0b000 || size == 0b100) {
-			return Size.byt;
+			return Size.BYTE;
 		} else if (size == 0b001 || size == 0b101) {
-			return Size.word;
+			return Size.WORD;
 		} else if (size == 0b010 || size == 0b110) {
-			return Size.longW;
+			return Size.LONG;
 		}
 		return null;
 	}

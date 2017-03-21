@@ -80,9 +80,9 @@ public class GenBus {
 //	https://wiki.megadrive.org/index.php?title=IO_Registers
 	public void write(long address, long data, Size size) {
 		long addressL = (address & 0xFFFFFFFFL);
-		if (size == Size.byt) {
+		if (size == Size.BYTE) {
 			data = data & 0xFF;
-		} else if (size == Size.word) {
+		} else if (size == Size.WORD) {
 			data = data & 0xFFFF;
 		} else {
 			data = data & 0xFFFF;	// manejado afuera, quias deberia manejarse tambien aca
@@ -90,7 +90,7 @@ public class GenBus {
 		
 		if (addressL >= 0xA00000 && addressL <= 0xA0FFFF) {	//	Z80 addressing space
 			int addr = (int) (address - 0xA00000);
-			if (size == Size.byt) {
+			if (size == Size.BYTE) {
 				z80.memory[addr] = (int) data;
 			} else {
 				z80.memory[addr] = (int) (data >> 8);
@@ -157,12 +157,12 @@ public class GenBus {
 		} else if (addressL >= 0xFF0000) {
 			long addr = (addressL & 0xFFFFFF) - 0xFF0000;
 			
-			if (size == Size.byt) {
+			if (size == Size.BYTE) {
 				memory.writeRam(addr, data);
-			} else if (size == Size.word) {
+			} else if (size == Size.WORD) {
 				memory.writeRam(addr, (data >> 8));
 				memory.writeRam(addr + 1, (data & 0xFF));
-			} else if (size == Size.longW) {
+			} else if (size == Size.LONG) {
 				memory.writeRam(addr, (data >> 8));			//	FIXME, debe escribir 2 words
 				memory.writeRam(addr + 1, (data & 0xFF));
 			}
@@ -207,18 +207,18 @@ public class GenBus {
 				int ssp = cpu.SSP;
 				
 				ssp--;
-				write(ssp, oldPC & 0xFF, Size.byt);
+				write(ssp, oldPC & 0xFF, Size.BYTE);
 				ssp--;
-				write(ssp, (oldPC >> 8) & 0xFF, Size.byt);
+				write(ssp, (oldPC >> 8) & 0xFF, Size.BYTE);
 				ssp--;
-				write(ssp, (oldPC >> 16) & 0xFF, Size.byt);
+				write(ssp, (oldPC >> 16) & 0xFF, Size.BYTE);
 				ssp--;
-				write(ssp, (oldPC >> 24), Size.byt);
+				write(ssp, (oldPC >> 24), Size.BYTE);
 				
 				ssp--;
-				write(ssp, oldSR & 0xFF, Size.byt);
+				write(ssp, oldSR & 0xFF, Size.BYTE);
 				ssp--;
-				write(ssp, (oldSR >> 8) & 0xFF, Size.byt);
+				write(ssp, (oldSR >> 8) & 0xFF, Size.BYTE);
 				
 				cpu.setALong(7, ssp);
 				

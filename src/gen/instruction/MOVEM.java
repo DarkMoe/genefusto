@@ -226,7 +226,7 @@ public class MOVEM implements GenInstructionHandler {
 		
 		for (int i = 0; i < 8; i++) {
 			if (((registerListMaskD) & (1 << i)) != 0) {
-				o = cpu.resolveAddressingMode(Size.longW, mode, register);
+				o = cpu.resolveAddressingMode(Size.LONG, mode, register);
 				data = o.getAddressingMode().getLong(o);
 				
 				cpu.setDLong(i, data);
@@ -234,7 +234,7 @@ public class MOVEM implements GenInstructionHandler {
 		}
 		for (int i = 0; i < 8; i++) {
 			if (((registerListMaskA) & (1 << i)) != 0) {
-				o = cpu.resolveAddressingMode(Size.longW, mode, register);
+				o = cpu.resolveAddressingMode(Size.LONG, mode, register);
 				data = o.getAddressingMode().getLong(o);
 				
 				cpu.setALong(i, data);
@@ -275,14 +275,14 @@ public class MOVEM implements GenInstructionHandler {
 			if (((registerListMaskA) & (1 << i)) != 0) {
 				data = cpu.getA(i);
 				
-				cpu.writeAddressingMode(Size.longW, 0, data, mode, register);
+				cpu.writeAddressingMode(Size.LONG, 0, data, mode, register);
 			}
 		}
 		for (int i = 7; i >= 0; i--) {
 			if (((registerListMaskD) & (1 << i)) != 0) {
 				data = cpu.getD(i);
 				
-				cpu.writeAddressingMode(Size.longW, 0, data, mode, register);
+				cpu.writeAddressingMode(Size.LONG, 0, data, mode, register);
 			}
 		}
 		

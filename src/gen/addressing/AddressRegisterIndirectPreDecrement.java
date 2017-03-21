@@ -17,7 +17,7 @@ public class AddressRegisterIndirectPreDecrement implements AddressingMode {
 		long addr = o.getAddress();
 		long data = o.getData();
 
-		cpu.bus.write(addr, (data & 0xFF), Size.byt);
+		cpu.bus.write(addr, (data & 0xFF), Size.BYTE);
 	}
 
 	@Override
@@ -25,7 +25,7 @@ public class AddressRegisterIndirectPreDecrement implements AddressingMode {
 		long addr = o.getAddress();
 		long data = o.getData();
 
-		cpu.bus.write(addr, (data & 0xFFFF), Size.word);
+		cpu.bus.write(addr, (data & 0xFFFF), Size.WORD);
 	}
 
 	@Override
@@ -33,8 +33,8 @@ public class AddressRegisterIndirectPreDecrement implements AddressingMode {
 		long addr = o.getAddress();
 		long data = o.getData();
 
-		cpu.bus.write(addr, (data >> 16), Size.longW);
-		cpu.bus.write(addr + 2, (data & 0xFFFF), Size.longW);
+		cpu.bus.write(addr, (data >> 16), Size.LONG);
+		cpu.bus.write(addr + 2, (data & 0xFFFF), Size.LONG);
 	}
 
 	@Override

@@ -223,7 +223,7 @@ public class LSL implements GenInstructionHandler {
 		long res = cpu.getD(register) << toShift;
 		cpu.setDWord(register, res);
 		
-		calcFlags(res, Size.word.getMsb(), 0xFFFF, 16);
+		calcFlags(res, Size.WORD.getMsb(), 0xFFFF, 16);
 	}
 	
 	private void LSLRegisterLong(int opcode) {
@@ -244,7 +244,7 @@ public class LSL implements GenInstructionHandler {
 		long res = cpu.getD(register) << toShift;
 		cpu.setDLong(register, res);
 		
-		calcFlags(res, Size.longW.getMsb(), 0xFFFF_FFFFL, 32);
+		calcFlags(res, Size.LONG.getMsb(), 0xFFFF_FFFFL, 32);
 	}
 	
 	private void LSRRegisterByte(int opcode) {

@@ -199,7 +199,7 @@ public class BTST implements GenInstructionHandler {
 		int destMode = (opcode >> 3) & 0x7;
 		int destReg = (opcode & 0x7);
 		
-		Operation o = cpu.resolveAddressingMode(Size.byt, destMode, destReg);
+		Operation o = cpu.resolveAddressingMode(Size.BYTE, destMode, destReg);
 		long data = o.getAddressingMode().getByte(o);
 		
 		long bitNumber = cpu.getD(dataRegister) & 0xFF;
@@ -212,7 +212,7 @@ public class BTST implements GenInstructionHandler {
 		int destMode = (opcode >> 3) & 0x7;
 		int destReg = (opcode & 0x7);
 		
-		Operation o = cpu.resolveAddressingMode(Size.longW, destMode, destReg);
+		Operation o = cpu.resolveAddressingMode(Size.LONG, destMode, destReg);
 		long data = o.getAddressingMode().getLong(o);
 		
 		long bitNumber = cpu.getD(dataRegister);
@@ -229,14 +229,14 @@ public class BTST implements GenInstructionHandler {
 		
 		cpu.PC += 2;
 		
-		Operation o = cpu.resolveAddressingMode(cpu.PC + 2, Size.byt, destMode, destReg);
+		Operation o = cpu.resolveAddressingMode(cpu.PC + 2, Size.BYTE, destMode, destReg);
 		long data = o.getAddressingMode().getByte(o);
 		
 		calcFlags(data, (int) numberBit);
 	}
 	
 	private void BTSTImmediateLong(int opcode) {
-		Size size = Size.longW;
+		Size size = Size.LONG;
 		int destReg = (opcode & 0x7);
 		int destMode = (opcode >> 3) & 0x7;
 		long numberBit = (cpu.bus.read(cpu.PC + 2)) << 8;

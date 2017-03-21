@@ -126,7 +126,7 @@ public class ANDI implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 		
-		Operation o = cpu.resolveAddressingMode(Size.byt, mode, register);
+		Operation o = cpu.resolveAddressingMode(Size.BYTE, mode, register);
 		long data = o.getAddressingMode().getByte(o);
 		
 		long toAnd  = (cpu.bus.read(cpu.PC + 2)) << 8;
@@ -134,36 +134,36 @@ public class ANDI implements GenInstructionHandler {
 		 	 toAnd = toAnd & 0xFF;	//	ocupa 2 bytes, pero solo se toma el ultimo
 		
 		long res = data & toAnd;
-		cpu.writeAddressingMode(Size.byt, 0, res, mode, register);
+		cpu.writeAddressingMode(Size.BYTE, 0, res, mode, register);
 		 	 
 		cpu.PC += 2;
 		
-		calcFlags(res, Size.byt.getMsb());
+		calcFlags(res, Size.BYTE.getMsb());
 	}
 	
 	private void ANDIWord(int opcode) {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 		
-		Operation o = cpu.resolveAddressingMode(Size.word, mode, register);
+		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
 		long data = o.getAddressingMode().getWord(o);
 		
 		long toAnd  = (cpu.bus.read(cpu.PC + 2)) << 8;
 		 	 toAnd |= (cpu.bus.read(cpu.PC + 3));
 		
 		long res = data & toAnd;
-		cpu.writeAddressingMode(Size.word, 0, res, mode, register);
+		cpu.writeAddressingMode(Size.WORD, 0, res, mode, register);
 		 	 
 		cpu.PC += 2;
 		
-		calcFlags(res, Size.word.getMsb());
+		calcFlags(res, Size.WORD.getMsb());
 	}
 	
 	private void ANDILong(int opcode) {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 		
-		Operation o = cpu.resolveAddressingMode(Size.longW, mode, register);
+		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
 		long data = o.getAddressingMode().getLong(o);
 		
 		long toAnd  = (cpu.bus.read(cpu.PC + 2)) << 24;
@@ -172,11 +172,11 @@ public class ANDI implements GenInstructionHandler {
 		     toAnd |= (cpu.bus.read(cpu.PC + 5));
 		
 		long res = data & toAnd;
-		cpu.writeAddressingMode(Size.longW, 0, res, mode, register);
+		cpu.writeAddressingMode(Size.LONG, 0, res, mode, register);
 		 	 
 		cpu.PC += 4;
 		
-		calcFlags(res, Size.longW.getMsb());
+		calcFlags(res, Size.LONG.getMsb());
 	}
 	
 	void calcFlags(long data, int msb) {

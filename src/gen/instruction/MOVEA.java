@@ -114,7 +114,7 @@ public class MOVEA implements GenInstructionHandler {
 		int register = opcode & 0x7;
 		int addrReg = (opcode >> 9) & 0x7;
 		
-		Operation o = cpu.resolveAddressingMode(Size.word, mode, register);
+		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
 		long data = o.getAddressingMode().getWord(o);
 		
 		if ((data & 0x8000) > 0) {
@@ -128,7 +128,7 @@ public class MOVEA implements GenInstructionHandler {
 		int register = opcode & 0x7;
 		int addrReg = (opcode >> 9) & 0x7;
 		
-		Operation o = cpu.resolveAddressingMode(Size.longW, mode, register);
+		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
 		long data = o.getAddressingMode().getLong(o);
 		
 		cpu.setALong(addrReg, data);

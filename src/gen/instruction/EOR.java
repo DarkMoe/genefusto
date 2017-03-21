@@ -133,13 +133,13 @@ public class EOR implements GenInstructionHandler {
 		
 		long toEor = cpu.getD(dataReg) & 0xFF;
 		
-		Operation o = cpu.resolveAddressingMode(Size.byt, mode, register);
+		Operation o = cpu.resolveAddressingMode(Size.BYTE, mode, register);
 		long data = o.getAddressingMode().getByte(o);
 		
 		long res = data ^ toEor;
-		cpu.writeKnownAddressingMode(o, res, Size.byt);
+		cpu.writeKnownAddressingMode(o, res, Size.BYTE);
 		
-		calcFlags(res, Size.byt.getMsb());
+		calcFlags(res, Size.BYTE.getMsb());
 	}
 
 	private void EORWord(int opcode) {
@@ -149,13 +149,13 @@ public class EOR implements GenInstructionHandler {
 		
 		long toEor = cpu.getD(dataReg) & 0xFFFF;
 		
-		Operation o = cpu.resolveAddressingMode(Size.word, mode, register);
+		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
 		long data = o.getAddressingMode().getWord(o);
 		
 		long res = data ^ toEor;
-		cpu.writeKnownAddressingMode(o, res, Size.word);
+		cpu.writeKnownAddressingMode(o, res, Size.WORD);
 		
-		calcFlags(res, Size.word.getMsb());
+		calcFlags(res, Size.WORD.getMsb());
 	}
 	
 	private void EORLong(int opcode) {
@@ -165,13 +165,13 @@ public class EOR implements GenInstructionHandler {
 		
 		long toEor = cpu.getD(dataReg);
 		
-		Operation o = cpu.resolveAddressingMode(Size.longW, mode, register);
+		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
 		long data = o.getAddressingMode().getLong(o);
 		
 		long res = data ^ toEor;
-		cpu.writeKnownAddressingMode(o, res, Size.longW);
+		cpu.writeKnownAddressingMode(o, res, Size.LONG);
 		
-		calcFlags(res, Size.longW.getMsb());
+		calcFlags(res, Size.LONG.getMsb());
 	}
 	
 	void calcFlags(long data, long msb) {

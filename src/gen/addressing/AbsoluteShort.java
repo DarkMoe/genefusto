@@ -16,21 +16,21 @@ public class AbsoluteShort implements AddressingMode {
 	public void setByte(Operation o) {
 		long addr = o.getAddress();
 		long data = o.getData();
-		cpu.bus.write(addr, data, Size.byt);
+		cpu.bus.write(addr, data, Size.BYTE);
 	}
 
 	@Override
 	public void setWord(Operation o) {
 		long addr = o.getAddress();
 		long data = o.getData();
-		cpu.bus.write(addr, data, Size.word);
+		cpu.bus.write(addr, data, Size.WORD);
 	}
 
 	@Override
 	public void setLong(Operation o) {
 		long addr = o.getAddress();
 		long data = o.getData();
-		cpu.bus.write(addr, data, Size.longW);
+		cpu.bus.write(addr, data, Size.LONG);
 	}
 	
 	@Override

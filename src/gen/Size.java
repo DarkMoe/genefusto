@@ -2,16 +2,22 @@ package gen;
 
 public enum Size {
 
-	byt(0x80), word(0x8000), longW(0x8000_0000);
+	BYTE(0x80, 0xFF), WORD(0x8000, 0xFFFF), LONG(0x8000_0000, 0xFFFF_FFFFL);
 	
 	int msb;
+	long max;
 	
-	Size(int msb) {
+	Size(int msb, long maxSize) {
 		this.msb = msb;
+		this.max = maxSize;
 	}
 
 	public int getMsb() {
 		return this.msb;
+	}
+	
+	public long getMax() {
+		return this.max;
 	}
 	
 }
