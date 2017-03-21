@@ -243,7 +243,7 @@ public class GenVdp {
 				all = (first << 16) | second;
 				
 				int code = (int) ((first >> 14) | (((second >> 4) & 0xF) << 2));
-				int addr = (int) ((first & 0x3FFF) | ((second & 0x3) << 13));
+				int addr = (int) ((first & 0x3FFF) | ((second & 0x3) << 14));
 				
 				addressPort = addr;
 				autoIncrementTotal = 0;	// reset este acumulador

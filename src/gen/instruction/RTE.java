@@ -66,7 +66,7 @@ public class RTE implements GenInstructionHandler {
 		
 		cpu.PC = newPC - 2;
 		
-		cpu.A[7] = cpu.SSP;
+		cpu.setALong(7, cpu.SSP);
 	}
 
 }

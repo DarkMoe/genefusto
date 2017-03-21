@@ -50,7 +50,7 @@ public class MOVEQ implements GenInstructionHandler {
 			
 			@Override
 			public void run(int opcode) {
-				MOVEQByte(opcode);
+				MOVEQLong(opcode);
 			}
 		};
 		for (int r = 0; r < 8; r++) {
@@ -61,7 +61,7 @@ public class MOVEQ implements GenInstructionHandler {
 		}
 	}
 	
-	private void MOVEQByte(int opcode) {
+	private void MOVEQLong(int opcode) {
 		int register = (opcode >> 9) & 0x7;
 		int immData = opcode & 0xFF;
 		long data = immData;
@@ -69,7 +69,7 @@ public class MOVEQ implements GenInstructionHandler {
 			data |= 0xFFFF_FF00L;
 		}
 
-		cpu.D[register] = data;
+		cpu.setDLong(register, data);
 		
 		calcFlags(data, Size.longW.getMsb());
 	}

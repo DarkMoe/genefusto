@@ -13,47 +13,47 @@ public class DataRegisterDirect implements AddressingMode {
 	
 	@Override
 	public void setByte(Operation o) {
+		long data = o.getData();
 		int register = o.getRegister();
-		long data = cpu.D[register];
 		
-		cpu.D[register] = data & 0xFF;
+		cpu.setDByte(register, data);
 	}
 
 	@Override
 	public void setWord(Operation o) {
-		long data = cpu.D[o.getRegister()];
+		long data = o.getData();
 		int register = o.getRegister();
 		
-		cpu.D[register] = data & 0xFFFF;
+		cpu.setDWord(register, data);
 	}
 
 	@Override
 	public void setLong(Operation o) {
-		long data = cpu.D[o.getRegister()];
+		long data = o.getData();
 		int register = o.getRegister();
 		
-		cpu.D[register] = data;
+		cpu.setDLong(register, data);
 	}
 
 	@Override
 	public long getByte(Operation o) {
 		int register = o.getRegister();
 		
-		return cpu.D[register] & 0xFF;
+		return cpu.getD(register) & 0xFF;
 	}
 
 	@Override
 	public long getWord(Operation o) {
 		int register = o.getRegister();
 		
-		return cpu.D[register] & 0xFFFF;
+		return cpu.getD(register) & 0xFFFF;
 	}
 
 	@Override
 	public long getLong(Operation o) {
 		int register = o.getRegister();
 		
-		return cpu.D[register];
+		return cpu.getD(register);
 	}
 
 }

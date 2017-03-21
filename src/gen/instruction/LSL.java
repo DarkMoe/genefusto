@@ -206,7 +206,24 @@ public class LSL implements GenInstructionHandler {
 	}
 	
 	private void LSLRegisterWord(int opcode) {
-		throw new RuntimeException("AA");
+		int register = (opcode & 0x7);
+		boolean ir = cpu.bitTest(opcode, 5);
+		int numRegister = (opcode >> 9) & 0x7;
+		
+		long toShift;
+		if (!ir) {
+			if (numRegister == 0) {
+				numRegister = 8;
+			}
+			toShift = numRegister;
+		} else {
+			toShift = cpu.getD(numRegister);
+		}
+		
+		long res = cpu.getD(register) << toShift;
+		cpu.setDWord(register, res);
+		
+		calcFlags(res, Size.word.getMsb(), 0xFFFF, 16);
 	}
 	
 	private void LSLRegisterLong(int opcode) {
@@ -221,15 +238,13 @@ public class LSL implements GenInstructionHandler {
 			}
 			toShift = numRegister;
 		} else {
-			toShift = cpu.D[numRegister];
+			toShift = cpu.getD(numRegister);
 		}
 		
-		long res = cpu.D[register] << toShift;
-		cpu.D[register] = (res & 0xFFFF_FFFFL);
+		long res = cpu.getD(register) << toShift;
+		cpu.setDLong(register, res);
 		
-		boolean shifted = cpu.bitTest(res, 33);
-		
-		calcFlags(res, Size.longW.getMsb(), 0xFFFF_FFFFL, shifted);
+		calcFlags(res, Size.longW.getMsb(), 0xFFFF_FFFFL, 32);
 	}
 	
 	private void LSRRegisterByte(int opcode) {
@@ -244,7 +259,7 @@ public class LSL implements GenInstructionHandler {
 		throw new RuntimeException("AA");
 	}
 
-	void calcFlags(long data, long msb, long maxSize, boolean lastBitShifted) {
+	void calcFlags(long data, long msb, long maxSize, int carryPosition) {
 		long wrapped = data & maxSize;
 		if (wrapped == 0) {
 			cpu.setZ();
@@ -259,6 +274,7 @@ public class LSL implements GenInstructionHandler {
 
 		cpu.clearV();
 		
+		boolean lastBitShifted = cpu.bitTest(data, carryPosition);
 		if (lastBitShifted) {
 			cpu.setC();
 			cpu.setX();

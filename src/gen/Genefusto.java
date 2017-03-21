@@ -13,6 +13,7 @@ import gen.addressing.FullIndex;
 import gen.addressing.ImmediateData;
 import gen.addressing.PCIndirectDisplacement;
 import gen.instruction.ADD;
+import gen.instruction.ADDA;
 import gen.instruction.ADDQ;
 import gen.instruction.AND;
 import gen.instruction.ANDI;
@@ -135,6 +136,7 @@ public class Genefusto {
         bus.cpu = cpu;
 
         new ADD(cpu).generate();
+        new ADDA(cpu).generate();
         new ADDQ(cpu).generate();
         new AND(cpu).generate();
         new ANDI(cpu).generate();
@@ -379,8 +381,8 @@ public class Genefusto {
         }
     }
 
-    String basePath = "C:\\Users\\Zotac\\workspace\\raul\\src\\gen\\";
-//	String basePath = "C:\\dev\\workspace\\test\\src\\gen\\";
+//    String basePath = "C:\\Users\\Zotac\\workspace\\raul\\src\\gen\\";
+	String basePath = "C:\\dev\\workspace\\test\\src\\gen\\";
     
     class MyRunnable implements Runnable {
         File file;

@@ -220,8 +220,7 @@ public class GenBus {
 				ssp--;
 				write(ssp, (oldSR >> 8) & 0xFF, Size.byt);
 				
-				cpu.SSP = ssp;
-				cpu.A[7] = ssp;
+				cpu.setALong(7, ssp);
 				
 				long address = readInterruptVector(0x78);
 				cpu.PC = address;

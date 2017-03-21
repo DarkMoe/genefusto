@@ -175,7 +175,7 @@ public class BCLR implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(Size.byt, destMode, destReg);
 		long data = o.getAddressingMode().getByte(o);
 		
-		long bitNumber = cpu.D[dataRegister] & 0xFF;
+		long bitNumber = cpu.getD(dataRegister) & 0xFF;
 		
 		cpu.PC += 2;
 		
@@ -195,7 +195,7 @@ public class BCLR implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(Size.longW, destMode, destReg);
 		long data = o.getAddressingMode().getLong(o);
 		
-		long bitNumber = cpu.D[dataRegister];
+		long bitNumber = cpu.getD(dataRegister);
 		
 		cpu.PC += 2;
 		

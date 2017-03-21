@@ -13,47 +13,47 @@ public class AddressRegisterDirect implements AddressingMode {
 	
 	@Override
 	public void setByte(Operation o) {
-		long data = cpu.A[o.getRegister()];
 		int register = o.getRegister();
+		long data = cpu.getA(register);
 		
-		cpu.A[register] = data & 0xFF;
+		cpu.setAByte(register, data);
 	}
 
 	@Override
 	public void setWord(Operation o) {
-		long data = cpu.A[o.getRegister()];
 		int register = o.getRegister();
+		long data = cpu.getA(register);
 		
-		cpu.A[register] = data & 0xFFFF;
+		cpu.setAWord(register, data);
 	}
 
 	@Override
 	public void setLong(Operation o) {
-		long data = cpu.A[o.getRegister()];
 		int register = o.getRegister();
+		long data = cpu.getA(register);
 		
-		cpu.A[register] = data;
+		cpu.setALong(register, data);
 	}
 
 	@Override
 	public long getByte(Operation o) {
 		int register = o.getRegister();
 		
-		return cpu.A[register] & 0xFF;
+		return cpu.getA(register) & 0xFF;
 	}
 
 	@Override
 	public long getWord(Operation o) {
 		int register = o.getRegister();
 		
-		return cpu.A[register] & 0xFFFF;
+		return cpu.getA(register) & 0xFFFF;
 	}
 
 	@Override
 	public long getLong(Operation o) {
 		int register = o.getRegister();
 		
-		return cpu.A[register];
+		return cpu.getA(register);
 	}
 
 }

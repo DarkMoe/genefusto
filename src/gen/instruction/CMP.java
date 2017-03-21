@@ -129,7 +129,7 @@ public class CMP implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(Size.word, mode, register);
 		long data = o.getAddressingMode().getWord(o);
 		
-		long toSub = (cpu.D[dataRegister] & 0xFFFF);
+		long toSub = (cpu.getD(dataRegister) & 0xFFFF);
 		long res = toSub - data;
 		
 		calcFlags(res, Size.word.getMsb(), 0xFFFF);
@@ -143,7 +143,7 @@ public class CMP implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(Size.longW, mode, register);
 		long data = o.getAddressingMode().getLong(o);
 		
-		long toSub = cpu.D[dataRegister];
+		long toSub = cpu.getD(dataRegister);
 		long res = toSub - data;
 		
 		calcFlags(res, Size.longW.getMsb(), 0xFFFF_FFFFL);

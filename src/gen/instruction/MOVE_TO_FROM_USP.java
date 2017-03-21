@@ -74,13 +74,13 @@ public class MOVE_TO_FROM_USP implements GenInstructionHandler {
 	private void MOVEToUSP(int opcode) {
 		int register = opcode & 0x7;
 
-		cpu.USP = cpu.A[register];
+		cpu.USP = cpu.getA(register);
 	}
 	
 	private void MOVEFromUSP(int opcode) {
 		int register = opcode & 0x7;
 
-		cpu.A[register] = cpu.USP;
+		cpu.setALong(register, cpu.USP);	// FIXME si es supervisor solo debe modificar el SSP, sino el USP
 	}
 	
 }

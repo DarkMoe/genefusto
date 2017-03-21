@@ -127,7 +127,7 @@ public class ORI implements GenInstructionHandler {
 		int destReg = (opcode & 0x7);
 		int destMode = (opcode >> 3) & 0x7;
 		
-		data = cpu.D[destReg] | data;
+		data = (cpu.getD(destReg) & 0xFF) | data;
 				
 		cpu.writeAddressingMode(Size.byt, cpu.PC + 2, data, destMode, destReg);
 		
@@ -143,7 +143,7 @@ public class ORI implements GenInstructionHandler {
 		int destReg = (opcode & 0x7);
 		int destMode = (opcode >> 3) & 0x7;
 		
-		data = cpu.D[destReg] | data;
+		data = (cpu.getD(destReg) & 0xFFFF) | data;
 				
 		cpu.writeAddressingMode(Size.word, cpu.PC + 2, data, destMode, destReg);
 		
@@ -161,7 +161,7 @@ public class ORI implements GenInstructionHandler {
 		int destReg = (opcode & 0x7);
 		int destMode = (opcode >> 3) & 0x7;
 		
-		data = cpu.D[destReg] | data;
+		data = cpu.getD(destReg) | data;
 				
 		cpu.writeAddressingMode(Size.longW, cpu.PC + 2, data, destMode, destReg);
 				

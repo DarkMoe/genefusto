@@ -102,7 +102,7 @@ public class BCC implements GenInstructionHandler {
 			cpu.SSP--;
 			cpu.bus.write(cpu.SSP, (oldPC >> 24), Size.byt);
 			
-			cpu.A[7] = cpu.SSP;
+			cpu.setALong(7, cpu.SSP);
 			
 			break;
 		case 0b0100:
@@ -153,7 +153,7 @@ public class BCC implements GenInstructionHandler {
 			cpu.SSP--;
 			cpu.bus.write(cpu.SSP, (oldPC >> 24), Size.byt);
 			
-			cpu.A[7] = cpu.SSP;
+			cpu.setALong(7, cpu.SSP);
 			
 			break;
 		case 0b0110:

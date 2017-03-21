@@ -107,7 +107,7 @@ public class JSR implements GenInstructionHandler {
 		cpu.SSP--;
 		cpu.bus.write(cpu.SSP, (oldPC >> 24), Size.byt);
 		
-		cpu.A[7] = cpu.SSP;
+		cpu.setALong(7, cpu.SSP);
 		
 		cpu.PC = newPC - 2;
 	}

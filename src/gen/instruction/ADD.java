@@ -162,8 +162,8 @@ public class ADD implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(Size.word, mode, register);
 		long data = o.getAddressingMode().getWord(o);
 		
-		long tot = (cpu.D[dataRegister] + data);
-		cpu.D[dataRegister] = ((cpu.D[dataRegister] & 0xFFFF_0000) | (tot & 0x0000_FFFFL)) & 0xFFFF_FFFF;
+		long tot = (cpu.getD(dataRegister) + data);
+		cpu.setDWord(dataRegister, tot);
 		
 		calcFlags(tot, Size.word.getMsb(), 0xFFFF);
 	}

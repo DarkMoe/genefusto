@@ -2,13 +2,14 @@ package gen;
 
 import gen.addressing.AddressingMode;
 import gen.instruction.Operation;
+import m68k.cpu.Size;
 
 public class Gen68 {
 	
 	//	D0-D7
-	public long[] D = new long[8];
-	//	A0-A7	(A7 = USP = User Stack Pointer ?)
-	public long[] A = new long[8];
+	private long[] D = new long[8];
+	//	A0-A7	(A7 = USP = User Stack Pointer o SSP)
+	private long[] A = new long[8];
 	
 	public long PC;
 
@@ -102,7 +103,11 @@ public class Gen68 {
 		
 		cycles = 0;
 		
-		if (PC == 0x50c) {
+		if (PC == 0x3c2) {
+			System.out.println();
+		}
+		
+		if (D[7] == 0) {
 			System.out.println();
 		}
 		
@@ -114,8 +119,52 @@ public class Gen68 {
 		return 0;
 	}
 	
-	private long A(int register) {
+	public void setAByte(int register, long data) {
+		long reg = A[register];
+		A[register] = ((reg & 0xFFFF_FF00) | (data & 0xFF));
+		
+		if (register == 7) {
+			SSP = (int) A[register];
+		}
+	}
+	
+	public void setAWord(int register, long data) {
+		long reg = A[register];
+		A[register] = ((reg & 0xFFFF_0000) | (data & 0xFFFF));
+		
+		if (register == 7) {
+			SSP = (int) A[register];
+		}
+	}
+	
+	public void setALong(int register, long data) {
+		A[register] = data & 0xFFFF_FFFFL;
+		
+		if (register == 7) {
+			SSP = (int) A[register];
+		}
+	}
+	
+	public void setDByte(int register, long data) {
+		long reg = D[register];
+		D[register] = ((reg & 0xFFFF_FF00) | (data & 0xFF));
+	}
+	
+	public void setDWord(int register, long data) {
+		long reg = D[register];
+		D[register] = ((reg & 0xFFFF_0000) | (data & 0xFFFF));
+	}
+	
+	public void setDLong(int register, long data) {
+		D[register] = data & 0xFFFF_FFFFL;
+	}
+	
+	public long getA(int register) {
 		return A[register] & 0xFFFF_FFFFL;
+	}
+	
+	public long getD(int register) {
+		return D[register] & 0xFFFF_FFFFL;
 	}
 
 	public void setX() {
@@ -368,20 +417,40 @@ public class Gen68 {
 				PC += 2;
 				// TODO check otros sizes
 
-			} else if (register == 0b011) {		 //	(d8,PC,Xi)		Full index mode
-				long displacement = (bus.read(PC + 2) << 8);
-				displacement 	 |= (bus.read(PC + 3));
-				displacement = displacement & 0xFF;		// es 8 bits, siempre el ultimo byte ?
+			} else if (register == 0b011) {		 //	(d8,PC,Xi)		PC With index operan
+				long exten  = (bus.read(PC + 2) << 8);
+				     exten |= (bus.read(PC + 3));
+				int displacement = (int) (exten & 0xFF);		// es 8 bits, siempre el ultimo byte ?
 				
-				long dataReg;
-				if (size == Size.word) {
-					 dataReg = D[register] & 0xFFFF;
+				if ((displacement & 0x80) > 0) { 	// sign extend
+					displacement = 0xFFFF_FF00 | displacement;
+				}
+				int idxRegNumber = (int) ((exten >> 12) & 0x07);
+				Size idxSize = ((exten & 0x0800) == 0x0800 ? Size.longW : Size.word);
+				boolean idxIsAddressReg = ((exten & 0x8000) == 0x8000);
+				
+				if (idxIsAddressReg) {
+					if (idxSize == Size.word) {
+						data = getA(idxRegNumber);
+						if ((data & 0x8000) > 0) {
+							data = 0xFFFF_0000 | data;
+						}
+					} else {
+						data = getA(idxRegNumber);
+					}
 				} else {
-					throw new RuntimeException("");
+					if (idxSize == Size.word) {
+						data = getD(idxRegNumber);
+						if ((data & 0x8000) > 0) {
+							data = 0xFFFF_0000 | data;
+						}
+					} else {
+						data = getD(idxRegNumber);
+					}
 				}
 				
-				data = PC + 2 + displacement + dataReg;
-				oper.setAddress(data);
+				long result = data = PC + 2 + displacement + data;
+				oper.setAddress(result);
 				
 				PC += 2;
 				
@@ -586,11 +655,42 @@ public class Gen68 {
 				
 				PC += 2;
 				
-			} else if (size == Size.word) {	//	word
+			} else if (size == Size.word) {
 				throw new RuntimeException("NOO");
-			} else if (size == Size.longW) {	//	long
+			} else if (size == Size.longW) {
 				throw new RuntimeException("NOO");
 			}
+		
+		} else if (mode == 0b110) {		//	 Address Register Indirect with Index (Base Displacement) Mode
+//			int ext = fetchPCWordSigned();
+//			displacement = signExtendByte(ext);
+//			idxRegNumber = (ext >> 12) & 0x07;
+//			idxSize = ((ext & 0x0800) == 0x0800 ? Size.Long : Size.Word);
+//			idxIsAddressReg = ((ext & 0x8000) == 0x8000);
+//			int idxVal;
+//			if(idxIsAddressReg)
+//			{
+//				if(idxSize == Size.Word)
+//				{
+//					idxVal = getAddrRegisterWordSigned(idxRegNumber);
+//				}
+//				else
+//				{
+//					idxVal = getAddrRegisterLong(idxRegNumber);
+//				}
+//			}
+//			else
+//			{
+//				if(idxSize == Size.Word)
+//				{
+//					idxVal = getDataRegisterWordSigned(idxRegNumber);
+//				}
+//				else
+//				{
+//					idxVal = getDataRegisterLong(idxRegNumber);
+//				}
+//			}
+//			address = getAddrRegisterLong(regNumber) + displacement + idxVal;
 			
 		} else if (mode == 0b111) {
 			if (register == 0b000) {			//	Abs.W

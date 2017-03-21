@@ -176,8 +176,8 @@ public class AND implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(Size.word, mode, register);
 		long data = o.getAddressingMode().getWord(o);
 		
-		long res = (cpu.D[destRegister] & 0xFFFF) & data;
-		cpu.D[destRegister] = (cpu.D[destRegister] & 0xFFFF_0000L) | res;
+		long res = (cpu.getD(destRegister) & 0xFFFF) & data;
+		cpu.setDWord(destRegister, res);
 		
 		calcFlags(res, Size.word.getMsb());
 	}

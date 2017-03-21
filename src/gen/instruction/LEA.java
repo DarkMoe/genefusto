@@ -104,7 +104,7 @@ public class LEA implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(Size.word, mode, register);
 		long addr = o.getAddress();
 		
-		cpu.A[destReg] = addr;
+		cpu.setALong(destReg, addr);
 	}
 
 }

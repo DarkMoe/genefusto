@@ -210,12 +210,12 @@ public class ASR implements GenInstructionHandler {
 		if (!ir) {
 			toShift = numRegister;
 		} else {
-			toShift = cpu.D[numRegister];
+			toShift = cpu.getD(numRegister);
 		}
 		
-		long shiftee = cpu.D[register] & 0xFFFF;
+		long shiftee = cpu.getD(register) & 0xFFFF;
 		long res = shiftee << toShift;
-		cpu.D[register] = (cpu.D[register] & 0xFFFF_0000L) | (res & 0xFFFF);
+		cpu.setDWord(register, res);
 					
 		calcFlags(res, shiftee, Size.word.getMsb(), 0xFFFF);
 	}
@@ -229,12 +229,12 @@ public class ASR implements GenInstructionHandler {
 		if (!ir) {
 			toShift = numRegister;
 		} else {
-			toShift = cpu.D[numRegister];
+			toShift = cpu.getD(numRegister);
 		}
 		
-		long shiftee = cpu.D[register];
+		long shiftee = cpu.getD(register);
 		long res = shiftee << toShift;
-		cpu.D[register] = res & 0xFFFF_FFFFL;
+		cpu.setDLong(register, res);
 					
 		calcFlags(res, shiftee, Size.longW.getMsb(), 0xFFFF_FFFFL);
 	}
@@ -256,12 +256,12 @@ public class ASR implements GenInstructionHandler {
 		if (!ir) {
 			toShift = numRegister;
 		} else {
-			toShift = cpu.D[numRegister];
+			toShift = cpu.getD(numRegister);
 		}
 		
-		long shiftee = cpu.D[register];
+		long shiftee = cpu.getD(register);
 		long res = shiftee >> toShift;
-		cpu.D[register] = res;
+		cpu.setDLong(register, res);
 					
 		calcFlags(res, shiftee, Size.longW.getMsb(), 0xFFFF_FFFFL);
 	}
