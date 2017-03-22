@@ -79,16 +79,19 @@ public class GenBus {
 	
 //	https://wiki.megadrive.org/index.php?title=IO_Registers
 	public void write(long address, long data, Size size) {
-		long addressL = (address & 0xFFFFFFFFL);
+		long addressL = (address & 0xFF_FFFF);
 		if (size == Size.BYTE) {
 			data = data & 0xFF;
 		} else if (size == Size.WORD) {
 			data = data & 0xFFFF;
 		} else {
-			data = data & 0xFFFF;	// manejado afuera, quias deberia manejarse tambien aca
+			data = data & 0xFFFF;	// manejado afuera, quizas deberia manejarse tambien aca
 		}
 		
-		if (addressL >= 0xA00000 && addressL <= 0xA0FFFF) {	//	Z80 addressing space
+		if (addressL <= 0x3FFFFF) {	//	Cartridge ROM/RAM
+			System.out.println("write cart rom ram ? " + Integer.toHexString((int) addressL));
+			
+		} else if (addressL >= 0xA00000 && addressL <= 0xA0FFFF) {	//	Z80 addressing space
 			int addr = (int) (address - 0xA00000);
 			if (size == Size.BYTE) {
 				z80.memory[addr] = (int) data;
@@ -156,6 +159,9 @@ public class GenBus {
 			
 		} else if (addressL >= 0xFF0000) {
 			long addr = (addressL & 0xFFFFFF) - 0xFF0000;
+			if (addr >= 0x10000 || addr < 0) {
+				System.out.println();
+			}
 			
 			if (size == Size.BYTE) {
 				memory.writeRam(addr, data);

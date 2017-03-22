@@ -153,7 +153,17 @@ public class OR implements GenInstructionHandler {
 	}
 	
 	private void ORSourceEAByte(int opcode) {
-		throw new RuntimeException("");
+		int register = (opcode & 0x7);
+		int mode = (opcode >> 3) & 0x7;
+		int destRegister = (opcode >> 9) & 0x7;
+		
+		Operation o = cpu.resolveAddressingMode(Size.BYTE, mode, register);
+		long data = o.getAddressingMode().getWord(o);
+		
+		long res = (cpu.getD(destRegister) & 0xFFFF) | data;
+		cpu.setDByte(destRegister, res);
+		
+		calcFlags(res, Size.BYTE.getMsb());
 	}
 
 	private void ORSourceEAWord(int opcode) {
@@ -171,7 +181,17 @@ public class OR implements GenInstructionHandler {
 	}
 	
 	private void ORSourceEALong(int opcode) {
-		throw new RuntimeException("");
+		int register = (opcode & 0x7);
+		int mode = (opcode >> 3) & 0x7;
+		int destRegister = (opcode >> 9) & 0x7;
+		
+		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
+		long data = o.getAddressingMode().getWord(o);
+		
+		long res = (cpu.getD(destRegister) & 0xFFFF) | data;
+		cpu.setDLong(destRegister, res);
+		
+		calcFlags(res, Size.LONG.getMsb());
 	}
 	
 	void calcFlags(long data, long msb) {

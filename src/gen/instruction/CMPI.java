@@ -168,7 +168,7 @@ public class CMPI implements GenInstructionHandler {
 		long toSub = o.getAddressingMode().getLong(o);
 		long res = toSub - data;
 		
-		calcFlags(res, Size.LONG.getMsb(), 0xFFFF_FFFF);
+		calcFlags(res, Size.LONG.getMsb(), 0xFFFF_FFFFL);
 	}
 	
 	void calcFlags(long data, int msb, long maxSize) {	// TODO V

@@ -2,16 +2,17 @@ package gen;
 
 import gen.addressing.AbsoluteLong;
 import gen.addressing.AbsoluteShort;
-import gen.addressing.AddressDisplacement;
+import gen.addressing.AddressRegisterWithDisplacement;
+import gen.addressing.AddressRegisterWithIndex;
 import gen.addressing.AddressRegisterDirect;
 import gen.addressing.AddressRegisterIndirect;
 import gen.addressing.AddressRegisterIndirectPostIncrement;
 import gen.addressing.AddressRegisterIndirectPreDecrement;
 import gen.addressing.AddressingMode;
 import gen.addressing.DataRegisterDirect;
-import gen.addressing.FullIndex;
+import gen.addressing.PCWithIndex;
 import gen.addressing.ImmediateData;
-import gen.addressing.PCIndirectDisplacement;
+import gen.addressing.PCWithDisplacement;
 import gen.instruction.ADD;
 import gen.instruction.ADDA;
 import gen.instruction.ADDQ;
@@ -28,6 +29,8 @@ import gen.instruction.CMP;
 import gen.instruction.CMPI;
 import gen.instruction.DBcc;
 import gen.instruction.EOR;
+import gen.instruction.EXT;
+import gen.instruction.JMP;
 import gen.instruction.JSR;
 import gen.instruction.LEA;
 import gen.instruction.LSL;
@@ -151,6 +154,8 @@ public class Genefusto {
         new CMPI(cpu).generate();
         new DBcc(cpu).generate();
         new EOR(cpu).generate();
+        new EXT(cpu).generate();
+        new JMP(cpu).generate();
         new JSR(cpu).generate();
         new LEA(cpu).generate();
         new LSL(cpu).generate();
@@ -180,14 +185,14 @@ public class Genefusto {
 			new AddressRegisterIndirect(cpu),
 			new AddressRegisterIndirectPostIncrement(cpu),
 			new AddressRegisterIndirectPreDecrement(cpu),
-			new AddressDisplacement(cpu),
-			null,
+			new AddressRegisterWithDisplacement(cpu),
+			new AddressRegisterWithIndex(cpu),
 			
 			new AbsoluteShort(cpu),
 			new AbsoluteLong(cpu),
-			new PCIndirectDisplacement(cpu),
-			new FullIndex(cpu),
-			new ImmediateData(cpu),
+			new PCWithDisplacement(cpu),
+			new PCWithIndex(cpu),
+			new ImmediateData(cpu),	//	solo si es un source operand TODO, si es writting es StatusRegisterOperand
 		};
 		
     	try {

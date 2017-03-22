@@ -4,31 +4,30 @@ import gen.Gen68;
 import gen.GenInstruction;
 import gen.Size;
 
-public class JSR implements GenInstructionHandler {
+public class JMP implements GenInstructionHandler {
 
 	final Gen68 cpu;
 	
-	public JSR(Gen68 cpu) {
+	public JMP(Gen68 cpu) {
 		this.cpu = cpu;
 	}
-	
+
 //	NAME
-//	JSR -- Jump to subroutine
+//	JMP -- Unconditional jump
+//
 //
 //SYNOPSIS
-//	JSR	<ea>
+//	JMP	<ea>
 //
 //FUNCTION
-//	Pushes the long word address of the instruction immediately
-//	following the JSR instruction onto the stack. The PC contains
-//	the address of the instruction word plus two. Program execution
-//	continues at location specified by <ea>.
+//	Program execution continues at the address specified by
+//	the operand.
 //
 //FORMAT
 //	-----------------------------------------------------------------
 //	|15 |14 |13 |12 |11 |10 | 9 | 8 | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
 //	|---|---|---|---|---|---|---|---|---|---|-----------|-----------|
-//	| 0 | 1 | 0 | 0 | 1 | 1 | 1 | 0 | 1 | 0 |    MODE   | REGISTER  |
+//	| 0 | 1 | 0 | 0 | 1 | 1 | 1 | 0 | 1 | 1 |    MODE   | REGISTER  |
 //	----------------------------------------=========================
 //	                                                   <ea>
 //REGISTER
@@ -64,14 +63,14 @@ public class JSR implements GenInstructionHandler {
 	
 	@Override
 	public void generate() {
-		int base = 0x4E80;
+		int base = 0x4EC0;
 		GenInstruction ins;
 		
 		ins = new GenInstruction() {
 			
 			@Override
 			public void run(int opcode) {
-				JumpSR(opcode);
+				JMPUnconditional(opcode);
 			}
 		};
 		
@@ -90,24 +89,12 @@ public class JSR implements GenInstructionHandler {
 		
 	}
 	
-	private void JumpSR(int opcode) {
+	private void JMPUnconditional(int opcode) {
 		int mode = (opcode >> 3) & 0x7;
 		int register = opcode & 0x7;
+		
 		Operation o = cpu.resolveAddressingMode(cpu.PC + 2, Size.LONG, mode, register);
 		long newPC = o.getAddress();
-		
-		long oldPC = cpu.PC + 2;
-		
-		cpu.SSP--;
-		cpu.bus.write(cpu.SSP, oldPC & 0xFF, Size.BYTE);
-		cpu.SSP--;
-		cpu.bus.write(cpu.SSP, (oldPC >> 8) & 0xFF, Size.BYTE);
-		cpu.SSP--;
-		cpu.bus.write(cpu.SSP, (oldPC >> 16) & 0xFF, Size.BYTE);
-		cpu.SSP--;
-		cpu.bus.write(cpu.SSP, (oldPC >> 24), Size.BYTE);
-		
-		cpu.setALong(7, cpu.SSP);
 		
 		cpu.PC = newPC - 2;
 	}

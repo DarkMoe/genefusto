@@ -81,19 +81,24 @@ public class Gen68 {
 	GenInstruction[] instructions = new GenInstruction[0x10000];
 	AddressingMode addressingModes[];
 	
+	StringBuilder sb = new StringBuilder();
+	
 	public int runInstruction() {
 		long opcode = (bus.read(PC) << 8);
 		opcode |= bus.read(PC + 1);
 		
-		System.out.println(pad4((int) PC) + " - Opcode: " + pad4((int) opcode) + " - SR: " + pad4(SR));
+		sb.append(pad4((int) PC) + " - Opcode: " + pad4((int) opcode) + " - SR: " + pad4(SR) + "\r\n");
 		for (int j = 0; j < 8; j++) {
-			System.out.print(" D" + j + ":" + Integer.toHexString((int) D[j]));
+			sb.append(" D" + j + ":" + Integer.toHexString((int) D[j]));
 		}
-		System.out.println();
+		sb.append("\r\n");
 		for (int j = 0; j < 8; j++) {
-			System.out.print(" A" + j + ":" + Integer.toHexString((int) A[j]));
+			sb.append(" A" + j + ":" + Integer.toHexString((int) A[j]));
 		}
-		System.out.println();
+		sb.append("\r\n");
+		System.out.println(sb.toString());
+		
+		sb.setLength(0);
 		
 		if (PC == 0x3c2) {
 			bus.vdp.vip = 1;	// hack horrible vblank
@@ -102,11 +107,7 @@ public class Gen68 {
 		
 		cycles = 0;
 		
-		if (PC == 0x3c2) {
-			System.out.println();
-		}
-		
-		if (D[7] == 0) {
+		if (PC == 0x4afc) {
 			System.out.println();
 		}
 		
@@ -371,6 +372,43 @@ public class Gen68 {
 			
 			PC += 2;
 			
+		} else if (mode == 0b110) {	//	AddressRegisterWithIndex
+			long exten  = (bus.read(PC + 2) << 8);
+		     	 exten |= (bus.read(PC + 3));
+			int displacement = (int) (exten & 0xFF);		// es 8 bits, siempre el ultimo byte ?
+			
+			if ((displacement & 0x80) > 0) { 	// sign extend
+				displacement = 0xFFFF_FF00 | displacement;
+			}
+			int idxRegNumber = (int) ((exten >> 12) & 0x07);
+			Size idxSize = ((exten & 0x0800) == 0x0800 ? Size.LONG : Size.WORD);
+			boolean idxIsAddressReg = ((exten & 0x8000) == 0x8000);
+			
+			if (idxIsAddressReg) {
+				if (idxSize == Size.WORD) {
+					data = getA(idxRegNumber);
+					if ((data & 0x8000) > 0) {
+						data = 0xFFFF_0000 | data;
+					}
+				} else {
+					data = getA(idxRegNumber);
+				}
+			} else {
+				if (idxSize == Size.WORD) {
+					data = getD(idxRegNumber);
+					if ((data & 0x8000) > 0) {
+						data = 0xFFFF_0000 | data;
+					}
+				} else {
+					data = getD(idxRegNumber);
+				}
+			}
+			
+			long result = getA(register) + displacement + data;
+			oper.setAddress(result);
+			
+			PC += 2;
+			
 		} else if (mode == 0b111) {
 			if (register == 0b000) {		//	Abs.W
 				addr  = (bus.read(offset) << 8);
@@ -386,7 +424,7 @@ public class Gen68 {
 //					data = (bus.read(addr) << 8);
 //					data |= bus.read(addr + 1);
 				} else {
-					throw new RuntimeException("AA");
+//					throw new RuntimeException("AA");
 				}
 				
 				oper.setAddress(addr);
@@ -416,7 +454,7 @@ public class Gen68 {
 				PC += 2;
 				// TODO check otros sizes
 
-			} else if (register == 0b011) {		 //	(d8,PC,Xi)		PC With index operan
+			} else if (register == 0b011) {		 //	(d8,PC,Xi)		PC With index operand
 				long exten  = (bus.read(PC + 2) << 8);
 				     exten |= (bus.read(PC + 3));
 				int displacement = (int) (exten & 0xFF);		// es 8 bits, siempre el ultimo byte ?
@@ -448,7 +486,7 @@ public class Gen68 {
 					}
 				}
 				
-				long result = data = PC + 2 + displacement + data;
+				long result = PC + 2 + displacement + data;
 				oper.setAddress(result);
 				
 				PC += 2;

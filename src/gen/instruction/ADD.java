@@ -169,7 +169,17 @@ public class ADD implements GenInstructionHandler {
 	}
 	
 	private void ADDLong(int opcode) {
-		throw new RuntimeException("C");
+		int dataRegister = (opcode >> 9) & 0x7;
+		int mode = (opcode >> 3) & 0x7;
+		int register = (opcode & 0x7);
+		
+		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
+		long data = o.getAddressingMode().getLong(o);
+		
+		long tot = (cpu.getD(dataRegister) + data);
+		cpu.setDLong(dataRegister, tot);
+		
+		calcFlags(tot, Size.LONG.getMsb(), 0xFFFF_FFFFL);
 	}
 	
 	void calcFlags(long tot, int msb, long maxSize) {//TODO  overflow
