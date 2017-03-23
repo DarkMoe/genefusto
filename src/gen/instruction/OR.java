@@ -143,7 +143,55 @@ public class OR implements GenInstructionHandler {
 					}
 					
 					for (int register = 0; register < 8; register++) {
-						int opcode = base + (register << 9) | (opMode << 6) | ((m << 3) | r);
+						int opcode = base | (register << 9) | (opMode << 6) | ((m << 3) | r);
+						cpu.addInstruction(opcode, ins);
+					}
+				}
+			}
+		}
+		
+		for (int opMode = 4; opMode < 7; opMode++) {
+			if (opMode == 0b100) {
+				ins = new GenInstruction() {
+					
+					@Override
+					public void run(int opcode) {
+						ORDestEAByte(opcode);
+					}
+
+				};
+			} else if (opMode == 0b101) {
+				ins = new GenInstruction() {
+					
+					@Override
+					public void run(int opcode) {
+						ORDestEAWord(opcode);
+					}
+
+				};
+			} else if (opMode == 0b110) {
+				ins = new GenInstruction() {
+					
+					@Override
+					public void run(int opcode) {
+						ORDestEALong(opcode);
+					}
+
+				};
+			}
+		
+			for (int m = 0; m < 8; m++) {
+				if (m == 0 || m == 1) {
+					continue;
+				}
+				
+				for (int r = 0; r < 8; r++) {
+					if ((m == 7) && r > 0b001) {
+						continue;
+					}
+					
+					for (int register = 0; register < 8; register++) {
+						int opcode = base | (register << 9) | (opMode << 6) | ((m << 3) | r);
 						cpu.addInstruction(opcode, ins);
 					}
 				}
@@ -192,6 +240,31 @@ public class OR implements GenInstructionHandler {
 		cpu.setDLong(destRegister, res);
 		
 		calcFlags(res, Size.LONG.getMsb());
+	}
+	
+	private void ORDestEAByte(int opcode) {
+		int register = (opcode & 0x7);
+		int mode = (opcode >> 3) & 0x7;
+		int sourceRegister = (opcode >> 9) & 0x7;
+		
+		long toOr = cpu.getD(sourceRegister) & 0xFF;
+		
+		Operation o = cpu.resolveAddressingMode(Size.BYTE, mode, register);
+		long data = o.getAddressingMode().getByte(o);
+		
+		long res = toOr | data;
+		
+		cpu.writeKnownAddressingMode(o, res, Size.BYTE);
+		
+		calcFlags(res, Size.BYTE.getMsb());
+	}
+	
+	private void ORDestEAWord(int opcode) {
+		throw new RuntimeException();
+	}
+	
+	private void ORDestEALong(int opcode) {
+		throw new RuntimeException();
 	}
 	
 	void calcFlags(long data, long msb) {

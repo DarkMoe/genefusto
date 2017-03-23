@@ -202,7 +202,26 @@ public class LSL implements GenInstructionHandler {
 	}
 	
 	private void LSLRegisterByte(int opcode) {
-		throw new RuntimeException("AA");
+		int register = (opcode & 0x7);
+		boolean ir = cpu.bitTest(opcode, 5);
+		int numRegister = (opcode >> 9) & 0x7;
+		
+		long toShift;
+		if (!ir) {
+			if (numRegister == 0) {
+				numRegister = 8;
+			}
+			toShift = numRegister;
+		} else {
+			toShift = cpu.getD(numRegister);
+		}
+		
+		long res = (cpu.getD(register) & 0xFF) << toShift;
+		cpu.setDByte(register, res);
+		
+		boolean carry = cpu.bitTest(res, 8);
+		
+		calcFlags(res, Size.BYTE.getMsb(), 0xFF, carry);
 	}
 	
 	private void LSLRegisterWord(int opcode) {
@@ -220,10 +239,12 @@ public class LSL implements GenInstructionHandler {
 			toShift = cpu.getD(numRegister);
 		}
 		
-		long res = cpu.getD(register) << toShift;
+		long res = (cpu.getD(register) & 0xFFFF) << toShift;
 		cpu.setDWord(register, res);
 		
-		calcFlags(res, Size.WORD.getMsb(), 0xFFFF, 16);
+		boolean carry = cpu.bitTest(res, 16);
+		
+		calcFlags(res, Size.WORD.getMsb(), 0xFFFF, carry);
 	}
 	
 	private void LSLRegisterLong(int opcode) {
@@ -244,7 +265,9 @@ public class LSL implements GenInstructionHandler {
 		long res = cpu.getD(register) << toShift;
 		cpu.setDLong(register, res);
 		
-		calcFlags(res, Size.LONG.getMsb(), 0xFFFF_FFFFL, 32);
+		boolean carry = cpu.bitTest(res, 32);
+		
+		calcFlags(res, Size.LONG.getMsb(), 0xFFFF_FFFFL, carry);
 	}
 	
 	private void LSRRegisterByte(int opcode) {
@@ -265,18 +288,19 @@ public class LSL implements GenInstructionHandler {
 		} else {
 			toShift = cpu.getD(numRegister);
 		}
-		
-		long res = cpu.getD(register) >> toShift;
+
+		boolean carry = (cpu.getD(register) & 0x1) == 0x1;
+		long res = (cpu.getD(register) & 0xFFFF) >> toShift;
 		cpu.setDWord(register, res);
 		
-		calcFlags(res, Size.WORD.getMsb(), 0xFFFF, 16);
+		calcFlags(res, Size.WORD.getMsb(), 0xFFFF, carry);
 	}
 
 	private void LSRRegisterLong(int opcode) {
 		throw new RuntimeException("AA");
 	}
 
-	void calcFlags(long data, long msb, long maxSize, int carryPosition) {
+	void calcFlags(long data, long msb, long maxSize, boolean carry) {
 		long wrapped = data & maxSize;
 		if (wrapped == 0) {
 			cpu.setZ();
@@ -291,8 +315,7 @@ public class LSL implements GenInstructionHandler {
 
 		cpu.clearV();
 		
-		boolean lastBitShifted = cpu.bitTest(data, carryPosition);
-		if (lastBitShifted) {
+		if (carry) {
 			cpu.setC();
 			cpu.setX();
 		} else {

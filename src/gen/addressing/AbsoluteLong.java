@@ -1,6 +1,7 @@
 package gen.addressing;
 
 import gen.Gen68;
+import gen.Size;
 import gen.instruction.Operation;
 
 public class AbsoluteLong implements AddressingMode {
@@ -13,7 +14,10 @@ public class AbsoluteLong implements AddressingMode {
 	
 	@Override
 	public void setByte(Operation o) {
-		throw new RuntimeException("NOO");
+		long address = o.getAddress();
+		long data = o.getData();
+		
+		cpu.bus.write(address, data, Size.BYTE);
 	}
 
 	@Override
@@ -37,7 +41,8 @@ public class AbsoluteLong implements AddressingMode {
 	@Override
 	public long getWord(Operation o) {
 		long addr = o.getAddress();
-		long data = (cpu.bus.read(addr)) & 0xFFFF;
+		long data  = (cpu.bus.read(addr)) << 8;
+			 data |= cpu.bus.read(addr + 1);
 		
 		return data;
 	}
@@ -45,7 +50,10 @@ public class AbsoluteLong implements AddressingMode {
 	@Override
 	public long getLong(Operation o) {
 		long addr = o.getAddress();
-		long data = (cpu.bus.read(addr));
+		long  data = (cpu.bus.read(addr)) << 24;
+			 data |= cpu.bus.read(addr + 1) << 16;
+			 data |= cpu.bus.read(addr + 2) << 8;
+			 data |= cpu.bus.read(addr + 3);
 		
 		return data;
 	}

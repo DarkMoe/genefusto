@@ -118,7 +118,17 @@ public class CMP implements GenInstructionHandler {
 	}
 
 	private void CMPByte(int opcode) {
-		throw new RuntimeException("JJ");
+		int dataRegister = (opcode >> 9) & 0x7;
+		int mode = (opcode >> 3) & 0x7;
+		int register = (opcode & 0x7);
+		
+		Operation o = cpu.resolveAddressingMode(Size.BYTE, mode, register);
+		long data = o.getAddressingMode().getByte(o);
+		
+		long toSub = (cpu.getD(dataRegister) & 0xFF);
+		long res = toSub - data;
+		
+		calcFlags(res, Size.BYTE.getMsb(), 0xFF);
 	}
 	
 	private void CMPWord(int opcode) {

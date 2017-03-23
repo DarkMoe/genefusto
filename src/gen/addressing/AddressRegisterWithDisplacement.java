@@ -41,14 +41,21 @@ public class AddressRegisterWithDisplacement implements AddressingMode {
 	@Override
 	public long getWord(Operation o) {
 		long addr = o.getAddress();
-		long data = cpu.bus.read(addr) & 0xFFFF;
+		long data  = cpu.bus.read(addr) << 8;
+			 data |= cpu.bus.read(addr + 1);
 		
 		return data;
 	}
 
 	@Override
 	public long getLong(Operation o) {
-		throw new RuntimeException("NOO");
+		long addr = o.getAddress();
+		long data  = cpu.bus.read(addr) << 24;
+			 data |= cpu.bus.read(addr + 1) << 16;
+			 data |= cpu.bus.read(addr + 2) << 8;
+			 data |= cpu.bus.read(addr + 3);
+		
+		return data;
 	}
 
 }

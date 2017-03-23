@@ -82,41 +82,8 @@ public class BCC implements GenInstructionHandler {
 	
 	private void bccByte(int opcode) {
 		int cc = (opcode >> 8) & 0xF;
-		boolean taken;
-		switch (cc) {
-		case 0b0000:
-			taken = true;
-			break;
-		case 0b0001:
-			// es un BSR
-			long oldPC = cpu.PC + 2;
-			
-			taken = true;
-			
-			cpu.SSP--;
-			cpu.bus.write(cpu.SSP, oldPC & 0xFF, Size.BYTE);
-			cpu.SSP--;
-			cpu.bus.write(cpu.SSP, (oldPC >> 8) & 0xFF, Size.BYTE);
-			cpu.SSP--;
-			cpu.bus.write(cpu.SSP, (oldPC >> 16) & 0xFF, Size.BYTE);
-			cpu.SSP--;
-			cpu.bus.write(cpu.SSP, (oldPC >> 24), Size.BYTE);
-			
-			cpu.setALong(7, cpu.SSP);
-			
-			break;
-		case 0b0100:
-			taken = !cpu.isC();
-			break;
-		case 0b0110:
-			taken = !cpu.isZ();
-			break;
-		case 0b0111:
-			taken = cpu.isZ();
-			break;
-			default:
-				throw new RuntimeException("not impl " + cc);
-		}
+
+		boolean taken = cpu.evaluateBranchCondition(cc, Size.BYTE);
 
 		long offset = opcode & 0xFF;
 		if ((offset & 0x80) == 0x80) {
@@ -132,39 +99,8 @@ public class BCC implements GenInstructionHandler {
 	
 	private void bccWord(int opcode) {
 		int cc = (opcode >> 8) & 0xF;
-		boolean taken;
 		
-		switch (cc) {
-		case 0b0000:
-			taken = true;
-			break;
-		case 0b0001:
-			// es un BSR
-			long oldPC = cpu.PC + 4;
-			
-			taken = true;
-			
-			cpu.SSP--;
-			cpu.bus.write(cpu.SSP, oldPC & 0xFF, Size.BYTE);
-			cpu.SSP--;
-			cpu.bus.write(cpu.SSP, (oldPC >> 8) & 0xFF, Size.BYTE);
-			cpu.SSP--;
-			cpu.bus.write(cpu.SSP, (oldPC >> 16) & 0xFF, Size.BYTE);
-			cpu.SSP--;
-			cpu.bus.write(cpu.SSP, (oldPC >> 24), Size.BYTE);
-			
-			cpu.setALong(7, cpu.SSP);
-			
-			break;
-		case 0b0110:
-			taken = !cpu.isZ();
-			break;
-		case 0b0111:
-			taken = cpu.isZ();
-			break;
-		default:
-			throw new RuntimeException("not impl " + cc);
-		}
+		boolean taken = cpu.evaluateBranchCondition(cc, Size.WORD);
 
 		long offset = cpu.bus.read(cpu.PC + 2) << 8;
 		offset |= cpu.bus.read(cpu.PC + 3);

@@ -82,6 +82,7 @@ public class Gen68 {
 	AddressingMode addressingModes[];
 	
 	StringBuilder sb = new StringBuilder();
+	private boolean print;
 	
 	public int runInstruction() {
 		long opcode = (bus.read(PC) << 8);
@@ -96,7 +97,9 @@ public class Gen68 {
 			sb.append(" A" + j + ":" + Integer.toHexString((int) A[j]));
 		}
 		sb.append("\r\n");
-		System.out.println(sb.toString());
+		if (print) {
+			System.out.println(sb.toString());
+		}
 		
 		sb.setLength(0);
 		
@@ -107,11 +110,14 @@ public class Gen68 {
 		
 		cycles = 0;
 		
-		if (PC == 0x4afc) {
+//		print = true;
+		
+		if (PC == 0x41CE) {
+			print = true;
 			System.out.println();
 		}
 		
- 		GenInstruction instruction = instructions[(int) opcode];
+ 		GenInstruction instruction = getInstruction((int) opcode);
 		instruction.run((int) opcode);
 		
 		PC += 2;
@@ -119,6 +125,14 @@ public class Gen68 {
 		return 0;
 	}
 	
+	private GenInstruction getInstruction(int opcode) {
+		GenInstruction instr = instructions[opcode];
+		if (instr == null) {
+			System.out.println("INSTR: " + Integer.toHexString(opcode));
+		}
+		return instr;
+	}
+
 	public void setAByte(int register, long data) {
 		long reg = A[register];
 		A[register] = ((reg & 0xFFFF_FF00) | (data & 0xFF));
@@ -175,12 +189,20 @@ public class Gen68 {
 		SR = bitReset(SR, 4);
 	}
 	
+	public boolean isX() {
+		return bitTest(SR, 4);
+	}
+	
 	public void setN() {
 		SR = bitSet(SR, 3);
 	}
 	
 	public void clearN() {
 		SR = bitReset(SR, 3);
+	}
+	
+	public boolean isN() {
+		return bitTest(SR, 3);
 	}
 	
 	public void setZ() {
@@ -201,6 +223,10 @@ public class Gen68 {
 	
 	public void clearV() {
 		SR = bitReset(SR, 1);
+	}
+	
+	public boolean isV() {
+		return bitTest(SR, 1);
 	}
 	
 	public void setC() {
@@ -386,7 +412,7 @@ public class Gen68 {
 			
 			if (idxIsAddressReg) {
 				if (idxSize == Size.WORD) {
-					data = getA(idxRegNumber);
+					data = getA(idxRegNumber) & 0xFFFF;	// confirmar este wrap aca
 					if ((data & 0x8000) > 0) {
 						data = 0xFFFF_0000 | data;
 					}
@@ -395,7 +421,7 @@ public class Gen68 {
 				}
 			} else {
 				if (idxSize == Size.WORD) {
-					data = getD(idxRegNumber);
+					data = getD(idxRegNumber) & 0xFFFF;
 					if ((data & 0x8000) > 0) {
 						data = 0xFFFF_0000 | data;
 					}
@@ -468,7 +494,7 @@ public class Gen68 {
 				
 				if (idxIsAddressReg) {
 					if (idxSize == Size.WORD) {
-						data = getA(idxRegNumber);
+						data = getA(idxRegNumber) & 0xFFFF;	// confirmar este wrap aca
 						if ((data & 0x8000) > 0) {
 							data = 0xFFFF_0000 | data;
 						}
@@ -477,7 +503,7 @@ public class Gen68 {
 					}
 				} else {
 					if (idxSize == Size.WORD) {
-						data = getD(idxRegNumber);
+						data = getD(idxRegNumber) & 0xFFFF;
 						if ((data & 0x8000) > 0) {
 							data = 0xFFFF_0000 | data;
 						}
@@ -690,13 +716,30 @@ public class Gen68 {
 				addr = (base + displac);
 				bus.write(addr, data & 0xFF, size);
 				
-				PC += 2;
-				
 			} else if (size == Size.WORD) {
-				throw new RuntimeException("NOO");
+				long base = A[register];
+				long displac = (bus.read(offset) << 8);
+				displac 	|= (bus.read(offset + 1));
+				
+				if ((displac & 0x8000) > 0) {
+					displac |= 0xFFFF_0000L;	// sign extend 32 bits
+				}
+				addr = (base + displac);
+				bus.write(addr, data & 0xFFFF, size);
+				
 			} else if (size == Size.LONG) {
-				throw new RuntimeException("NOO");
+				long base = A[register];
+				long displac = (bus.read(offset) << 8);
+				displac 	|= (bus.read(offset + 1));
+				
+				//	tiene sign extend esto ?
+				
+				addr = (base + displac);
+				bus.write(addr, (data >> 16), Size.WORD);		// FIXME, manejar write como long word y arreglar todo
+				bus.write(addr + 2, (data & 0xFFFF), Size.WORD);
 			}
+			
+			PC += 2;
 		
 		} else if (mode == 0b110) {		//	 Address Register Indirect with Index (Base Displacement) Mode
 			long exten  = (bus.read(PC + 2) << 8);
@@ -818,6 +861,79 @@ public class Gen68 {
 		}
 		totalInstructions++;
 		instructions[opcode] = ins;
+	}
+
+//	Condition code 'cc' specifies one of the following:
+//0000 F  False            Z = 1      1000 VC oVerflow Clear   V = 0
+//0001 T  True             Z = 0      1001 VS oVerflow Set     V = 1
+//0010 HI HIgh             C + Z = 0  1010 PL PLus             N = 0
+//0011 LS Low or Same      C + Z = 1  1011 MI MInus            N = 1
+//0100 CC Carry Clear      C = 0      1100 GE Greater or Equal N (+) V = 0
+//0101 CS Carry Set        C = 1      1101 LT Less Than        N (+) V = 1
+//0110 NE Not Equal        Z = 0      1110 GT Greater Than     Z + (N (+) V) = 0
+//0111 EQ EQual            Z = 1      1111 LE Less or Equal    Z + (N (+) V) = 1
+	public boolean evaluateBranchCondition(int cc, Size size) {
+		boolean taken;
+		
+		switch (cc) {
+		case 0b0000:
+			taken = true;
+			break;
+		case 0b0001:
+			// es un BSR
+			long oldPC;
+			if (size == Size.BYTE) {
+				oldPC = PC + 2;
+			} else if (size == Size.WORD) {
+				oldPC = PC + 4;
+			} else {
+				throw new RuntimeException("");
+			}
+			
+			taken = true;
+			
+			SSP--;
+			bus.write(SSP, oldPC & 0xFF, Size.BYTE);
+			SSP--;
+			bus.write(SSP, (oldPC >> 8) & 0xFF, Size.BYTE);
+			SSP--;
+			bus.write(SSP, (oldPC >> 16) & 0xFF, Size.BYTE);
+			SSP--;
+			bus.write(SSP, (oldPC >> 24), Size.BYTE);
+			
+			setALong(7, SSP);
+			
+			break;
+		case 0b0100:
+			taken = !isC();
+			break;
+		case 0b0101:
+			taken = isC();
+			break;
+		case 0b0110:
+			taken = !isZ();
+			break;
+		case 0b0111:
+			taken = isZ();
+			break;
+		case 0b1000:
+			taken = !isV();
+			break;
+		case 0b1001:
+			taken = isV();
+			break;
+		case 0b1010:
+			taken = !isN();
+			break;
+		case 0b1011:
+			taken = isN();
+			break;
+			
+			default:
+				throw new RuntimeException("not impl " + cc);
+		}
+		
+		return taken;
 	}
 	
 }
