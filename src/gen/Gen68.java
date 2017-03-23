@@ -103,17 +103,12 @@ public class Gen68 {
 		
 		sb.setLength(0);
 		
-		if (PC == 0x3c2) {
-			bus.vdp.vip = 1;	// hack horrible vblank
-			System.out.println();
-		}
-		
 		cycles = 0;
 		
 //		print = true;
 		
-		if (PC == 0x41CE) {
-			print = true;
+		if (PC == 0x85b0) {
+//			print = true;
 			System.out.println();
 		}
 		
@@ -128,7 +123,7 @@ public class Gen68 {
 	private GenInstruction getInstruction(int opcode) {
 		GenInstruction instr = instructions[opcode];
 		if (instr == null) {
-			System.out.println("INSTR: " + Integer.toHexString(opcode));
+			System.out.println("PC: " + Integer.toHexString((int) PC) + " - INSTR: " + Integer.toHexString(opcode));
 		}
 		return instr;
 	}

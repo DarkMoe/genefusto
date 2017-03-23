@@ -155,7 +155,24 @@ public class BSET implements GenInstructionHandler {
 	}
 	
 	private void BSETImmediateLong(int opcode) {
-		throw new RuntimeException("");
+		int mode = (opcode >> 3) & 0x7;
+		int register = opcode & 0x7;
+		
+		long numberBit  = (cpu.bus.read(cpu.PC + 2)) << 8;
+			 numberBit |= cpu.bus.read(cpu.PC + 3);
+		numberBit = numberBit & 0xFF;
+		
+		cpu.PC += 2;
+		
+		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
+		long data = o.getAddressingMode().getLong(o);
+		
+		calcFlags(data, (int) numberBit);
+	
+		data = cpu.bitSet((int) data, (int) numberBit);
+		o.setData(data);
+		
+		cpu.writeKnownAddressingMode(o, data, Size.LONG);
 	}
 	
 	

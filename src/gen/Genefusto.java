@@ -15,6 +15,7 @@ import gen.addressing.ImmediateData;
 import gen.addressing.PCWithDisplacement;
 import gen.instruction.ADD;
 import gen.instruction.ADDA;
+import gen.instruction.ADDI;
 import gen.instruction.ADDQ;
 import gen.instruction.AND;
 import gen.instruction.ANDI;
@@ -38,6 +39,7 @@ import gen.instruction.MOVE;
 import gen.instruction.MOVEA;
 import gen.instruction.MOVEM;
 import gen.instruction.MOVEQ;
+import gen.instruction.MOVE_FROM_SR;
 import gen.instruction.MOVE_TO_FROM_USP;
 import gen.instruction.MOVE_TO_SR;
 import gen.instruction.NOP;
@@ -48,6 +50,7 @@ import gen.instruction.ORI_SR;
 import gen.instruction.RTE;
 import gen.instruction.RTS;
 import gen.instruction.SUB;
+import gen.instruction.SUBI;
 import gen.instruction.SUBQ;
 import gen.instruction.SWAP;
 import gen.instruction.TST;
@@ -140,6 +143,7 @@ public class Genefusto {
 
         new ADD(cpu).generate();
         new ADDA(cpu).generate();
+        new ADDI(cpu).generate();
         new ADDQ(cpu).generate();
         new AND(cpu).generate();
         new ANDI(cpu).generate();
@@ -161,6 +165,7 @@ public class Genefusto {
         new LSL(cpu).generate();
         new MOVE(cpu).generate();
         new MOVEA(cpu).generate();
+        new MOVE_FROM_SR(cpu).generate();
         new MOVE_TO_SR(cpu).generate();
         new MOVE_TO_FROM_USP(cpu).generate();
         new MOVEM(cpu).generate();
@@ -173,6 +178,7 @@ public class Genefusto {
         new RTE(cpu).generate();
         new RTS(cpu).generate();
         new SUB(cpu).generate();
+        new SUBI(cpu).generate();
         new SUBQ(cpu).generate();
         new SWAP(cpu).generate();
         new TST(cpu).generate();
@@ -422,6 +428,7 @@ public class Genefusto {
             	}
             	cpu.runInstruction();
             	bus.checkInterrupts();
+            	vdp.run(1);
             	vdp.dma();
             }
         } catch (RuntimeException e) {

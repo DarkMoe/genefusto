@@ -540,5 +540,17 @@ public class GenVdp {
         }
         return s;
     }
+
+    int totalCycles = 0;
+    
+	public void run(int cycles) {
+		totalCycles += cycles;
+		if (totalCycles == 251503) {
+			totalCycles = 0;
+			vip = 1;
+		}
+		
+		
+	}
 	
 }

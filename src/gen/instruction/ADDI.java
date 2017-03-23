@@ -4,40 +4,39 @@ import gen.Gen68;
 import gen.GenInstruction;
 import gen.Size;
 
-public class SUBQ implements GenInstructionHandler {
+public class ADDI implements GenInstructionHandler {
 
 	final Gen68 cpu;
 	
-	public SUBQ(Gen68 cpu) {
+	public ADDI(Gen68 cpu) {
 		this.cpu = cpu;
 	}
 
 //	NAME
-//	SUBQ -- Subtract 3-bit immediate quick
+//	ADDI -- Add immediate
 //
 //SYNOPSIS
-//	SUBQ	#<data>,<ea>
+//	ADDI	#<data>,<ea>
 //
 //	Size = (Byte, Word, Long)
 //
 //FUNCTION
-//	Subtracts the immediate value of 1 to 8 to the operand at the
-//	destination location. The size of the operation may be specified as
-//	byte, word, or long. When subtracting to address registers,
-//        the condition codes are not altered, and the entire destination
-//        address register is used regardless of the operation size.
+//	Adds the immediate data to the destination operand, and
+//	stores the result in the destination location. The size of the
+//	operation may be specified as byte, word, or long. The size of the
+//	immediate data matches the operation size.
 //
 //FORMAT
-//	-----------------------------------------------------------------
-//	|15 |14 |13 |12 |11 |10 | 9 | 8 | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
-//	|---|---|---|---|-----------|---|-------|-----------|-----------|
-//	| 0 | 1 | 0 | 1 |    DATA   | 1 | SIZE  |    MODE   |  REGISTER |
-//	----------------------------------------=========================
 //                                                          <ea>
-//
-//DATA
-//	000        ->represent value 8
-//	001 to 111 ->immediate data from 1 to 7
+//	----------------------------------------=========================
+//	|15 |14 |13 |12 |11 |10 | 9 | 8 | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
+//	|---|---|---|---|---|---|---|---|-------|-----------|-----------|
+//	| 0 | 0 | 0 | 0 | 0 | 1 | 1 | 0 | SIZE  |   MODE    |  REGISTER |
+//	|---------------------------------------------------------------|
+//	| 16 BITS DATA (with last Byte) |          8 BITS DATA          |
+//	|---------------------------------------------------------------|
+//	|             32 BITS DATA (included last Word)                 |
+//	-----------------------------------------------------------------
 //
 //SIZE
 //	00->one Byte operation
@@ -52,7 +51,7 @@ public class SUBQ implements GenInstructionHandler {
 //	|-------------------------------| |-----------------------------|
 //	|      Dn       |000 |N° reg. Dn| |    Abs.W      |111 |  000   |
 //	|-------------------------------| |-----------------------------|
-//	|      An *     |001 |N° reg. An| |    Abs.L      |111 |  001   |
+//	|      An       | -  |     -    | |    Abs.L      |111 |  001   |
 //	|-------------------------------| |-----------------------------|
 //	|     (An)      |010 |N° reg. An| |   (d16,PC)    | -  |   -    |
 //	|-------------------------------| |-----------------------------|
@@ -70,7 +69,6 @@ public class SUBQ implements GenInstructionHandler {
 //	|-------------------------------|
 //	|([bd,An],Xi,od)|110 |N° reg. An|
 //	---------------------------------
-//	 * Word or Long only.
 //
 //RESULT
 //	X - Set the same as the carry bit.
@@ -81,89 +79,81 @@ public class SUBQ implements GenInstructionHandler {
 	
 	@Override
 	public void generate() {
-		int base = 0x5100;
-		GenInstruction ins = null;
+		int base = 0x0600;
+		GenInstruction ins;
 		
 		for (int s = 0; s < 3; s++) {
 			if (s == 0b00) {
 				ins = new GenInstruction() {
+					
 					@Override
 					public void run(int opcode) {
-						SUBQByte(opcode);
+						ADDIByte(opcode);
 					}
+
 				};
 			} else if (s == 0b01) {
 				ins = new GenInstruction() {
+					
 					@Override
 					public void run(int opcode) {
-						SUBQWord(opcode);
+						ADDIWord(opcode);
 					}
+
 				};
-			} else if (s == 0b10) {
+			} else {
 				ins = new GenInstruction() {
+					
 					@Override
 					public void run(int opcode) {
-						SUBQLong(opcode);
+						ADDILong(opcode);
 					}
+
 				};
 			}
+		
 			for (int m = 0; m < 8; m++) {
+				if (m == 1) {
+					continue;
+				}
+				
 				for (int r = 0; r < 8; r++) {
-					if (m == 0b111 & r > 0b001) {
+					if ((m == 7) && r > 0b001) {
 						continue;
 					}
-					for (int d = 0; d < 8; d++) {
-						int opcode = base + ((d << 9) | (s << 6) | (m << 3) | r);
-						cpu.addInstruction(opcode, ins);
-					}
+					
+					int opcode = base | (s << 6) | (m << 3) | r;
+					cpu.addInstruction(opcode, ins);
 				}
 			}
 		}
 		
 	}
 	
-	private void SUBQByte(int opcode) {
-		throw new RuntimeException("A");
+	private void ADDIByte(int opcode) {
+		throw new RuntimeException();
 	}
-	
-	private void SUBQWord(int opcode) {
-		int dataToSub = (opcode >> 9) & 0x7;
+
+	private void ADDIWord(int opcode) {
+		long data  = cpu.bus.read(cpu.PC + 2) << 8;
+		 	 data |= cpu.bus.read(cpu.PC + 3);
+		
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 		
-		if (dataToSub == 0) {
-			dataToSub = 8;
-		}
-		
 		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
-		long data = o.getAddressingMode().getWord(o);
+		long toAdd = o.getAddressingMode().getWord(o);
 		
-		long tot = (data - dataToSub);
-		long total = (data & 0xFFFF_0000L) | (tot & 0x0000_FFFF) & 0xFFFF_FFFFL;
+		long tot = toAdd + data;
+		cpu.writeKnownAddressingMode(o, tot, Size.WORD);
 		
-		cpu.writeKnownAddressingMode(o, total, Size.WORD);
+		cpu.PC += 2;
 		
 		calcFlags(tot, Size.WORD.getMsb(), Size.WORD.getMax());
 	}
 	
-	private void SUBQLong(int opcode) {
-		int dataToSub = (opcode >> 9) & 0x7;
-		int mode = (opcode >> 3) & 0x7;
-		int register = (opcode & 0x7);
-		
-		if (dataToSub == 0) {
-			dataToSub = 8;
-		}
-		
-		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
-		long data = o.getAddressingMode().getLong(o);
-		
-		long tot = (data - dataToSub);
-		long total = tot & 0xFFFF_FFFFL;
-		
-		cpu.writeKnownAddressingMode(o, total, Size.LONG);
-		
-		calcFlags(tot, Size.LONG.getMsb(), Size.LONG.getMax());
+	private void ADDILong(int opcode) {
+		throw new RuntimeException();
 	}
 	
 	void calcFlags(long tot, int msb, long maxSize) {//TODO  overflow
@@ -172,12 +162,12 @@ public class SUBQ implements GenInstructionHandler {
 		} else {
 			cpu.clearZ();
 		}
-		if (((tot & maxSize) & msb) > 0) {
+		if ((tot & msb) > 0) {
 			cpu.setN();
 		} else {
 			cpu.clearN();
 		}
-		if (tot < 0) {
+		if (tot > maxSize) {
 			cpu.setC();
 			cpu.setX();
 		} else {

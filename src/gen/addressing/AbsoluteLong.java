@@ -22,7 +22,10 @@ public class AbsoluteLong implements AddressingMode {
 
 	@Override
 	public void setWord(Operation o) {
-		throw new RuntimeException("NOO");
+		long address = o.getAddress();
+		long data = o.getData();
+		
+		cpu.bus.write(address, data, Size.WORD);
 	}
 
 	@Override
