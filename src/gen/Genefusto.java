@@ -68,7 +68,8 @@ import gen.instruction.MOVE_FROM_SR;
 import gen.instruction.MOVE_TO_CCR;
 import gen.instruction.MOVE_TO_FROM_USP;
 import gen.instruction.MOVE_TO_SR;
-import gen.instruction.MUL;
+import gen.instruction.MULS;
+import gen.instruction.MULU;
 import gen.instruction.NEG;
 import gen.instruction.NOP;
 import gen.instruction.NOT;
@@ -178,7 +179,8 @@ public class Genefusto {
         new MOVE_TO_FROM_USP(cpu).generate();
         new MOVEM(cpu).generate();
         new MOVEQ(cpu).generate();
-        new MUL(cpu).generate();
+        new MULS(cpu).generate();
+        new MULU(cpu).generate();
         new NEG(cpu).generate();
         new NOP(cpu).generate();
         new NOT(cpu).generate();
@@ -441,7 +443,7 @@ public class Genefusto {
             	}
             	cpu.runInstruction();
             	bus.checkInterrupts();
-            	vdp.run(8);
+            	vdp.run(12);
             	vdp.dmaOperation();
             }
         } catch (RuntimeException e) {

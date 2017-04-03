@@ -126,18 +126,18 @@ public class ANDI implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 		
+		long toAnd  = (cpu.bus.read(cpu.PC + 2)) << 8;
+	 	 	 toAnd |= (cpu.bus.read(cpu.PC + 3));
+	 	toAnd = toAnd & 0xFF;	//	ocupa 2 bytes, pero solo se toma el ultimo
+		
+	 	cpu.PC += 2;
+	 	 
 		Operation o = cpu.resolveAddressingMode(Size.BYTE, mode, register);
 		long data = o.getAddressingMode().getByte(o);
 		
-		long toAnd  = (cpu.bus.read(cpu.PC + 2)) << 8;
-		 	 toAnd |= (cpu.bus.read(cpu.PC + 3));
-		 	 toAnd = toAnd & 0xFF;	//	ocupa 2 bytes, pero solo se toma el ultimo
-		
 		long res = data & toAnd;
-		cpu.writeAddressingMode(Size.BYTE, 0, res, mode, register);
+		cpu.writeKnownAddressingMode(o, res, Size.BYTE);
 		 	 
-		cpu.PC += 2;
-		
 		calcFlags(res, Size.BYTE.getMsb());
 	}
 	
@@ -145,17 +145,17 @@ public class ANDI implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 		
+		long toAnd  = (cpu.bus.read(cpu.PC + 2)) << 8;
+	 	 	 toAnd |= (cpu.bus.read(cpu.PC + 3));
+		
+	 	cpu.PC += 2;
+	 	 
 		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
 		long data = o.getAddressingMode().getWord(o);
 		
-		long toAnd  = (cpu.bus.read(cpu.PC + 2)) << 8;
-		 	 toAnd |= (cpu.bus.read(cpu.PC + 3));
-		
 		long res = data & toAnd;
-		cpu.writeAddressingMode(Size.WORD, 0, res, mode, register);
+		cpu.writeKnownAddressingMode(o, res, Size.WORD);
 		 	 
-		cpu.PC += 2;
-		
 		calcFlags(res, Size.WORD.getMsb());
 	}
 	
@@ -163,19 +163,19 @@ public class ANDI implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 		
+		long toAnd  = (cpu.bus.read(cpu.PC + 2)) << 24;
+			 toAnd |= (cpu.bus.read(cpu.PC + 3)) << 16;
+			 toAnd |= (cpu.bus.read(cpu.PC + 4)) << 8;
+			 toAnd |= (cpu.bus.read(cpu.PC + 5));
+		
+	 	cpu.PC += 4;
+	 	 
 		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
 		long data = o.getAddressingMode().getLong(o);
 		
-		long toAnd  = (cpu.bus.read(cpu.PC + 2)) << 24;
-		 	 toAnd |= (cpu.bus.read(cpu.PC + 3)) << 16;
-		     toAnd |= (cpu.bus.read(cpu.PC + 4)) << 8;
-		     toAnd |= (cpu.bus.read(cpu.PC + 5));
-		
 		long res = data & toAnd;
-		cpu.writeAddressingMode(Size.LONG, 0, res, mode, register);
+		cpu.writeKnownAddressingMode(o, res, Size.LONG);
 		 	 
-		cpu.PC += 4;
-		
 		calcFlags(res, Size.LONG.getMsb());
 	}
 	

@@ -59,10 +59,10 @@ public class ANDI_SR implements GenInstructionHandler {
 		long toAnd  = (cpu.bus.read(cpu.PC + 2)) << 8;
 		 	 toAnd |= (cpu.bus.read(cpu.PC + 3));
 		
+	 	cpu.PC += 2;
+		 	 
 		long res = cpu.SR & toAnd;
 		cpu.SR = (int) res;
-		
-		cpu.PC += 2;
 	}
 	
 }

@@ -224,6 +224,15 @@ public class GenVdp {
 				es = 	((data >> 0) & 1) == 1;
 				
 			} else if (reg == 0x01) {
+				if ((disp) && ((data & 0x40) == 0x40)) {	// el display estaba prendido pero se apago
+					for (int i = 0; i < 320; i++) {
+						for (int j = 0; j < 256; j++) {
+							screenData[i][j] = 0;
+							bus.emu.renderScreen();
+						}
+					}
+				}
+				
 				evram = ((data >> 7) & 1) == 1;
 				disp = 	((data >> 6) & 1) == 1;
 				ie0 = 	((data >> 5) & 1) == 1;
@@ -589,6 +598,10 @@ public class GenVdp {
 		
 		vram[offset] 	 = data1;
 		vram[offset + 1] = data2;
+		
+		System.out.println("addr: " + Integer.toHexString(offset) + " - data: " + Integer.toHexString(data1));
+		System.out.println("addr: " + Integer.toHexString(offset + 1) + " - data: " + Integer.toHexString(data2));
+		
 		fifoAddress[index] = offset;
 		fifoCode[index] = code;
 		fifoData[index] = word;
@@ -787,7 +800,7 @@ public class GenVdp {
 				
 				for (int filas = 0; filas < 8; filas++) {
 					for (int k = 0; k < 4; k++) {
-						int grab = (tileIndex + k) + (filas * 2);
+						int grab = (tileIndex + k) + (filas * 4);
 						int data = vram[grab];
 						
 						if (data != 0) {
@@ -797,11 +810,15 @@ public class GenVdp {
 						int pixel1 = (data & 0xF0) >> 4;
 						int pixel2 = data & 0x0F;
 						
-						int colorIndex1 = paletteLine + pixel1;
-						int colorIndex2 = paletteLine + pixel2;
+						int colorIndex1 = paletteLine + (pixel1 * 2);
+						int colorIndex2 = paletteLine + (pixel2 * 2);
 						
 						int color1 = cram[colorIndex1] << 8 | cram[colorIndex1 + 1];
 						int color2 = cram[colorIndex2] << 8 | cram[colorIndex2 + 1];
+						
+						if (color1 != 0) {
+							System.out.println();
+						}
 						
 						int r = (color1 >> 1) & 0x7;
 						int g = (color1 >> 5) & 0x7;
@@ -824,9 +841,9 @@ public class GenVdp {
 	}
 	
 	private int getColour(int red, int green, int blue) {
-        int extrapoRed = ((red + 1) * 8) - 1;						//	el maximo (1F) es 31 en decimal, al multiplicarlo por 8 da 248 (el blanco puro siendo 255)
-        int extrapoGreen = ((green + 1) * 8) - 1;					//	asi esta extrapolado casi perfecto y linealmente. Solo queda el caso del negro, que en lugar
-        int extrapoBlue = ((blue + 1) * 8) - 1;						// de ser 0, queda en 7 (se puede poner un if y ya)
+        int extrapoRed = ((red + 1) * 32) - 1;						//	el maximo (1F) es 31 en decimal, al multiplicarlo por 8 da 248 (el blanco puro siendo 255)
+        int extrapoGreen = ((green + 1) * 32) - 1;					//	asi esta extrapolado casi perfecto y linealmente. Solo queda el caso del negro, que en lugar
+        int extrapoBlue = ((blue + 1) * 32) - 1;						// de ser 0, queda en 7 (se puede poner un if y ya)
         
         int elco = extrapoRed << 16 | extrapoGreen << 8 | extrapoBlue;
         

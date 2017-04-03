@@ -267,11 +267,49 @@ public class ASR implements GenInstructionHandler {
 	}
 	
 	private void ASRByte(int opcode) {
-		throw new RuntimeException("AA");
+		int register = (opcode & 0x7);
+		boolean ir = cpu.bitTest(opcode, 5);
+		int numRegister = (opcode >> 9) & 0x7;
+		
+		long toShift;
+		if (!ir) {
+			if (numRegister == 0) {
+				toShift = 8;
+			} else {
+				toShift = numRegister;
+			}
+		} else {
+			toShift = cpu.getD(numRegister);
+		}
+		
+		long shiftee = cpu.getD(register) & 0xFF;
+		long res = shiftee >> toShift;
+		cpu.setDByte(register, res);
+					
+		calcFlags(res, shiftee, Size.BYTE.getMsb(), 0xFF);
 	}
 	
 	private void ASRWord(int opcode) {
-		throw new RuntimeException("AA");
+		int register = (opcode & 0x7);
+		boolean ir = cpu.bitTest(opcode, 5);
+		int numRegister = (opcode >> 9) & 0x7;
+		
+		long toShift;
+		if (!ir) {
+			if (numRegister == 0) {
+				toShift = 8;
+			} else {
+				toShift = numRegister;
+			}
+		} else {
+			toShift = cpu.getD(numRegister);
+		}
+		
+		long shiftee = cpu.getD(register) & 0xFFFF;
+		long res = shiftee >> toShift;
+		cpu.setDWord(register, res);
+					
+		calcFlags(res, shiftee, Size.WORD.getMsb(), 0xFFFF);
 	}
 	
 	private void ASRLong(int opcode) {

@@ -106,29 +106,55 @@ public class SUB implements GenInstructionHandler {
 		int base = 0x9000;
 		GenInstruction ins = null;
 		
-		for (int opMode = 0; opMode < 3; opMode++) {
+		for (int opMode = 0; opMode < 7; opMode++) {
 			if (opMode == 0b000) {
 				ins = new GenInstruction() {
 					@Override
 					public void run(int opcode) {
-						SUBByte(opcode);
+						SUB_EASource_Byte(opcode);
 					}
 				};
 			} else if (opMode == 0b001) {
 				ins = new GenInstruction() {
 					@Override
 					public void run(int opcode) {
-						SUBWord(opcode);
+						SUB_EASource_Word(opcode);
 					}
 				};
 			} else if (opMode == 0b010) {
 				ins = new GenInstruction() {
 					@Override
 					public void run(int opcode) {
-						SUBLong(opcode);
+						SUB_EASource_Long(opcode);
+					}
+				};
+			} else if (opMode == 0b100) {
+				ins = new GenInstruction() {
+					@Override
+					public void run(int opcode) {
+						SUB_EADest_Byte(opcode);
+					}
+				};
+			} else if (opMode == 0b101) {
+				ins = new GenInstruction() {
+					@Override
+					public void run(int opcode) {
+						SUB_EADest_Word(opcode);
+					}
+				};
+			} else if (opMode == 0b110) {
+				ins = new GenInstruction() {
+					@Override
+					public void run(int opcode) {
+						SUB_EADest_Long(opcode);
 					}
 				};
 			}
+			
+			if (opMode == 3) {	// opMode es 0, 1, 2 .. o 4, 5, 6
+				continue;
+			}
+			
 			for (int register = 0; register < 8; register++) {
 				for (int m = 0; m < 8; m++) {
 					if (m == 1 && opMode == 0b000) {	// byte size no tiene este modo
@@ -147,11 +173,21 @@ public class SUB implements GenInstructionHandler {
 		
 	}
 	
-	private void SUBByte(int opcode) {
-		throw new RuntimeException("A");
+	private void SUB_EASource_Byte(int opcode) {
+		int dataRegister = (opcode >> 9) & 0x7;
+		int mode = (opcode >> 3) & 0x7;
+		int register = (opcode & 0x7);
+		
+		Operation o = cpu.resolveAddressingMode(Size.BYTE, mode, register);
+		long data = o.getAddressingMode().getByte(o);
+		
+		long tot = ((cpu.getD(dataRegister) & 0xFF) - data);
+		cpu.setDByte(dataRegister, tot);
+		
+		calcFlags(tot, Size.BYTE.getMsb(), Size.BYTE.getMax());
 	}
 	
-	private void SUBWord(int opcode) {
+	private void SUB_EASource_Word(int opcode) {
 		int dataRegister = (opcode >> 9) & 0x7;
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
@@ -165,7 +201,7 @@ public class SUB implements GenInstructionHandler {
 		calcFlags(tot, Size.WORD.getMsb(), Size.WORD.getMax());
 	}
 	
-	private void SUBLong(int opcode) {
+	private void SUB_EASource_Long(int opcode) {
 		int dataRegister = (opcode >> 9) & 0x7;
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
@@ -177,6 +213,30 @@ public class SUB implements GenInstructionHandler {
 		cpu.setDLong(dataRegister, tot);
 		
 		calcFlags(tot, Size.LONG.getMsb(), 0xFFFF_FFFFL);
+	}
+	
+	private void SUB_EADest_Byte(int opcode) {
+		throw new RuntimeException("A");
+	}
+	
+	private void SUB_EADest_Word(int opcode) {
+		int dataRegister = (opcode >> 9) & 0x7;
+		int mode = (opcode >> 3) & 0x7;
+		int register = (opcode & 0x7);
+		
+		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
+		long data = o.getAddressingMode().getWord(o);
+		
+		long toSub = cpu.getD(dataRegister) & 0xFFFF;
+		long tot = (data - toSub);
+	
+		cpu.writeKnownAddressingMode(o, tot, Size.WORD);
+		
+		calcFlags(tot, Size.WORD.getMsb(), Size.WORD.getMax());
+	}
+	
+	private void SUB_EADest_Long(int opcode) {
+		throw new RuntimeException("A");
 	}
 	
 	void calcFlags(long tot, int msb, long maxSize) {//TODO  overflow

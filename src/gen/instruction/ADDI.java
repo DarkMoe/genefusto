@@ -131,29 +131,32 @@ public class ADDI implements GenInstructionHandler {
 	}
 	
 	private void ADDIByte(int opcode) {
-		long data  = cpu.bus.read(cpu.PC + 2) << 8;
-			 data |= cpu.bus.read(cpu.PC + 3);
-	
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
-		
+	
+		long data  = cpu.bus.read(cpu.PC + 2) << 8;
+			 data |= cpu.bus.read(cpu.PC + 3);
+		data = data & 0xFF;
+			 
+		cpu.PC += 2;
+			 
 		Operation o = cpu.resolveAddressingMode(Size.BYTE, mode, register);
 		long toAdd = o.getAddressingMode().getByte(o);
 		
 		long tot = toAdd + data;
 		cpu.writeKnownAddressingMode(o, tot, Size.BYTE);
 		
-		cpu.PC += 2;
-		
 		calcFlags(tot, Size.BYTE.getMsb(), Size.BYTE.getMax());
 	}
 
 	private void ADDIWord(int opcode) {
+		int mode = (opcode >> 3) & 0x7;
+		int register = (opcode & 0x7);
+
 		long data  = cpu.bus.read(cpu.PC + 2) << 8;
 		 	 data |= cpu.bus.read(cpu.PC + 3);
 		
-		int mode = (opcode >> 3) & 0x7;
-		int register = (opcode & 0x7);
+	 	cpu.PC += 2;
 		
 		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
 		long toAdd = o.getAddressingMode().getWord(o);
@@ -161,16 +164,30 @@ public class ADDI implements GenInstructionHandler {
 		long tot = toAdd + data;
 		cpu.writeKnownAddressingMode(o, tot, Size.WORD);
 		
-		cpu.PC += 2;
-		
 		calcFlags(tot, Size.WORD.getMsb(), Size.WORD.getMax());
 	}
 	
 	private void ADDILong(int opcode) {
-		throw new RuntimeException();
+		int mode = (opcode >> 3) & 0x7;
+		int register = (opcode & 0x7);
+
+		long data  = cpu.bus.read(cpu.PC + 2) << 24;
+		 	 data |= cpu.bus.read(cpu.PC + 3) << 16;
+		  	 data |= cpu.bus.read(cpu.PC + 4) << 8;
+		 	 data |= cpu.bus.read(cpu.PC + 5);
+		
+	 	cpu.PC += 4;
+		
+		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
+		long toAdd = o.getAddressingMode().getLong(o);
+		
+		long tot = toAdd + data;
+		cpu.writeKnownAddressingMode(o, tot, Size.LONG);
+		
+		calcFlags(tot, Size.LONG.getMsb(), Size.LONG.getMax());
 	}
 	
-	void calcFlags(long tot, int msb, long maxSize) {//TODO  overflow
+	void calcFlags(long tot, int msb, long maxSize) {	//TODO  overflow
 		if ((tot & maxSize) == 0) {
 			cpu.setZ();
 		} else {

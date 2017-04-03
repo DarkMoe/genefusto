@@ -30,7 +30,11 @@ public class AddressRegisterWithDisplacement implements AddressingMode {
 
 	@Override
 	public void setLong(Operation o) {
-		throw new RuntimeException("NOO");
+		long addr = o.getAddress();
+		long data = o.getData();
+
+		cpu.bus.write(addr, (data >> 16), Size.LONG);
+		cpu.bus.write(addr + 2, (data & 0xFFFF), Size.LONG);
 	}
 	
 	@Override

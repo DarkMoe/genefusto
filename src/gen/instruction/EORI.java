@@ -126,56 +126,65 @@ public class EORI implements GenInstructionHandler {
 	}
 	
 	private void EORIByte(int opcode) {
-		long data = cpu.bus.read(cpu.PC + 2) << 8;
-			data |= cpu.bus.read(cpu.PC + 3);
-		data = data & 0xFF;
-		
-		int destReg = (opcode & 0x7);
-		int destMode = (opcode >> 3) & 0x7;
-		
-		data = (cpu.getD(destReg) & 0xFF) ^ data;
-		data &= 0xFFFF_FFFFL;
-				
-		cpu.writeAddressingMode(Size.BYTE, cpu.PC + 2, data, destMode, destReg);
-		
-		cpu.PC += 2;		
-		
-		calcFlags(data, Size.BYTE.getMsb());
-	}
-
-	private void EORIWord(int opcode) {
-		long data = cpu.bus.read(cpu.PC + 2) << 8;
-			data |= cpu.bus.read(cpu.PC + 3);
-		
-		int destReg = (opcode & 0x7);
-		int destMode = (opcode >> 3) & 0x7;
-		
-		data = (cpu.getD(destReg) & 0xFFFF) ^ data;
-		data &= 0xFFFF_FFFFL;
-				
-		cpu.writeAddressingMode(Size.WORD, cpu.PC + 2, data, destMode, destReg);
+		int mode = (opcode >> 3) & 0x7;
+		int register = (opcode & 0x7);
+	
+		long toEor  = cpu.bus.read(cpu.PC + 2) << 8;
+			 toEor |= cpu.bus.read(cpu.PC + 3);
+		toEor = toEor & 0xFF;
 		
 		cpu.PC += 2;
 		
-		calcFlags(data, Size.WORD.getMsb());
+		Operation o = cpu.resolveAddressingMode(Size.BYTE, mode, register);
+		long data = o.getAddressingMode().getByte(o);
+		
+		long res = toEor ^ data;
+		res &= 0xFFFF_FFFFL;
+				
+		cpu.writeKnownAddressingMode(o, res, Size.BYTE);
+		
+		calcFlags(res, Size.BYTE.getMsb());
+	}
+
+	private void EORIWord(int opcode) {
+		int mode = (opcode >> 3) & 0x7;
+		int register = (opcode & 0x7);
+	
+		long toEor  = cpu.bus.read(cpu.PC + 2) << 8;
+			 toEor |= cpu.bus.read(cpu.PC + 3);
+		
+		cpu.PC += 2;
+		
+		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
+		long data = o.getAddressingMode().getWord(o);
+		
+		long res = toEor ^ data;
+		res &= 0xFFFF_FFFFL;
+				
+		cpu.writeKnownAddressingMode(o, res, Size.WORD);
+		
+		calcFlags(res, Size.WORD.getMsb());
 	}
 	
 	private void EORILong(int opcode) {
-		long data  = (cpu.bus.read(cpu.PC + 2)) << 24;
-	 	 	 data |= (cpu.bus.read(cpu.PC + 3)) << 16;
-	 	 	 data |= (cpu.bus.read(cpu.PC + 4)) << 8;
-	 	 	 data |= (cpu.bus.read(cpu.PC + 5));
+		int mode = (opcode >> 3) & 0x7;
+		int register = (opcode & 0x7);
 		
-		int destReg = (opcode & 0x7);
-		int destMode = (opcode >> 3) & 0x7;
+		long toEor  = (cpu.bus.read(cpu.PC + 2)) << 24;
+			 toEor |= (cpu.bus.read(cpu.PC + 3)) << 16;
+			 toEor |= (cpu.bus.read(cpu.PC + 4)) << 8;
+			 toEor |= (cpu.bus.read(cpu.PC + 5));
 		
-		data = cpu.getD(destReg) ^ data;
-		data &= 0xFFFF_FFFFL;
-		
-		cpu.writeAddressingMode(Size.LONG, cpu.PC + 2, data, destMode, destReg);
-				
 		cpu.PC += 4;
-		
+	 	 	
+		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
+		long data = o.getAddressingMode().getLong(o);
+			
+		long res = toEor ^ data;
+		res &= 0xFFFF_FFFFL;
+					
+		cpu.writeKnownAddressingMode(o, res, Size.LONG);
+				
 		calcFlags(data, Size.LONG.getMsb());
 	}
 	

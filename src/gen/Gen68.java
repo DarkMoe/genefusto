@@ -108,11 +108,7 @@ public class Gen68 {
 //		print = true;
 //		
 		
-		if (PC == 0x8202) {
-//			print = true;
-			System.out.println();
-		}
-		if (PC == 0x8260) {
+		if (PC == 0x31b0) {
 //			print = true;
 			System.out.println();
 		}
