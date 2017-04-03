@@ -48,10 +48,10 @@ public class ImmediateData implements AddressingMode {
 	@Override
 	public long getLong(Operation o) {
 		long addr = o.getAddress();
-		long data = (cpu.bus.read(addr) << 24);
-			data |= (cpu.bus.read(addr + 1) << 16);
-			data |= (cpu.bus.read(addr + 2) << 8);
-			data |= (cpu.bus.read(addr + 3));
+		long data  = (cpu.bus.read(addr) << 24);
+			 data |= (cpu.bus.read(addr + 1) << 16);
+			 data |= (cpu.bus.read(addr + 2) << 8);
+			 data |= (cpu.bus.read(addr + 3));
 		
 		return data;
 	}

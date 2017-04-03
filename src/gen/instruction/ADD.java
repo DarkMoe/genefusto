@@ -109,29 +109,58 @@ public class ADD implements GenInstructionHandler {
 		int base = 0xD000;
 		GenInstruction ins = null;
 		
-		for (int opMode = 0; opMode < 3; opMode++) {
+		for (int opMode = 0; opMode < 7; opMode++) {
 			if (opMode == 0b000) {
 				ins = new GenInstruction() {
 					@Override
 					public void run(int opcode) {
-						ADDByte(opcode);
+						ADD_EASource_Byte(opcode);
 					}
 				};
 			} else if (opMode == 0b001) {
 				ins = new GenInstruction() {
 					@Override
 					public void run(int opcode) {
-						ADDWord(opcode);
+						ADD_EASource_Word(opcode);
 					}
 				};
 			} else if (opMode == 0b010) {
 				ins = new GenInstruction() {
 					@Override
 					public void run(int opcode) {
-						ADDLong(opcode);
+						ADD_EASource_Long(opcode);
 					}
 				};
+			} else if (opMode == 0b100) {
+				ins = new GenInstruction() {
+					@Override
+					public void run(int opcode) {
+						ADD_EADest_Long(opcode);
+					}
+				};
+				
+			} else if (opMode == 0b101) {
+				ins = new GenInstruction() {
+					@Override
+					public void run(int opcode) {
+						ADD_EADest_Long(opcode);
+					}
+				};
+				
+			} else if (opMode == 0b110) {
+				ins = new GenInstruction() {
+					@Override
+					public void run(int opcode) {
+						ADD_EADest_Long(opcode);
+					}
+				};
+				
 			}
+			
+			if (opMode == 0b011) {
+				continue;
+			}
+			
 			for (int register = 0; register < 8; register++) {
 				for (int m = 0; m < 8; m++) {
 					if (m == 1 && opMode == 0b000) {	// byte size no tiene este modo
@@ -150,7 +179,7 @@ public class ADD implements GenInstructionHandler {
 		
 	}
 	
-	private void ADDByte(int opcode) {
+	private void ADD_EASource_Byte(int opcode) {
 		int dataRegister = (opcode >> 9) & 0x7;
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
@@ -164,7 +193,7 @@ public class ADD implements GenInstructionHandler {
 		calcFlags(tot, Size.BYTE.getMsb(), 0xFF);
 	}
 	
-	private void ADDWord(int opcode) {
+	private void ADD_EASource_Word(int opcode) {
 		int dataRegister = (opcode >> 9) & 0x7;
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
@@ -178,7 +207,7 @@ public class ADD implements GenInstructionHandler {
 		calcFlags(tot, Size.WORD.getMsb(), 0xFFFF);
 	}
 	
-	private void ADDLong(int opcode) {
+	private void ADD_EASource_Long(int opcode) {
 		int dataRegister = (opcode >> 9) & 0x7;
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
@@ -192,7 +221,32 @@ public class ADD implements GenInstructionHandler {
 		calcFlags(tot, Size.LONG.getMsb(), 0xFFFF_FFFFL);
 	}
 	
-	void calcFlags(long tot, int msb, long maxSize) {//TODO  overflow
+	private void ADD_EADest_Byte(int opcode) {
+		throw new RuntimeException("");
+	}
+	
+	private void ADD_EADest_Word(int opcode) {
+		throw new RuntimeException("");
+	}
+	
+	private void ADD_EADest_Long(int opcode) {
+		int dataRegister = (opcode >> 9) & 0x7;
+		int mode = (opcode >> 3) & 0x7;
+		int register = (opcode & 0x7);
+		
+		long toAdd = cpu.getD(dataRegister);
+		
+		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
+		long data = o.getAddressingMode().getLong(o);
+		
+		long tot = (toAdd + data);
+		
+		cpu.writeKnownAddressingMode(o, tot, Size.LONG);
+		
+		calcFlags(tot, Size.LONG.getMsb(), 0xFFFF_FFFFL);
+	}
+	
+	void calcFlags(long tot, int msb, long maxSize) {	//TODO  overflow
 		if ((tot & maxSize) == 0) {
 			cpu.setZ();
 		} else {

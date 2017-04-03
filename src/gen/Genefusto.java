@@ -1,60 +1,5 @@
 package gen;
 
-import gen.addressing.AbsoluteLong;
-import gen.addressing.AbsoluteShort;
-import gen.addressing.AddressRegisterWithDisplacement;
-import gen.addressing.AddressRegisterWithIndex;
-import gen.addressing.AddressRegisterDirect;
-import gen.addressing.AddressRegisterIndirect;
-import gen.addressing.AddressRegisterIndirectPostIncrement;
-import gen.addressing.AddressRegisterIndirectPreDecrement;
-import gen.addressing.AddressingMode;
-import gen.addressing.DataRegisterDirect;
-import gen.addressing.PCWithIndex;
-import gen.addressing.ImmediateData;
-import gen.addressing.PCWithDisplacement;
-import gen.instruction.ADD;
-import gen.instruction.ADDA;
-import gen.instruction.ADDI;
-import gen.instruction.ADDQ;
-import gen.instruction.AND;
-import gen.instruction.ANDI;
-import gen.instruction.ANDI_SR;
-import gen.instruction.ASR;
-import gen.instruction.BCC;
-import gen.instruction.BCLR;
-import gen.instruction.BSET;
-import gen.instruction.BTST;
-import gen.instruction.CLR;
-import gen.instruction.CMP;
-import gen.instruction.CMPI;
-import gen.instruction.DBcc;
-import gen.instruction.EOR;
-import gen.instruction.EXT;
-import gen.instruction.JMP;
-import gen.instruction.JSR;
-import gen.instruction.LEA;
-import gen.instruction.LSL;
-import gen.instruction.MOVE;
-import gen.instruction.MOVEA;
-import gen.instruction.MOVEM;
-import gen.instruction.MOVEQ;
-import gen.instruction.MOVE_FROM_SR;
-import gen.instruction.MOVE_TO_FROM_USP;
-import gen.instruction.MOVE_TO_SR;
-import gen.instruction.NOP;
-import gen.instruction.NOT;
-import gen.instruction.OR;
-import gen.instruction.ORI;
-import gen.instruction.ORI_SR;
-import gen.instruction.RTE;
-import gen.instruction.RTS;
-import gen.instruction.SUB;
-import gen.instruction.SUBI;
-import gen.instruction.SUBQ;
-import gen.instruction.SWAP;
-import gen.instruction.TST;
-
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -79,6 +24,67 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.filechooser.FileFilter;
 
+import gen.addressing.AbsoluteLong;
+import gen.addressing.AbsoluteShort;
+import gen.addressing.AddressRegisterDirect;
+import gen.addressing.AddressRegisterIndirect;
+import gen.addressing.AddressRegisterIndirectPostIncrement;
+import gen.addressing.AddressRegisterIndirectPreDecrement;
+import gen.addressing.AddressRegisterWithDisplacement;
+import gen.addressing.AddressRegisterWithIndex;
+import gen.addressing.AddressingMode;
+import gen.addressing.DataRegisterDirect;
+import gen.addressing.ImmediateData;
+import gen.addressing.PCWithDisplacement;
+import gen.addressing.PCWithIndex;
+import gen.instruction.ADD;
+import gen.instruction.ADDA;
+import gen.instruction.ADDI;
+import gen.instruction.ADDQ;
+import gen.instruction.AND;
+import gen.instruction.ANDI;
+import gen.instruction.ANDI_SR;
+import gen.instruction.ASR;
+import gen.instruction.BCC;
+import gen.instruction.BCLR;
+import gen.instruction.BSET;
+import gen.instruction.BTST;
+import gen.instruction.CLR;
+import gen.instruction.CMP;
+import gen.instruction.CMPI;
+import gen.instruction.DBcc;
+import gen.instruction.EOR;
+import gen.instruction.EORI;
+import gen.instruction.EXT;
+import gen.instruction.JMP;
+import gen.instruction.JSR;
+import gen.instruction.LEA;
+import gen.instruction.LSL;
+import gen.instruction.MOVE;
+import gen.instruction.MOVEA;
+import gen.instruction.MOVEM;
+import gen.instruction.MOVEQ;
+import gen.instruction.MOVE_FROM_SR;
+import gen.instruction.MOVE_TO_CCR;
+import gen.instruction.MOVE_TO_FROM_USP;
+import gen.instruction.MOVE_TO_SR;
+import gen.instruction.MUL;
+import gen.instruction.NEG;
+import gen.instruction.NOP;
+import gen.instruction.NOT;
+import gen.instruction.OR;
+import gen.instruction.ORI;
+import gen.instruction.ORI_SR;
+import gen.instruction.ROR;
+import gen.instruction.ROXL;
+import gen.instruction.RTE;
+import gen.instruction.RTS;
+import gen.instruction.SUB;
+import gen.instruction.SUBI;
+import gen.instruction.SUBQ;
+import gen.instruction.SWAP;
+import gen.instruction.Scc;
+import gen.instruction.TST;
 import test.FileLoader;
 
 //	MEMORY MAP:	https://en.wikibooks.org/wiki/Genesis_Programming
@@ -108,7 +114,7 @@ public class Genefusto {
     
     StringBuilder lineLog = new StringBuilder(300);
     
-    static BufferedImage img = new BufferedImage(160, 144, BufferedImage.TYPE_INT_RGB);
+    static BufferedImage img = new BufferedImage(320, 256, BufferedImage.TYPE_INT_RGB);
     
     public static void main(String[] args) throws Exception {
         // Create the frame on the event dispatching thread
@@ -130,7 +136,7 @@ public class Genefusto {
     	bus = new GenBus(this, null, null, null, null, null);
         
     	memory = new GenMemory();
-        vdp = new GenVdp();
+        vdp = new GenVdp(bus);
         z80 = new GenZ80(bus);
         cpu = new Gen68(bus);
         joypad = new GenJoypad();
@@ -158,6 +164,7 @@ public class Genefusto {
         new CMPI(cpu).generate();
         new DBcc(cpu).generate();
         new EOR(cpu).generate();
+        new EORI(cpu).generate();
         new EXT(cpu).generate();
         new JMP(cpu).generate();
         new JSR(cpu).generate();
@@ -166,17 +173,23 @@ public class Genefusto {
         new MOVE(cpu).generate();
         new MOVEA(cpu).generate();
         new MOVE_FROM_SR(cpu).generate();
+        new MOVE_TO_CCR(cpu).generate();
         new MOVE_TO_SR(cpu).generate();
         new MOVE_TO_FROM_USP(cpu).generate();
         new MOVEM(cpu).generate();
         new MOVEQ(cpu).generate();
+        new MUL(cpu).generate();
+        new NEG(cpu).generate();
         new NOP(cpu).generate();
         new NOT(cpu).generate();
         new OR(cpu).generate();
         new ORI(cpu).generate();
         new ORI_SR(cpu).generate();
+        new ROR(cpu).generate();
+        new ROXL(cpu).generate();
         new RTE(cpu).generate();
         new RTS(cpu).generate();
+        new Scc(cpu).generate();
         new SUB(cpu).generate();
         new SUBI(cpu).generate();
         new SUBQ(cpu).generate();
@@ -428,8 +441,8 @@ public class Genefusto {
             	}
             	cpu.runInstruction();
             	bus.checkInterrupts();
-            	vdp.run(1);
-            	vdp.dma();
+            	vdp.run(8);
+            	vdp.dmaOperation();
             }
         } catch (RuntimeException e) {
             throw e;
@@ -439,16 +452,16 @@ public class Genefusto {
 	private int currentMultiplier = 1;
 	public boolean runZ80 = false;
 	
-	private void renderScreen() {
+	void renderScreen() {
 	    int m = currentMultiplier;
 	    
-	    for (int i = 0; i < 144; i++) {
-	        for (int j = 0; j < 160; j++) {
-//	            int color = vdp.screenData[j][i];
+	    for (int i = 0; i < 256; i++) {
+	        for (int j = 0; j < 320; j++) {
+	            int color = vdp.screenData[j][i];
 	            
-	            int pos = ((i * m) * (160 * m)) + (j * m);
+	            int pos = ((i * m) * (320 * m)) + (j * m);
 	
-//	            	pixels[pos] = color;
+	            pixels[pos] = color;
 	        }
 	    }
 	    

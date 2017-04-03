@@ -88,6 +88,8 @@ public class EXT implements GenInstructionHandler {
 		
 		if ((data & 0x80) > 0) {
 			data |= 0xFF00;
+		} else {
+			data &= 0x00FF;
 		}
 
 		cpu.setDWord(register, data);

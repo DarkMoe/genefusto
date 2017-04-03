@@ -125,7 +125,15 @@ public class ADDA implements GenInstructionHandler {
 	}
 	
 	private void ADDALong(int opcode) {
-		throw new RuntimeException("C");
+		int addrRegister = (opcode >> 9) & 0x7;
+		int mode = (opcode >> 3) & 0x7;
+		int register = (opcode & 0x7);
+		
+		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
+		long data = o.getAddressingMode().getLong(o);
+		
+		long tot = (cpu.getA(addrRegister) + data);
+		cpu.setALong(addrRegister, tot);
 	}
 	
 }

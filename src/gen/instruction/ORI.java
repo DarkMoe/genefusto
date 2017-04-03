@@ -70,9 +70,7 @@ public class ORI implements GenInstructionHandler {
 		
 		for (int s = 0; s < 3; s++) {
 			if (s == 0b00) {
-				base = 0000;
 				ins = new GenInstruction() {
-					
 					@Override
 					public void run(int opcode) {
 						ORIByte(opcode);
@@ -80,9 +78,7 @@ public class ORI implements GenInstructionHandler {
 
 				};
 			} else if (s == 0b01) {
-				base = 0x0040;
 				ins = new GenInstruction() {
-					
 					@Override
 					public void run(int opcode) {
 						ORIWord(opcode);
@@ -90,9 +86,7 @@ public class ORI implements GenInstructionHandler {
 
 				};
 			} else {
-				base = 0x0080;
 				ins = new GenInstruction() {
-					
 					@Override
 					public void run(int opcode) {
 						ORILong(opcode);
@@ -111,7 +105,7 @@ public class ORI implements GenInstructionHandler {
 						continue;
 					}
 					
-					int opcode = base + ((m << 3) | r);
+					int opcode = base | (s << 6) | (m << 3) | r;
 					cpu.addInstruction(opcode, ins);
 				}
 			}

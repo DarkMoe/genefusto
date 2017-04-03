@@ -71,7 +71,7 @@ public class GenBus {
 			return memory.readRam(address);
 			
 		} else {
-			throw new RuntimeException("NOT MAPPED: " + pad4(address));
+			throw new RuntimeException("NOT MAPPED: " + pad4(address) + " - " + pad4(cpu.PC));
 		}
 		
 		return 0;
@@ -94,13 +94,12 @@ public class GenBus {
 		} else if (addressL >= 0xA00000 && addressL <= 0xA0FFFF) {	//	Z80 addressing space
 			int addr = (int) (address - 0xA00000);
 			if (size == Size.BYTE) {
-				z80.memory[addr] = (int) data;
+				z80.writeByte(addr, data);
 			} else {
-				z80.memory[addr] = (int) (data >> 8);
-				z80.memory[addr + 1] = (int) (data & 0xFF);
+				z80.writeWord(addr, data);
 			}
 			
-			System.out.println("Z80: " + pad4(addr) + " " + pad((int) data));
+//			System.out.println("Z80: " + pad4(addr) + " " + pad((int) data));
 			
 		} else if (address == 0xA10002 || address == 0xA10003) {	//	Controller 1 data
 			joypad.writeDataRegister1(data);

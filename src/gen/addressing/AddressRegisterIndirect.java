@@ -42,6 +42,7 @@ public class AddressRegisterIndirect implements AddressingMode {
 		long addr = o.getAddress();
 
 		long data = (cpu.bus.read(addr));
+		
 		return data;
 	}
 
@@ -51,6 +52,7 @@ public class AddressRegisterIndirect implements AddressingMode {
 
 		long data  = (cpu.bus.read(addr) << 8);
 			 data |= (cpu.bus.read(addr + 1));
+			 
 		return data;
 	}
 
@@ -62,6 +64,7 @@ public class AddressRegisterIndirect implements AddressingMode {
 			 data |= (cpu.bus.read(addr + 1) << 16);
 			 data |= (cpu.bus.read(addr + 2) << 8);
 			 data |= (cpu.bus.read(addr + 3) << 0);
+			 
 		return data;
 	}
 

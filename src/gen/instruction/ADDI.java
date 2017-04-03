@@ -131,7 +131,21 @@ public class ADDI implements GenInstructionHandler {
 	}
 	
 	private void ADDIByte(int opcode) {
-		throw new RuntimeException();
+		long data  = cpu.bus.read(cpu.PC + 2) << 8;
+			 data |= cpu.bus.read(cpu.PC + 3);
+	
+		int mode = (opcode >> 3) & 0x7;
+		int register = (opcode & 0x7);
+		
+		Operation o = cpu.resolveAddressingMode(Size.BYTE, mode, register);
+		long toAdd = o.getAddressingMode().getByte(o);
+		
+		long tot = toAdd + data;
+		cpu.writeKnownAddressingMode(o, tot, Size.BYTE);
+		
+		cpu.PC += 2;
+		
+		calcFlags(tot, Size.BYTE.getMsb(), Size.BYTE.getMax());
 	}
 
 	private void ADDIWord(int opcode) {

@@ -4,31 +4,31 @@ import gen.Gen68;
 import gen.GenInstruction;
 import gen.Size;
 
-public class NOT implements GenInstructionHandler {
+public class NEG implements GenInstructionHandler {
 
 	final Gen68 cpu;
 	
-	public NOT(Gen68 cpu) {
+	public NEG(Gen68 cpu) {
 		this.cpu = cpu;
 	}
-	
+
 //	NAME
-//	NOT -- Logical complement
+//	NEG -- Negate
 //
 //SYNOPSIS
-//	NOT	<ea>
+//	NEG	<ea>
 //
 //	Size = (Byte, Word, Long)
 //
 //FUNCTION
-//	All bits of the specified operand are inverted and placed
-//	back in the operand.
+//	The operand specified by <ea> is subtracted from
+//	zero. The result is stored in <ea>.
 //
 //FORMAT
 //	-----------------------------------------------------------------
 //	|15 |14 |13 |12 |11 |10 | 9 | 8 | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
 //	|---|---|---|---|---|---|---|---|-------|-----------|-----------|
-//	| 0 | 1 | 0 | 0 | 0 | 1 | 1 | 0 | SIZE  |    MODE   | REGISTER  |
+//	| 0 | 1 | 0 | 0 | 0 | 1 | 0 | 0 | SIZE  |    MODE   | REGISTER  |
 //	----------------------------------------=========================
 //	                                                   <ea>
 //
@@ -64,15 +64,15 @@ public class NOT implements GenInstructionHandler {
 //	---------------------------------
 //
 //RESULT
-//	X - Not affected.
+//	X - Set the same as the carry bit.
 //	N - Set if the result is negative, otherwise cleared.
 //	Z - Set if the result is zero, otherwise cleared.
-//	V - Always cleared.
-//	C - Always cleared.
+//	V - Set if overflow, otherwise cleared.
+//	C - Cleared if the result is zero, otherwise set.
 	
 	@Override
 	public void generate() {
-		int base = 0x4600;
+		int base = 0x4400;
 		GenInstruction ins = null;
 		
 		for (int s = 0; s < 3; s++) {
@@ -81,7 +81,7 @@ public class NOT implements GenInstructionHandler {
 					
 					@Override
 					public void run(int opcode) {
-						NOTByte(opcode);
+						NEGByte(opcode);
 					}
 					
 				};
@@ -90,7 +90,7 @@ public class NOT implements GenInstructionHandler {
 					
 					@Override
 					public void run(int opcode) {
-						NOTWord(opcode);
+						NEGWord(opcode);
 					}
 					
 				};
@@ -99,7 +99,7 @@ public class NOT implements GenInstructionHandler {
 					
 					@Override
 					public void run(int opcode) {
-						NOTLong(opcode);
+						NEGLong(opcode);
 					}
 					
 				};
@@ -120,41 +120,73 @@ public class NOT implements GenInstructionHandler {
 		}
 	}
 	
-	private void NOTByte(int opcode) {
+	private void NEGByte(int opcode) {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 		
 		Operation o = cpu.resolveAddressingMode(Size.BYTE, mode, register);
 		long data = o.getAddressingMode().getByte(o);
-		data = (~data) & 0xFF;
+		
+		long res = 0 - data;
 
-		cpu.writeKnownAddressingMode(o, data, Size.BYTE);
+		boolean overflow = false;
+		if (((res & 0x80) & (data & 0x80)) > 0) {	//	solo hay overflow si ambos parametros son negativos
+			overflow = true;
+		}
+		
+		cpu.writeKnownAddressingMode(o, res, Size.BYTE);
 				
-		calcFlags(data, Size.BYTE.getMsb());
+		calcFlags(res, Size.BYTE.getMsb(), 0xFF, overflow);
 	}
 	
-	private void NOTWord(int opcode) {
+	private void NEGWord(int opcode) {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 		
 		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
 		long data = o.getAddressingMode().getWord(o);
-		data = (~data) & 0xFFFF;
+		
+		long res = 0 - data;
 
-		cpu.writeKnownAddressingMode(o, data, Size.WORD);
+		boolean overflow = false;
+		if (((res & 0x8000) & (data & 0x8000)) > 0) {	//	solo hay overflow si ambos parametros son negativos
+			overflow = true;
+		}
+		
+		cpu.writeKnownAddressingMode(o, res, Size.WORD);
 				
-		calcFlags(data, Size.WORD.getMsb());
+		calcFlags(res, Size.WORD.getMsb(), 0xFFFF, overflow);
 	}
 
-	private void NOTLong(int opcode) {
-		throw new RuntimeException("");
+	private void NEGLong(int opcode) {
+		int mode = (opcode >> 3) & 0x7;
+		int register = (opcode & 0x7);
+		
+		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
+		long data = o.getAddressingMode().getWord(o);
+		
+		long res = 0 - data;
+
+		boolean overflow = false;
+		if (((res & 0x8000_0000) & (data & 0x8000_0000)) > 0) {	//	solo hay overflow si ambos parametros son negativos
+			overflow = true;
+		}
+		
+		cpu.writeKnownAddressingMode(o, res, Size.LONG);
+				
+		calcFlags(res, Size.LONG.getMsb(), 0xFFFF_FFFFL, overflow);
 	}
 	
-	void calcFlags(long data, long msb) {
-		if (data == 0) {
+	void calcFlags(long data, long msb, long max, boolean overflow) {
+		long wrap = data & max;
+		if (wrap == 0) {
 			cpu.setZ();
+			cpu.clearC();
+			cpu.clearX();
 		} else {
 			cpu.clearZ();
+			cpu.setC();
+			cpu.setX();
 		}
 		if ((data & msb) > 0) {
 			cpu.setN();
@@ -162,8 +194,11 @@ public class NOT implements GenInstructionHandler {
 			cpu.clearN();
 		}
 		
-		cpu.clearV();
-		cpu.clearC();
+		if (overflow) {
+			cpu.setV();
+		} else {
+			cpu.clearV();
+		}
 	}
 	
 }

@@ -106,14 +106,19 @@ public class Gen68 {
 		cycles = 0;
 		
 //		print = true;
+//		
 		
-		if (PC == 0x85b0) {
+		if (PC == 0x8202) {
+//			print = true;
+			System.out.println();
+		}
+		if (PC == 0x8260) {
 //			print = true;
 			System.out.println();
 		}
 		
  		GenInstruction instruction = getInstruction((int) opcode);
-		instruction.run((int) opcode);
+  		instruction.run((int) opcode);
 		
 		PC += 2;
 		
@@ -264,7 +269,7 @@ public class Gen68 {
 		SSP |= (bus.read(2) << 8);
 		SSP |= (bus.read(3) << 0);
 		
-		USP = 0xFFFFFFFF;
+		USP = 0xFFFF_FFFFL;
 
 		//	initial PC specified by locations $000004-$000007
 		PC |= (bus.read(4) << 24);
@@ -273,8 +278,8 @@ public class Gen68 {
 		PC |= (bus.read(7) << 0);
 		
 		for (int i = 0; i < A.length; i++) {
-			A[i] = 0xFFFFFFFF;
-			D[i] = 0xFFFFFFFF;
+			A[i] = 0xFFFF_FFFFL;
+			D[i] = 0xFFFF_FFFFL;
 		}
 		A[7] = SSP;
 		SR = 0x7FFF;
@@ -316,20 +321,6 @@ public class Gen68 {
 			
 			oper.setAddress(addr);
 			
-//			if (size == Size.byt) {				// size = Byte TODO checkear esto
-//				data = (bus.read(addr));
-//			
-//			} else if (size == Size.word) {		// size = word
-//				data  = (bus.read(addr) << 8);
-//				data |= (bus.read(addr + 1));
-//			
-//			} else if (size == Size.longW) {	//	size = Long
-//				data  = (bus.read(addr)     << 24);
-//				data |= (bus.read(addr + 1) << 16);
-//				data |= (bus.read(addr + 2) << 8);
-//				data |= (bus.read(addr + 3) << 0);
-//				
-//			}
 		} else if (mode == 0b011) {		//	(An)+	 Address Register Indirect with Postincrement Mode 
 			addr = A[register];
 			oper.setAddress(addr);
@@ -436,7 +427,7 @@ public class Gen68 {
 				addr |= (bus.read(offset + 1) << 0);
 			
 				if ((addr & 0x8000) > 0) {
-					addr |= 0xFFFF_0000;
+					addr |= 0xFFFF_0000L;
 				}
 				
 				if (size == Size.BYTE) {
@@ -469,7 +460,13 @@ public class Gen68 {
 				long displacement = (bus.read(PC + 2) << 8);
 				displacement 	 |= (bus.read(PC + 3));
 				
-				addr = PC + 2 + displacement;
+				if ((displacement & 0x8000) > 0) {
+					displacement = -displacement;
+					displacement &= 0xFFFF;
+					addr = PC + 2 - displacement;
+				} else {
+					addr = PC + 2 + displacement;
+				}
 				oper.setAddress(addr);
 				
 				PC += 2;
@@ -688,8 +685,13 @@ public class Gen68 {
 		} else if (mode == 0b100) {		//	-(An)
 			long address = A[register];
 			
-			if (size == Size.LONG) {	//	long word
-				address = (address - 4) & 0xFFFF_FFFF;
+			if (size == Size.WORD) {
+				address = (address - 2) & 0xFFFF_FFFFL;
+				A[register] = address;	// predecrement
+				
+				bus.write(address, data, size);
+			} else if (size == Size.LONG) {
+				address = (address - 4) & 0xFFFF_FFFFL;
 				A[register] = address;	// predecrement
 				
 				bus.write(address, (data >> 16) & 0xFFFF, size);
@@ -899,6 +901,12 @@ public class Gen68 {
 			setALong(7, SSP);
 			
 			break;
+		case 0b0010:	//	C + Z = 0
+			taken = !isC() && !isZ();
+			break;
+		case 0b0011:	//	C + Z = 1
+			taken = isC() && isZ();
+			break;
 		case 0b0100:
 			taken = !isC();
 			break;
@@ -922,6 +930,9 @@ public class Gen68 {
 			break;
 		case 0b1011:
 			taken = isN();
+			break;
+		case 0b1101:
+			taken = isN() | isV();
 			break;
 			
 			default:

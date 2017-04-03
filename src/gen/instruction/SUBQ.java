@@ -123,7 +123,26 @@ public class SUBQ implements GenInstructionHandler {
 	}
 	
 	private void SUBQByte(int opcode) {
-		throw new RuntimeException("A");
+		int dataToSub = (opcode >> 9) & 0x7;
+		int mode = (opcode >> 3) & 0x7;
+		int register = (opcode & 0x7);
+		
+		if (dataToSub == 0) {
+			dataToSub = 8;
+		}
+		
+		Operation o = cpu.resolveAddressingMode(Size.BYTE, mode, register);
+		long data = o.getAddressingMode().getByte(o);
+		
+		long tot = (data - dataToSub);
+		long total = (data & 0xFFFF_FF00L) | (tot & 0x0000_00FF) & 0xFFFF_FFFFL;
+		
+		if (mode == 1) {	//	address register, siempre guarda longword y no calcula flags
+			cpu.writeKnownAddressingMode(o, total, Size.LONG);
+		} else {
+			cpu.writeKnownAddressingMode(o, total, Size.BYTE);
+			calcFlags(tot, Size.BYTE.getMsb(), Size.BYTE.getMax());
+		}
 	}
 	
 	private void SUBQWord(int opcode) {
@@ -141,9 +160,12 @@ public class SUBQ implements GenInstructionHandler {
 		long tot = (data - dataToSub);
 		long total = (data & 0xFFFF_0000L) | (tot & 0x0000_FFFF) & 0xFFFF_FFFFL;
 		
-		cpu.writeKnownAddressingMode(o, total, Size.WORD);
-		
-		calcFlags(tot, Size.WORD.getMsb(), Size.WORD.getMax());
+		if (mode == 1) {	//	address register, siempre guarda longword y no calcula flags
+			cpu.writeKnownAddressingMode(o, total, Size.LONG);
+		} else {
+			cpu.writeKnownAddressingMode(o, total, Size.WORD);
+			calcFlags(tot, Size.WORD.getMsb(), Size.WORD.getMax());
+		}
 	}
 	
 	private void SUBQLong(int opcode) {
@@ -163,7 +185,11 @@ public class SUBQ implements GenInstructionHandler {
 		
 		cpu.writeKnownAddressingMode(o, total, Size.LONG);
 		
-		calcFlags(tot, Size.LONG.getMsb(), Size.LONG.getMax());
+		if (mode == 1) {
+			
+		} else {
+			calcFlags(tot, Size.LONG.getMsb(), Size.LONG.getMax());
+		}
 	}
 	
 	void calcFlags(long tot, int msb, long maxSize) {//TODO  overflow

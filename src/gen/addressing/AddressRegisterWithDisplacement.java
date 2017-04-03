@@ -22,7 +22,10 @@ public class AddressRegisterWithDisplacement implements AddressingMode {
 
 	@Override
 	public void setWord(Operation o) {
-		throw new RuntimeException("NOO");
+		long addr = o.getAddress();
+		long data = o.getData();
+
+		cpu.bus.write(addr, data & 0xFFFF, Size.WORD);
 	}
 
 	@Override

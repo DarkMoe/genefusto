@@ -165,7 +165,17 @@ public class AND implements GenInstructionHandler {
 	}
 	
 	private void ANDSourceEAByte(int opcode) {
-		throw new RuntimeException("");
+		int register = (opcode & 0x7);
+		int mode = (opcode >> 3) & 0x7;
+		int destRegister = (opcode >> 9) & 0x7;
+		
+		Operation o = cpu.resolveAddressingMode(Size.BYTE, mode, register);
+		long data = o.getAddressingMode().getByte(o);
+		
+		long res = (cpu.getD(destRegister) & 0xFF) & data;
+		cpu.setDByte(destRegister, res);
+		
+		calcFlags(res, Size.BYTE.getMsb());
 	}
 
 	private void ANDSourceEAWord(int opcode) {

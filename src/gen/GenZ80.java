@@ -5666,13 +5666,29 @@ public class GenZ80 {
         clearNegativeFlag();
     }
     
+    int YMA0;
+    int YMD0;
+    int YMA1;
+    int YMD1;
+    int romBank68k;
+    
     void writeMemory(int address, int data) {
     	if (address < 0x2000) {
     		memory[address] = data;
 		} else if (address >= 0x2000 && address < 0x3FFF) {
-
+			//	RESERVED
+		} else if (address == 0x4000) {		//	YM2612 A0
+			YMA0 = data;
+		} else if (address == 0x4001) {		//	YM2612 D0
+			YMD0 = data;
+		} else if (address == 0x4002) {		//	YM2612 A1
+			YMA1 = data;
+		} else if (address == 0x4003) {		//	YM2612 D1
+			YMD1 = data;
+		} else if (address == 0x6000) {		//	rom banking
+			romBank68k = data;
 		} else {
-			throw new RuntimeException("NOT ");
+			throw new RuntimeException("NOT " + Integer.toHexString(address));
 		}
 	}
 
@@ -5681,8 +5697,16 @@ public class GenZ80 {
 			return memory[address];
 		} else if (address >= 0x2000 && address < 0x3FFF) {
 			return 0;
+		} else if (address == 0x4000) {		//	YM2612 A0
+			return 0;	// TODO implement
+		} else if (address == 0x4001) {		//	YM2612 D0
+			throw new RuntimeException("NOT " + Integer.toHexString(address));
+		} else if (address == 0x4002) {		//	YM2612 A1
+			throw new RuntimeException("NOT " + Integer.toHexString(address));
+		} else if (address == 0x4003) {		//	YM2612 D1
+			throw new RuntimeException("NOT " + Integer.toHexString(address));
 		} else {
-			throw new RuntimeException("NOT ");
+			throw new RuntimeException("NOT " + Integer.toHexString(address));
 		}
 	}
 
@@ -5884,5 +5908,14 @@ public class GenZ80 {
 
 	public void reset() {
 		reset = true;
+	}
+
+	public void writeByte(int addr, long data) {
+		writeMemory(addr, (int) data);
+	}
+	
+	public void writeWord(int addr, long data) {
+		writeMemory(addr, (int) (data >> 8));
+		writeMemory(addr + 1, (int) (data & 0xFF));
 	}
 }

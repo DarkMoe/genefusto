@@ -4,72 +4,75 @@ import gen.Gen68;
 import gen.GenInstruction;
 import gen.Size;
 
-public class ASR implements GenInstructionHandler {
+public class ROR implements GenInstructionHandler {
 
 	final Gen68 cpu;
 	
-	public ASR(Gen68 cpu) {
+	public ROR(Gen68 cpu) {
 		this.cpu = cpu;
 	}
 
 //	NAME
-//	ASL, ASR -- Arithmetic shift left and arithmetic shift right
+//	ROL, ROR -- Rotate left and rotate right
 //
 //SYNOPSIS
-//	ASd	Dx,Dy
-//	ASd	#<data>,Dy
-//	ASd	<ea>
+//	ROd	Dx,Dy
+//	ROd	#<data>,Dy
+//	ROd	<ea>
 //	where d is direction, L or R
 //
 //	Size = (Byte, Word, Long)
 //
 //FUNCTION
-//	Performs an arithmetic shifting bit operation in the indicated
-//        direction, with an immediate data, or with a data register.
-//        If you shift address contents, you only can do ONE shift, and
-//        your operand is ONE word exclusively.
+//	Rotate the bits of the operand in the specified direction.
+//	The rotation count may be specified in two different ways:
 //
-//	ASL:              <--  
-//	      C <------ OPERAND <--- 0
-//	            |
-//	            |
-//	      X <---'
-//	       
+//	1. Immediate - the rotation count is specified in the instruction
 //
-//	ASR:      -->
-//	  .---> OPERAND ------> C
-//          |    T          |
-//	  |    |          |
-//	  `----'          `---> X
+//	2. Register  - the rotation count is contained in a data register
+//	               specified in the instruction
+//
+//	For a register, the size may be byte, word, or long, but for a memory
+//	location, the size must be a word. The rotation count is also
+//	restricted to one for a memory location.
+//
+//                  .-------->--------.
+//	ROL:      |                 |
+//	      C <------ OPERAND <---'
+//	                  <---	       
+//
+//	ROR:     ,-------<-------.
+//	         |               |
+//	         `--> OPERAND -----> C
+//	                --->
 //
 //FORMAT
-//	In the case of the shifting of a register:
+//	In the case of the rotating of a register:
 //	~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //	-----------------------------------------------------------------
 //	|15 |14 |13 |12 |11 |10 | 9 | 8 | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
 //	|---|---|---|---|-----------|---|-------|---|---|---|-----------|
-//	| 1 | 1 | 1 | 0 |  NUMBER/  |dr |  SIZE |i/r| 0 | 0 | REGISTER  |
+//	| 1 | 1 | 1 | 0 |  NUMBER/  |dr |  SIZE |i/r| 1 | 1 | REGISTER  |
 //	|   |   |   |   |  REGISTER |   |       |   |   |   |           |
 //	-----------------------------------------------------------------
 //
-//	In the case of the shifting of a memory area:
+//	In the case of the rotating of a memory area:
 //	~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //	-----------------------------------------------------------------
 //	|15 |14 |13 |12 |11 |10 | 9 | 8 | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
 //	|---|---|---|---|---|---|---|---|---|---|-----------|-----------|
-//	| 1 | 1 | 1 | 0 | 0 | 0 | 0 |dr | 1 | 1 |    MODE   | REGISTER  |
+//	| 1 | 1 | 1 | 0 | 0 | 1 | 1 |dr | 1 | 1 |    MODE   | REGISTER  |
 //	----------------------------------------=========================
 //	                                                  <ea>
 //
-//
 //NUMBER/REGISTER
-//	Specifies number of shifting or number of register which contents
-//	the number of shifting.
-//	If i/r = 0, number of shifting is specified in the instruction as
+//	Specifies number of rotating or number of register which contents
+//	the number of rotating.
+//	If i/r = 0, number of rotating is specified in the instruction as
 //	immediate data
 //	If i/r = 1, it's specified in the data register.
-//	If dr = 0, right shifting
-//	If dr = 1, left shifting
+//	If dr = 0, right rotating
+//	If dr = 1, left rotating
 //
 //SIZE
 //	00->one Byte operation
@@ -77,11 +80,11 @@ public class ASR implements GenInstructionHandler {
 //	10->one Long operation
 //
 //REGISTER
-//	For a register shifting:
-//	Indicates the number of data register on which shifting is applied.
+//	For a register rotating:
+//	Indicates the number of data register on which rotating is applied.
 //
-//	For a memory shifting:
-//	<ea> indicates operand which should be shifted.
+//	For a memory rotating:
+//	<ea> indicates operand which should be rotated.
 //	Only addressing modes relatives to memory are allowed:
 //
 //	--------------------------------- -------------------------------
@@ -97,7 +100,7 @@ public class ASR implements GenInstructionHandler {
 //	|-------------------------------| |-----------------------------|
 //	|    -(An)      |100 |N° reg. An| |   (bd,PC,Xi)  | -  |   -    |
 //	|-------------------------------| |-----------------------------|
-//	|    (d16,An)   |101 |N° reg. An| |([bd,PC,Xi],od)| -  |   -    | 
+//	|    (d16,An)   |101 |N° reg. An| |([bd,PC,Xi],od)| -  |   -    |
 //	|-------------------------------| |-----------------------------|
 //	|   (d8,An,Xi)  |110 |N° reg. An| |([bd,PC],Xi,od)| -  |   -    |
 //	|-------------------------------| |-----------------------------|
@@ -109,21 +112,16 @@ public class ASR implements GenInstructionHandler {
 //	---------------------------------
 //
 //RESULT
-//	X - Set according to the list bit shifted out of the operand.
-//	    Unaffected for a shift count of zero.
-//	N - Set if the most-significant bit of the result is set. Cleared
-//	    otherwise.
+//	X - Not affected
+//	N - Set if the result is negative. Cleared otherwise.
 //	Z - Set if the result is zero. Cleared otherwise.
-//	V - Set if the most significant bit is changed at any time during
-//	    the shift operation. Cleared otherwise.
-//	C - Set according to the list bit shifted out of the operand.
-//	    Cleared for a shift count of zero.
+//	V - Always cleared
+//	C - Set according to the last bit shifted out of the operand.
 	
 	@Override
 	public void generate() {
-		int base = 0xE000;
+		int base = 0xE018;
 		GenInstruction ins = null;
-		
 		for (int dr = 0; dr < 2; dr++) {
 			if (dr == 0) {
 				for (int s = 0; s < 3; s++) {
@@ -131,21 +129,21 @@ public class ASR implements GenInstructionHandler {
 						ins = new GenInstruction() {
 							@Override
 							public void run(int opcode) {
-								ASRByte(opcode);
+								RORRegisterByte(opcode);
 							}
 						};
 					} else if (s == 0b01) {
 						ins = new GenInstruction() {
 							@Override
 							public void run(int opcode) {
-								ASRWord(opcode);
+								RORRegisterWord(opcode);
 							}
 						};
 					} else if (s == 0b10) {
 						ins = new GenInstruction() {
 							@Override
 							public void run(int opcode) {
-								ASRLong(opcode);
+								RORRegisterLong(opcode);
 							}
 						};
 					}
@@ -153,7 +151,7 @@ public class ASR implements GenInstructionHandler {
 					for (int ir = 0; ir < 2; ir++) {
 						for (int r = 0; r < 8; r++) {
 							for (int nReg = 0; nReg < 8; nReg++) {
-								int opcode = base + (nReg << 9) | (dr << 8) |(s << 6) | (ir << 5) | r;
+								int opcode = base | (nReg << 9) | (dr << 8) |(s << 6) | (ir << 5) | r;
 								cpu.addInstruction(opcode, ins);
 							}
 						}
@@ -165,21 +163,21 @@ public class ASR implements GenInstructionHandler {
 						ins = new GenInstruction() {
 							@Override
 							public void run(int opcode) {
-								ASLByte(opcode);
+								ROLRegisterByte(opcode);
 							}
 						};
 					} else if (s == 0b01) {
 						ins = new GenInstruction() {
 							@Override
 							public void run(int opcode) {
-								ASLWord(opcode);
+								ROLRegisterWord(opcode);
 							}
 						};
 					} else if (s == 0b10) {
 						ins = new GenInstruction() {
 							@Override
 							public void run(int opcode) {
-								ASLLong(opcode);
+								ROLRegisterLong(opcode);
 							}
 						};
 					}
@@ -187,7 +185,7 @@ public class ASR implements GenInstructionHandler {
 					for (int ir = 0; ir < 2; ir++) {
 						for (int r = 0; r < 8; r++) {
 							for (int nReg = 0; nReg < 8; nReg++) {
-								int opcode = base + (nReg << 9) | (dr << 8) |(s << 6) | (ir << 5) | r;
+								int opcode = base | (nReg << 9) | (dr << 8) |(s << 6) | (ir << 5) | r;
 								cpu.addInstruction(opcode, ins);
 							}
 						}
@@ -197,7 +195,7 @@ public class ASR implements GenInstructionHandler {
 		}
 	}
 	
-	private void ASLByte(int opcode) {
+	private void ROLRegisterByte(int opcode) {
 		int register = (opcode & 0x7);
 		boolean ir = cpu.bitTest(opcode, 5);
 		int numRegister = (opcode >> 9) & 0x7;
@@ -205,22 +203,31 @@ public class ASR implements GenInstructionHandler {
 		long toShift;
 		if (!ir) {
 			if (numRegister == 0) {
-				toShift = 8;
-			} else {
-				toShift = numRegister;
+				numRegister = 8;
 			}
+			toShift = numRegister;
 		} else {
 			toShift = cpu.getD(numRegister);
 		}
 		
-		long shiftee = cpu.getD(register) & 0xFF;
-		long res = shiftee << toShift;
+		toShift &= 15;	//	wrap
+		
+		long data = cpu.getD(register) & 0xFF;
+		long rot = (data << toShift);
+		
+		long res = rot & 0xFF;
+		for (int i = 0; i < toShift; i++) {		// rotacion de bits
+			res = res | ((rot & (1 << (8 + i))) >> (8 - i));
+		}
+		
+		boolean carry = ((rot & (1 << (8))) > 0);
+		
 		cpu.setDByte(register, res);
-					
-		calcFlags(res, shiftee, Size.BYTE.getMsb(), 0xFF);
+		
+		calcFlags(res, Size.BYTE.getMsb(), 0xFF, carry);
 	}
 	
-	private void ASLWord(int opcode) {
+	private void ROLRegisterWord(int opcode) {
 		int register = (opcode & 0x7);
 		boolean ir = cpu.bitTest(opcode, 5);
 		int numRegister = (opcode >> 9) & 0x7;
@@ -228,22 +235,35 @@ public class ASR implements GenInstructionHandler {
 		long toShift;
 		if (!ir) {
 			if (numRegister == 0) {
-				toShift = 8;
-			} else {
-				toShift = numRegister;
+				numRegister = 8;
 			}
+			toShift = numRegister;
 		} else {
 			toShift = cpu.getD(numRegister);
 		}
 		
-		long shiftee = cpu.getD(register) & 0xFFFF;
-		long res = shiftee << toShift;
+		toShift &= 15;	//	wrap
+		
+		long data = cpu.getD(register) & 0xFFFF;
+		long rot = (data << toShift);
+		
+		long res = rot & 0xFFFF;
+		for (int i = 0; i < toShift; i++) {		// rotacion de bits
+			res = res | ((rot & (1 << (16 + i))) >> (16 - i));
+		}
+		
+		boolean carry = ((rot & (1 << (16))) > 0);
+		
 		cpu.setDWord(register, res);
-					
-		calcFlags(res, shiftee, Size.WORD.getMsb(), 0xFFFF);
+		
+		calcFlags(res, Size.WORD.getMsb(), 0xFFFF, carry);
 	}
 	
-	private void ASLLong(int opcode) {
+	private void ROLRegisterLong(int opcode) {
+		throw new RuntimeException("AA");
+	}
+	
+	private void RORRegisterByte(int opcode) {
 		int register = (opcode & 0x7);
 		boolean ir = cpu.bitTest(opcode, 5);
 		int numRegister = (opcode >> 9) & 0x7;
@@ -251,76 +271,93 @@ public class ASR implements GenInstructionHandler {
 		long toShift;
 		if (!ir) {
 			if (numRegister == 0) {
-				toShift = 8;
-			} else {
-				toShift = numRegister;
+				numRegister = 8;
 			}
+			toShift = numRegister;
 		} else {
 			toShift = cpu.getD(numRegister);
 		}
 		
-		long shiftee = cpu.getD(register);
-		long res = shiftee << toShift;
-		cpu.setDLong(register, res);
-					
-		calcFlags(res, shiftee, Size.LONG.getMsb(), 0xFFFF_FFFFL);
-	}
-	
-	private void ASRByte(int opcode) {
-		throw new RuntimeException("AA");
-	}
-	
-	private void ASRWord(int opcode) {
-		throw new RuntimeException("AA");
-	}
-	
-	private void ASRLong(int opcode) {
-		int register = (opcode & 0x7);
-		boolean ir = cpu.bitTest(opcode, 5);
-		int numRegister = (opcode >> 9) & 0x7;
+		toShift &= 7;	//	wrap
 		
-		long toShift;
-		if (!ir) {
-			if (numRegister == 0) {
-				toShift = 8;
-			} else {
-				toShift = numRegister;
+		long data = cpu.getD(register) & 0xFF;
+		long rot = (data >> toShift);
+		
+		long res = rot;
+		for (int i = 0; i < toShift; i++) {		// rotacion de bits
+			res = res | ((data & (1 << i)) << (8 - toShift));
+		}
+		boolean carry = false;
+		if (toShift != 0) {
+			if (((data >> toShift - 1) & 1) > 0) {
+				carry = true;
 			}
-		} else {
-			toShift = cpu.getD(numRegister);
 		}
 		
-		long shiftee = cpu.getD(register);
-		long res = shiftee >> toShift;
-		cpu.setDLong(register, res);
-					
-		calcFlags(res, shiftee, Size.LONG.getMsb(), 0xFFFF_FFFFL);
+		cpu.setDByte(register, res);
+		
+		calcFlags(res, Size.BYTE.getMsb(), 0xFF, carry);
+	}
+	
+	private void RORRegisterWord(int opcode) {
+		throw new RuntimeException("AA");
 	}
 
-	void calcFlags(long data, long old, long msb, long maxSize) {
-		if ((data & maxSize) == 0) {
+	private void RORRegisterLong(int opcode) {
+		int register = (opcode & 0x7);
+		boolean ir = cpu.bitTest(opcode, 5);
+		int numRegister = (opcode >> 9) & 0x7;
+		
+		long toShift;
+		if (!ir) {
+			if (numRegister == 0) {
+				numRegister = 8;
+			}
+			toShift = numRegister;
+		} else {
+			toShift = cpu.getD(numRegister);
+		}
+		
+		toShift &= 31;	//	wrap
+		
+		long data = cpu.getD(register);
+		long rot = (data >> toShift);
+		
+		long res = rot;
+		for (int i = 0; i < toShift; i++) {		// rotacion de bits
+			res = res | ((data & (1 << i)) << (32 - toShift));
+		}
+		boolean carry = false;
+		if (toShift != 0) {
+			if (((data >> toShift - 1) & 1) > 0) {	// -1 para validar el ultimo bit que se roto
+				carry = true;
+			}
+		}
+		
+		cpu.setDLong(register, res);
+		
+		calcFlags(res, Size.LONG.getMsb(), 0xFFFF_FFFFL, carry);
+	}
+
+	void calcFlags(long data, long msb, long maxSize, boolean carry) {
+		long wrapped = data & maxSize;
+		if (wrapped == 0) {
 			cpu.setZ();
 		} else {
 			cpu.clearZ();
 		}
-		if ((data & msb) > 0) {
+		if ((wrapped & msb) > 0) {
 			cpu.setN();
 		} else {
 			cpu.clearN();
 		}
+
+		cpu.clearV();
 		
-		if (((data & msb) ^ (old & msb)) == msb) {
-			cpu.setV();
-		} else {
-			cpu.clearV();
-		}
-		
-		if (data > maxSize) {
+		if (carry) {
 			cpu.setC();
-			cpu.setX();
 		} else {
 			cpu.clearC();
-			cpu.clearX();
 		}
 	}
 	

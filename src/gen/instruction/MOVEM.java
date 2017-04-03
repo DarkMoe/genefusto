@@ -212,7 +212,42 @@ public class MOVEM implements GenInstructionHandler {
 	}
 	
 	private void MOVEMMemToRegsWord(int opcode) {
-		throw new RuntimeException("WWW");
+		int mode = (opcode >> 3) & 0x7;
+		int register = opcode & 0x7;
+		Operation o;
+		long data;
+		
+		int registerListMaskA = (int) cpu.bus.read(cpu.PC + 2);	// TODO ojo q con pre decrement es al reves la interpretacion
+		int registerListMaskD = (int) cpu.bus.read(cpu.PC + 3);
+		
+		for (int i = 0; i < 8; i++) {
+			if (((registerListMaskD) & (1 << i)) != 0) {
+				o = cpu.resolveAddressingMode(Size.WORD, mode, register);
+				data = o.getAddressingMode().getWord(o);
+				
+				if ((data & 0x8000) > 0) {	//	sign extend para registros destino y size word
+					data |= 0xFFFF_0000L;
+				}
+				
+				cpu.setDLong(i, data);
+			}
+		}
+		for (int i = 0; i < 8; i++) {
+			if (((registerListMaskA) & (1 << i)) != 0) {
+				o = cpu.resolveAddressingMode(Size.WORD, mode, register);
+				data = o.getAddressingMode().getWord(o);
+				
+				if ((data & 0x8000) > 0) {
+					data |= 0xFFFF_0000L;
+				}
+				
+				cpu.setALong(i, data);
+			}
+		}
+		
+		cpu.SSP = (int) cpu.getA(7);
+		
+		cpu.PC += 2;
 	}
 	
 	private void MOVEMMemToRegsLong(int opcode) {
@@ -247,7 +282,44 @@ public class MOVEM implements GenInstructionHandler {
 	}
 	
 	private void MOVEMRegsToMemWord(int opcode) {
-		throw new RuntimeException("WWW");
+		int mode = (opcode >> 3) & 0x7;
+		int register = opcode & 0x7;
+		long data;
+		
+		int msb = (int) cpu.bus.read(cpu.PC + 2);
+		int lsb = (int) cpu.bus.read(cpu.PC + 3);
+		
+		int registerListMaskD = 0;
+		for (int i = 0; i < 8; i++) {
+			registerListMaskD <<= 1;
+			registerListMaskD |= (msb & 1);
+			msb >>= 1;
+		}
+		int registerListMaskA = 0;
+		for (int i = 0; i < 8; i++) {
+			registerListMaskA <<= 1;
+			registerListMaskA |= (lsb & 1);
+			lsb >>= 1;
+		}
+		
+		for (int i = 7; i >= 0; i--) {
+			if (((registerListMaskA) & (1 << i)) != 0) {
+				data = cpu.getA(i) & 0xFFFF;
+				
+				cpu.writeAddressingMode(Size.WORD, 0, data, mode, register);
+			}
+		}
+		for (int i = 7; i >= 0; i--) {
+			if (((registerListMaskD) & (1 << i)) != 0) {
+				data = cpu.getD(i) & 0xFFFF;
+				
+				cpu.writeAddressingMode(Size.WORD, 0, data, mode, register);
+			}
+		}
+		
+		cpu.SSP = (int) cpu.getA(7);
+		
+		cpu.PC += 2;
 	}
 	
 	private void MOVEMRegsToMemLong(int opcode) {
@@ -259,13 +331,13 @@ public class MOVEM implements GenInstructionHandler {
 		int lsb = (int) cpu.bus.read(cpu.PC + 3);
 		
 		int registerListMaskD = 0;
-		while (msb != 0) {
+		for (int i = 0; i < 8; i++) {
 			registerListMaskD <<= 1;
 			registerListMaskD |= (msb & 1);
 			msb >>= 1;
 		}
 		int registerListMaskA = 0;
-		while (lsb != 0) {
+		for (int i = 0; i < 8; i++) {
 			registerListMaskA <<= 1;
 			registerListMaskA |= (lsb & 1);
 			lsb >>= 1;
