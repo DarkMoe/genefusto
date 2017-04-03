@@ -315,7 +315,25 @@ public class LSL implements GenInstructionHandler {
 	}
 
 	private void LSRRegisterLong(int opcode) {
-		throw new RuntimeException("AA");
+		int register = (opcode & 0x7);
+		boolean ir = cpu.bitTest(opcode, 5);
+		int numRegister = (opcode >> 9) & 0x7;
+		
+		long toShift;
+		if (!ir) {
+			if (numRegister == 0) {
+				numRegister = 8;
+			}
+			toShift = numRegister;
+		} else {
+			toShift = cpu.getD(numRegister);
+		}
+
+		boolean carry = (cpu.getD(register) & 0x1) == 0x1;
+		long res = (cpu.getD(register)) >> toShift;
+		cpu.setDLong(register, res);
+		
+		calcFlags(res, Size.LONG.getMsb(), 0xFFFF_FFFFL, carry);
 	}
 
 	void calcFlags(long data, long msb, long maxSize, boolean carry) {

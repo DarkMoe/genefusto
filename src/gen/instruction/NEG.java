@@ -163,7 +163,7 @@ public class NEG implements GenInstructionHandler {
 		int register = (opcode & 0x7);
 		
 		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
-		long data = o.getAddressingMode().getWord(o);
+		long data = o.getAddressingMode().getLong(o);
 		
 		long res = 0 - data;
 

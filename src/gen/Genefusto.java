@@ -76,6 +76,7 @@ import gen.instruction.NOT;
 import gen.instruction.OR;
 import gen.instruction.ORI;
 import gen.instruction.ORI_SR;
+import gen.instruction.PEA;
 import gen.instruction.ROR;
 import gen.instruction.ROXL;
 import gen.instruction.RTE;
@@ -108,7 +109,7 @@ public class Genefusto {
 
     int CLOCKSPEED = 4194304;
     
-    final JFrame jframe = new JFrame("GenFUSTO");
+    final JFrame jframe = new JFrame("GeNEFUSTO");
     private Thread currentGameThread;
     private MyRunnable currentRunna;
     private boolean isRomOpened;
@@ -187,6 +188,7 @@ public class Genefusto {
         new OR(cpu).generate();
         new ORI(cpu).generate();
         new ORI_SR(cpu).generate();
+        new PEA(cpu).generate();
         new ROR(cpu).generate();
         new ROXL(cpu).generate();
         new RTE(cpu).generate();
@@ -437,9 +439,9 @@ public class Genefusto {
         try {
             for(;;) {
             	if (runZ80) {	//	TODO hacer que use la velocidad correcta y sea un thread distinto
-            		int opcode = z80.memory[z80.PC];
-    				z80.PC = (z80.PC + 1) & 0xFFFF;
-            		z80.executeInstruction(opcode);
+//            		int opcode = z80.readMemory(z80.PC);
+//    				z80.PC = (z80.PC + 1) & 0xFFFF;
+//            		z80.executeInstruction(opcode);
             	}
             	cpu.runInstruction();
             	bus.checkInterrupts();

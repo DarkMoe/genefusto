@@ -59,10 +59,10 @@ public class ORI_SR implements GenInstructionHandler {
 		long toOr  = (cpu.bus.read(cpu.PC + 2)) << 8;
 		 	 toOr |= (cpu.bus.read(cpu.PC + 3));
 		
+	 	cpu.PC += 2;
+		 	 
 		long res = cpu.SR | toOr;
 		cpu.SR = (int) res;
-		
-		cpu.PC += 2;
 	}
 	
 }

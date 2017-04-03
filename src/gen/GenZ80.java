@@ -98,6 +98,8 @@ public class GenZ80 {
 		int tmp, addr, lo, hi;
 		int cycles = 0;
 		
+		System.out.println("Z80: " + Integer.toHexString(PC - 1));
+		
 		String fullOpcode = hex(opcode);
         if (toPrint) {
 //            lineLog.setLength(0);
@@ -5687,6 +5689,8 @@ public class GenZ80 {
 			YMD1 = data;
 		} else if (address == 0x6000) {		//	rom banking
 			romBank68k = data;
+		} else if (address == 0x7F11) {		//	SN76489 PSG
+			System.out.println("PSG write Z80");
 		} else {
 			throw new RuntimeException("NOT " + Integer.toHexString(address));
 		}
@@ -5705,6 +5709,8 @@ public class GenZ80 {
 			throw new RuntimeException("NOT " + Integer.toHexString(address));
 		} else if (address == 0x4003) {		//	YM2612 D1
 			throw new RuntimeException("NOT " + Integer.toHexString(address));
+		} else if (address >= 0x8000 && address <= 0xFFFF) {		//	8000h	FFFFh	M68k memory bank
+			return 0; //bus.read(address)	FIXME implementar lectura desde 68k
 		} else {
 			throw new RuntimeException("NOT " + Integer.toHexString(address));
 		}

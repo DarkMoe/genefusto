@@ -300,7 +300,39 @@ public class ROR implements GenInstructionHandler {
 	}
 	
 	private void RORRegisterWord(int opcode) {
-		throw new RuntimeException("AA");
+		int register = (opcode & 0x7);
+		boolean ir = cpu.bitTest(opcode, 5);
+		int numRegister = (opcode >> 9) & 0x7;
+		
+		long toShift;
+		if (!ir) {
+			if (numRegister == 0) {
+				numRegister = 8;
+			}
+			toShift = numRegister;
+		} else {
+			toShift = cpu.getD(numRegister);
+		}
+		
+		toShift &= 15;	//	wrap
+		
+		long data = cpu.getD(register) & 0xFFFF;
+		long rot = (data >> toShift);
+		
+		long res = rot;
+		for (int i = 0; i < toShift; i++) {		// rotacion de bits
+			res = res | ((data & (1 << i)) << (16 - toShift));
+		}
+		boolean carry = false;
+		if (toShift != 0) {
+			if (((data >> toShift - 1) & 1) > 0) {
+				carry = true;
+			}
+		}
+		
+		cpu.setDWord(register, res);
+		
+		calcFlags(res, Size.WORD.getMsb(), 0xFFFF, carry);
 	}
 
 	private void RORRegisterLong(int opcode) {
