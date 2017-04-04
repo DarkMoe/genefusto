@@ -54,6 +54,7 @@ import gen.instruction.CMP;
 import gen.instruction.CMPA;
 import gen.instruction.CMPI;
 import gen.instruction.DBcc;
+import gen.instruction.DIVS;
 import gen.instruction.EOR;
 import gen.instruction.EORI;
 import gen.instruction.EXT;
@@ -77,6 +78,7 @@ import gen.instruction.NOP;
 import gen.instruction.NOT;
 import gen.instruction.OR;
 import gen.instruction.ORI;
+import gen.instruction.ORI_CCR;
 import gen.instruction.ORI_SR;
 import gen.instruction.PEA;
 import gen.instruction.ROR;
@@ -85,10 +87,12 @@ import gen.instruction.ROXR;
 import gen.instruction.RTE;
 import gen.instruction.RTS;
 import gen.instruction.SUB;
+import gen.instruction.SUBA;
 import gen.instruction.SUBI;
 import gen.instruction.SUBQ;
 import gen.instruction.SWAP;
 import gen.instruction.Scc;
+import gen.instruction.TRAP;
 import gen.instruction.TST;
 import gen.instruction.UNLK;
 import test.FileLoader;
@@ -170,6 +174,7 @@ public class Genefusto {
         new CMPA(cpu).generate();
         new CMPI(cpu).generate();
         new DBcc(cpu).generate();
+        new DIVS(cpu).generate();
         new EOR(cpu).generate();
         new EORI(cpu).generate();
         new EXT(cpu).generate();
@@ -193,6 +198,7 @@ public class Genefusto {
         new NOT(cpu).generate();
         new OR(cpu).generate();
         new ORI(cpu).generate();
+        new ORI_CCR(cpu).generate();
         new ORI_SR(cpu).generate();
         new PEA(cpu).generate();
         new ROR(cpu).generate();
@@ -202,9 +208,11 @@ public class Genefusto {
         new RTS(cpu).generate();
         new Scc(cpu).generate();
         new SUB(cpu).generate();
+        new SUBA(cpu).generate();
         new SUBI(cpu).generate();
         new SUBQ(cpu).generate();
         new SWAP(cpu).generate();
+        new TRAP(cpu).generate();
         new TST(cpu).generate();
         new UNLK(cpu).generate();
         
@@ -453,7 +461,7 @@ public class Genefusto {
             	}
             	cpu.runInstruction();
             	bus.checkInterrupts();
-            	vdp.run(12);
+            	vdp.run(18);
             	vdp.dmaOperation();
             }
         } catch (RuntimeException e) {

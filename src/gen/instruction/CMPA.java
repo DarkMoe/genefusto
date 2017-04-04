@@ -135,7 +135,7 @@ public class CMPA implements GenInstructionHandler {
 
 		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
 		long toSub = o.getAddressingMode().getLong(o);
-		cpu.print = true;
+
 		long res = data - toSub;
 		
 		calcFlags(res, Size.LONG.getMsb(), 0xFFFF_FFFFL);

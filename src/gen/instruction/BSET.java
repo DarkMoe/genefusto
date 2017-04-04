@@ -130,7 +130,41 @@ public class BSET implements GenInstructionHandler {
 					cpu.addInstruction(opcode, insByte);
 				}
 			}
-		}		
+		}
+		
+		base = 0x01C0;
+		GenInstruction insRegByte = new GenInstruction() {
+			@Override
+			public void run(int opcode) {
+				BSETRegisterByte(opcode);
+			}
+		};
+		GenInstruction insRegLong = new GenInstruction() {
+			@Override
+			public void run(int opcode) {
+				BSETRegisterLong(opcode);
+			}
+		};
+		
+		for (int m = 0; m < 8; m++) {
+			if (m == 1) {
+				continue;
+			}
+			
+			for (int r = 0; r < 8; r++) {
+				if ((m == 0b111) && r > 0b001) {
+					continue;
+				}
+				for (int register = 0; register < 8; register++) {
+					int opcode = base | (register << 9) | (m << 3) | r;
+					if (m == 0) {
+						cpu.addInstruction(opcode, insRegLong);
+					} else {
+						cpu.addInstruction(opcode, insRegByte);
+					}
+				}
+			}
+		}
 	}
 
 	private void BSETImmediateByte(int opcode) {
@@ -175,6 +209,27 @@ public class BSET implements GenInstructionHandler {
 		cpu.writeKnownAddressingMode(o, data, Size.LONG);
 	}
 	
+	private void BSETRegisterByte(int opcode) {
+		throw new RuntimeException();
+	}
+	
+	private void BSETRegisterLong(int opcode) {
+		int dataRegister = (opcode >> 9) & 0x7;
+		int mode = (opcode >> 3) & 0x7;
+		int register = opcode & 0x7;
+		
+		int numberBit = (int) cpu.getD(dataRegister);
+		
+		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
+		long data = o.getAddressingMode().getLong(o);
+		
+		calcFlags(data, (int) numberBit);
+	
+		data = cpu.bitSet((int) data, (int) numberBit);
+		o.setData(data);
+		
+		cpu.writeKnownAddressingMode(o, data, Size.LONG);
+	}
 	
 	void calcFlags(long data, int bit) {
 		if (cpu.bitTest(data, bit)) {

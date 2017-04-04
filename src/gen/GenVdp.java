@@ -810,16 +810,35 @@ public class GenVdp {
 				tileIndex *= 0x20;
 				
 				for (int filas = 0; filas < 8; filas++) {
+					int pointVert;
+					if (vertFlip) {
+						pointVert = (filas - 7) * -1;
+					} else {
+						pointVert = filas;
+					}
 					for (int k = 0; k < 4; k++) {
-						int grab = (tileIndex + k) + (filas * 4);
+						int point;
+						if (horFlip) {
+							point = (k - 3) * -1;
+						} else {
+							point = k;
+						}
+						
+						int grab = (tileIndex + point) + (pointVert * 4);
 						int data = vram[grab];
 						
 						if (data != 0) {
 							System.out.println();
 						}
 						
-						int pixel1 = (data & 0xF0) >> 4;
-						int pixel2 = data & 0x0F;
+						int pixel1, pixel2;
+						if (horFlip) {
+							pixel1 = data & 0x0F;
+							pixel2 = (data & 0xF0) >> 4;
+						} else {
+							pixel1 = (data & 0xF0) >> 4;
+							pixel2 = data & 0x0F;
+						}
 						
 						int colorIndex1 = paletteLine + (pixel1 * 2);
 						int colorIndex2 = paletteLine + (pixel2 * 2);

@@ -104,7 +104,7 @@ public class LINK implements GenInstructionHandler {
 		cpu.PC += 2;
 			 
 		long data = cpu.getA(register);
-		cpu.print = true;
+
 		cpu.SSP--;
 		cpu.bus.write(cpu.SSP, data & 0xFF, Size.BYTE);
 		cpu.SSP--;

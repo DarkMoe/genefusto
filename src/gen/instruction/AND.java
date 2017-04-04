@@ -193,7 +193,17 @@ public class AND implements GenInstructionHandler {
 	}
 	
 	private void ANDSourceEALong(int opcode) {
-		throw new RuntimeException("");
+		int register = (opcode & 0x7);
+		int mode = (opcode >> 3) & 0x7;
+		int destRegister = (opcode >> 9) & 0x7;
+		
+		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
+		long data = o.getAddressingMode().getLong(o);
+		
+		long res = cpu.getD(destRegister) & data;
+		cpu.setDLong(destRegister, res);
+		
+		calcFlags(res, Size.LONG.getMsb());
 	}
 	
 	void calcFlags(long data, long msb) {

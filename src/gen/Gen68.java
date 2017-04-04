@@ -110,11 +110,7 @@ public class Gen68 {
 		
 		if (PC == 0x8EAC) {
 //			print = true;
-			System.out.println();
-		}
-		
-		if (PC == 0x1E577A) {
-			System.out.println();
+//			System.out.println();
 		}
 		
  		GenInstruction instruction = getInstruction((int) opcode);
@@ -951,10 +947,13 @@ public class Gen68 {
 			taken = isN();
 			break;
 		case 0b1100:
-			taken = !(isN() | isV());
+			taken = !(isN() || isV());
 			break;
-		case 0b1101:
-			taken = isN() | isV();
+		case 0b1101:	//	LT Less Than        N (+) V = 1
+			taken = isN() || isV();
+			break;
+		case 0b1110:	//	GT Greater Than     Z + (N (+) V) = 0
+			taken = !(isZ() && (isN() || isV()));
 			break;
 			
 			default:

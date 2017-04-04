@@ -236,7 +236,7 @@ public class GenBus {
 		}
 	}
 
-	private long readInterruptVector(long vector) {
+	public long readInterruptVector(long vector) {
 		long address  = memory.readCartridge(vector) << 24;
 			 address |= memory.readCartridge(vector + 1) << 16;
 			 address |= memory.readCartridge(vector + 2) << 8;
