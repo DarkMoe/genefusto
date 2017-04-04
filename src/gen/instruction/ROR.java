@@ -260,7 +260,35 @@ public class ROR implements GenInstructionHandler {
 	}
 	
 	private void ROLRegisterLong(int opcode) {
-		throw new RuntimeException("AA");
+		int register = (opcode & 0x7);
+		boolean ir = cpu.bitTest(opcode, 5);
+		int numRegister = (opcode >> 9) & 0x7;
+		
+		long toShift;
+		if (!ir) {
+			if (numRegister == 0) {
+				numRegister = 8;
+			}
+			toShift = numRegister;
+		} else {
+			toShift = cpu.getD(numRegister);
+		}
+		
+		toShift &= 31;	//	wrap
+		
+		long data = cpu.getD(register);
+		long rot = (data << toShift);
+		
+		long res = rot & 0xFFFF_FFFFL;
+		for (int i = 0; i < toShift; i++) {		// rotacion de bits
+			res = res | ((rot & (1 << (32 + i))) >> (32 - i));
+		}
+		
+		boolean carry = ((rot & (1 << (32))) > 0);
+		
+		cpu.setDLong(register, res);
+		
+		calcFlags(res, Size.LONG.getMsb(), 0xFFFF_FFFFL, carry);
 	}
 	
 	private void RORRegisterByte(int opcode) {

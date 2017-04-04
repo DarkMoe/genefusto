@@ -85,7 +85,9 @@ public class MOVE_FROM_SR implements GenInstructionHandler {
 
 		long data = cpu.SR;
 		
-		cpu.writeAddressingMode(Size.WORD, 0, data, mode, register);
+		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);	//TODO es escritura, el mode immediate se tranforma por otro, hacer nuevo metodo !!
+		o.setData(data);
+		o.getAddressingMode().setWord(o);
 	}
 	
 }

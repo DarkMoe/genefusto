@@ -1,5 +1,8 @@
 package gen;
 
+//	info de quirks a implementar:
+//	https://emudocs.org/Genesis/Graphics/genvdp.txt
+
 public class GenVdp {
 
 	int[] vram  = new int[0x10000];
@@ -264,6 +267,8 @@ public class GenVdp {
 			
 		} else { // Write 2 - Setting RAM address
 			if (!addressSecondWrite) {
+				System.out.println("first");
+				
 				firstWrite = data;
 				addressSecondWrite = true;
 				
@@ -276,6 +281,8 @@ public class GenVdp {
 				
 				int code = (int) ((first >> 14) | (((second >> 4) & 0xF) << 2));
 				int addr = (int) ((first & 0x3FFF) | ((second & 0x3) << 14));
+
+				System.out.println("second code " + code);
 				
 				addressPort = addr;
 				autoIncrementTotal = 0;	// reset este acumulador
@@ -594,6 +601,10 @@ public class GenVdp {
 		
 		if (offset == 0x26) {
 			System.out.println();
+		}
+		
+		if (offset > 0xFFFE) {
+			return;
 		}
 		
 		vram[offset] 	 = data1;

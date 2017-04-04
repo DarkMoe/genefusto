@@ -108,12 +108,15 @@ public class SUBQ implements GenInstructionHandler {
 				};
 			}
 			for (int m = 0; m < 8; m++) {
+				if (m == 1 && s == 0b00) {	//	size byte no tiene address direct
+					continue;
+				}
 				for (int r = 0; r < 8; r++) {
 					if (m == 0b111 & r > 0b001) {
 						continue;
 					}
 					for (int d = 0; d < 8; d++) {
-						int opcode = base + ((d << 9) | (s << 6) | (m << 3) | r);
+						int opcode = base | (d << 9) | (s << 6) | (m << 3) | r;
 						cpu.addInstruction(opcode, ins);
 					}
 				}
@@ -137,12 +140,9 @@ public class SUBQ implements GenInstructionHandler {
 		long tot = (data - dataToSub);
 		long total = (data & 0xFFFF_FF00L) | (tot & 0x0000_00FF) & 0xFFFF_FFFFL;
 		
-		if (mode == 1) {	//	address register, siempre guarda longword y no calcula flags
-			cpu.writeKnownAddressingMode(o, total, Size.LONG);
-		} else {
-			cpu.writeKnownAddressingMode(o, total, Size.BYTE);
-			calcFlags(tot, Size.BYTE.getMsb(), Size.BYTE.getMax());
-		}
+		cpu.writeKnownAddressingMode(o, total, Size.BYTE);
+		
+		calcFlags(tot, Size.BYTE.getMsb(), Size.BYTE.getMax());
 	}
 	
 	private void SUBQWord(int opcode) {
@@ -154,15 +154,20 @@ public class SUBQ implements GenInstructionHandler {
 			dataToSub = 8;
 		}
 		
-		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
-		long data = o.getAddressingMode().getWord(o);
-		
-		long tot = (data - dataToSub);
-		long total = (data & 0xFFFF_0000L) | (tot & 0x0000_FFFF) & 0xFFFF_FFFFL;
-		
 		if (mode == 1) {	//	address register, siempre guarda longword y no calcula flags
+			Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
+			long data = o.getAddressingMode().getLong(o);
+			
+			long total = (data - dataToSub);
 			cpu.writeKnownAddressingMode(o, total, Size.LONG);
+			
 		} else {
+			Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
+			long data = o.getAddressingMode().getWord(o);
+			
+			long tot = (data - dataToSub);
+			long total = (data & 0xFFFF_0000L) | (tot & 0x0000_FFFF) & 0xFFFF_FFFFL;
+			
 			cpu.writeKnownAddressingMode(o, total, Size.WORD);
 			calcFlags(tot, Size.WORD.getMsb(), Size.WORD.getMax());
 		}

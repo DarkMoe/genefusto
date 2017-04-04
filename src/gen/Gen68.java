@@ -82,7 +82,7 @@ public class Gen68 {
 	AddressingMode addressingModes[];
 	
 	StringBuilder sb = new StringBuilder();
-	private boolean print;
+	public boolean print;
 	
 	public int runInstruction() {
 		long opcode = (bus.read(PC) << 8);
@@ -108,8 +108,12 @@ public class Gen68 {
 //		print = true;
 //		
 		
-		if (PC == 0x31b0) {
+		if (PC == 0x8EAC) {
 //			print = true;
+			System.out.println();
+		}
+		
+		if (PC == 0x1E577A) {
 			System.out.println();
 		}
 		
@@ -324,11 +328,17 @@ public class Gen68 {
 			if (size == Size.BYTE) {	//	byte
 //				data = bus.read(addr);
 				A[register]++;
+				if (register == 7) {
+					SSP = (int) A[register];
+				}
 				
 			} else if (size == Size.WORD) {	//	word
 //				data  = (bus.read(addr)     << 8);
 //				data |= (bus.read(addr + 1) << 0);
 				A[register] += 2;
+				if (register == 7) {
+					SSP = (int) A[register];
+				}
 				
 			} else if (size == Size.LONG) {	//	long
 //				data  = (bus.read(addr)     << 24);
@@ -336,33 +346,46 @@ public class Gen68 {
 //				data |= (bus.read(addr + 2) << 8);
 //				data |= (bus.read(addr + 3) << 0);
 				A[register] += 4;
+				if (register == 7) {
+					SSP = (int) A[register];
+				}
 				
 			}
 				
 		} else if (mode == 0b100) {		//	-(An)	 Address Register Indirect with Predecrement Mode 
 			addr = A[register];
-			oper.setAddress(addr);
 			
 			if (size == Size.BYTE) {	//	byte
 				addr--;
 				A[register] = addr;
+				if (register == 7) {
+					SSP = (int) addr;
+				}
 //				data = bus.read(addr);
 				
 			} else if (size == Size.WORD) {	//	word
 				addr -= 2;
 				A[register] = addr;
+				if (register == 7) {
+					SSP = (int) addr;
+				}
 //				data  = (bus.read(addr)     << 8);
 //				data |= (bus.read(addr + 1) << 0);
 				
 			} else if (size == Size.LONG) {	//	long
 				addr -= 4;
 				A[register] = addr;
+				if (register == 7) {
+					SSP = (int) addr;
+				}
 //				data  = (bus.read(addr)     << 24);
 //				data |= (bus.read(addr + 1) << 16);
 //				data |= (bus.read(addr + 2) << 8);
 //				data |= (bus.read(addr + 3) << 0);
 				
 			}
+			
+			oper.setAddress(addr);
 			
 		} else if (mode == 0b101) {	//	(d16,An)	Address with Displacement
 			long base = A[register];
@@ -926,6 +949,9 @@ public class Gen68 {
 			break;
 		case 0b1011:
 			taken = isN();
+			break;
+		case 0b1100:
+			taken = !(isN() | isV());
 			break;
 		case 0b1101:
 			taken = isN() | isV();

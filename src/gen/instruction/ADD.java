@@ -135,7 +135,7 @@ public class ADD implements GenInstructionHandler {
 				ins = new GenInstruction() {
 					@Override
 					public void run(int opcode) {
-						ADD_EADest_Long(opcode);
+						ADD_EADest_Byte(opcode);
 					}
 				};
 				
@@ -143,7 +143,7 @@ public class ADD implements GenInstructionHandler {
 				ins = new GenInstruction() {
 					@Override
 					public void run(int opcode) {
-						ADD_EADest_Long(opcode);
+						ADD_EADest_Word(opcode);
 					}
 				};
 				
@@ -157,7 +157,7 @@ public class ADD implements GenInstructionHandler {
 				
 			}
 			
-			if (opMode == 0b011) {
+			if (opMode == 0b011) {	// opMode es 0, 1, 2 o 4, 5, 6
 				continue;
 			}
 			
@@ -222,11 +222,37 @@ public class ADD implements GenInstructionHandler {
 	}
 	
 	private void ADD_EADest_Byte(int opcode) {
-		throw new RuntimeException("");
+		int dataRegister = (opcode >> 9) & 0x7;
+		int mode = (opcode >> 3) & 0x7;
+		int register = (opcode & 0x7);
+		
+		long toAdd = cpu.getD(dataRegister) & 0xFF;
+		
+		Operation o = cpu.resolveAddressingMode(Size.BYTE, mode, register);
+		long data = o.getAddressingMode().getByte(o);
+		
+		long tot = (toAdd + data);
+		
+		cpu.setDByte(dataRegister, tot);
+		
+		calcFlags(tot, Size.BYTE.getMsb(), 0xFF);
 	}
 	
 	private void ADD_EADest_Word(int opcode) {
-		throw new RuntimeException("");
+		int dataRegister = (opcode >> 9) & 0x7;
+		int mode = (opcode >> 3) & 0x7;
+		int register = (opcode & 0x7);
+		
+		long toAdd = cpu.getD(dataRegister) & 0xFFFF;
+		
+		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
+		long data = o.getAddressingMode().getWord(o);
+		
+		long tot = (toAdd + data);
+		
+		cpu.setDWord(dataRegister, tot);
+		
+		calcFlags(tot, Size.WORD.getMsb(), 0xFFFF);
 	}
 	
 	private void ADD_EADest_Long(int opcode) {
@@ -241,7 +267,7 @@ public class ADD implements GenInstructionHandler {
 		
 		long tot = (toAdd + data);
 		
-		cpu.writeKnownAddressingMode(o, tot, Size.LONG);
+		cpu.setDLong(dataRegister, tot);
 		
 		calcFlags(tot, Size.LONG.getMsb(), 0xFFFF_FFFFL);
 	}

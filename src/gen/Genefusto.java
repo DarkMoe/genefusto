@@ -51,6 +51,7 @@ import gen.instruction.BSET;
 import gen.instruction.BTST;
 import gen.instruction.CLR;
 import gen.instruction.CMP;
+import gen.instruction.CMPA;
 import gen.instruction.CMPI;
 import gen.instruction.DBcc;
 import gen.instruction.EOR;
@@ -59,6 +60,7 @@ import gen.instruction.EXT;
 import gen.instruction.JMP;
 import gen.instruction.JSR;
 import gen.instruction.LEA;
+import gen.instruction.LINK;
 import gen.instruction.LSL;
 import gen.instruction.MOVE;
 import gen.instruction.MOVEA;
@@ -79,6 +81,7 @@ import gen.instruction.ORI_SR;
 import gen.instruction.PEA;
 import gen.instruction.ROR;
 import gen.instruction.ROXL;
+import gen.instruction.ROXR;
 import gen.instruction.RTE;
 import gen.instruction.RTS;
 import gen.instruction.SUB;
@@ -87,6 +90,7 @@ import gen.instruction.SUBQ;
 import gen.instruction.SWAP;
 import gen.instruction.Scc;
 import gen.instruction.TST;
+import gen.instruction.UNLK;
 import test.FileLoader;
 
 //	MEMORY MAP:	https://en.wikibooks.org/wiki/Genesis_Programming
@@ -163,6 +167,7 @@ public class Genefusto {
         new BTST(cpu).generate();
         new CLR(cpu).generate();
         new CMP(cpu).generate();
+        new CMPA(cpu).generate();
         new CMPI(cpu).generate();
         new DBcc(cpu).generate();
         new EOR(cpu).generate();
@@ -171,6 +176,7 @@ public class Genefusto {
         new JMP(cpu).generate();
         new JSR(cpu).generate();
         new LEA(cpu).generate();
+        new LINK(cpu).generate();
         new LSL(cpu).generate();
         new MOVE(cpu).generate();
         new MOVEA(cpu).generate();
@@ -191,6 +197,7 @@ public class Genefusto {
         new PEA(cpu).generate();
         new ROR(cpu).generate();
         new ROXL(cpu).generate();
+        new ROXR(cpu).generate();
         new RTE(cpu).generate();
         new RTS(cpu).generate();
         new Scc(cpu).generate();
@@ -199,6 +206,7 @@ public class Genefusto {
         new SUBQ(cpu).generate();
         new SWAP(cpu).generate();
         new TST(cpu).generate();
+        new UNLK(cpu).generate();
         
         System.out.println(cpu.totalInstructions);
         

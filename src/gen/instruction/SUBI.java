@@ -167,7 +167,23 @@ public class SUBI implements GenInstructionHandler {
 	}
 	
 	private void SUBILong(int opcode) {
-		throw new RuntimeException();
+		int mode = (opcode >> 3) & 0x7;
+		int register = (opcode & 0x7);
+
+		long data  = cpu.bus.read(cpu.PC + 2) << 24;
+		 	 data |= cpu.bus.read(cpu.PC + 3) << 16;
+		 	 data |= cpu.bus.read(cpu.PC + 4) << 8;
+		 	 data |= cpu.bus.read(cpu.PC + 5);
+		
+	 	cpu.PC += 4;
+
+		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
+		long toSub = o.getAddressingMode().getLong(o);
+
+		long tot = toSub - data;
+		cpu.writeKnownAddressingMode(o, tot, Size.LONG);
+		
+		calcFlags(tot, Size.LONG.getMsb(), Size.LONG.getMax());
 	}
 	
 	void calcFlags(long tot, int msb, long maxSize) {//TODO  overflow

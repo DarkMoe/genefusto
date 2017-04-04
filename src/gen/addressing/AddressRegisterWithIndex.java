@@ -1,6 +1,7 @@
 package gen.addressing;
 
 import gen.Gen68;
+import gen.Size;
 import gen.instruction.Operation;
 
 public class AddressRegisterWithIndex implements AddressingMode {
@@ -13,17 +14,27 @@ public class AddressRegisterWithIndex implements AddressingMode {
 	
 	@Override
 	public void setByte(Operation o) {
-		throw new RuntimeException();
+		long address = o.getAddress();
+		long data = o.getData();
+		
+		cpu.bus.write(address, data, Size.BYTE);
 	}
 
 	@Override
 	public void setWord(Operation o) {
-		throw new RuntimeException();
+		long address = o.getAddress();
+		long data = o.getData();
+		
+		cpu.bus.write(address, data, Size.WORD);
 	}
 
 	@Override
 	public void setLong(Operation o) {
-		throw new RuntimeException();
+		long address = o.getAddress();
+		long data = o.getData();
+		
+		cpu.bus.write(address, (data >> 16), Size.LONG);
+		cpu.bus.write(address + 2, (data & 0xFFFF), Size.LONG);
 	}
 
 	@Override

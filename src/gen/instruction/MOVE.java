@@ -162,7 +162,10 @@ public class MOVE implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(cpu.PC + 2, Size.BYTE, sourceMode, sourceReg);
 		long data = o.getAddressingMode().getByte(o);
 		
-		cpu.writeAddressingMode(Size.BYTE, cpu.PC + 2, data, mode, register);
+		Operation oDest = cpu.resolveAddressingMode(Size.BYTE, mode, register);
+		oDest.setData(data);
+		
+		oDest.getAddressingMode().setByte(oDest);
 		
 		calcFlags(data, Size.BYTE.getMsb());
 	}
@@ -176,7 +179,10 @@ public class MOVE implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(cpu.PC + 2, Size.WORD, sourceMode, sourceReg);
 		long data = o.getAddressingMode().getWord(o);
 		
-		cpu.writeAddressingMode(Size.WORD, cpu.PC + 2, data, mode, register);
+		Operation oDest = cpu.resolveAddressingMode(Size.WORD, mode, register);
+		oDest.setData(data);
+		
+		oDest.getAddressingMode().setWord(oDest);
 		
 		calcFlags(data, Size.WORD.getMsb());
 	}
@@ -190,7 +196,10 @@ public class MOVE implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(cpu.PC + 2, Size.LONG, sourceMode, sourceReg);
 		long data = o.getAddressingMode().getLong(o);
 		
-		cpu.writeAddressingMode(Size.LONG, cpu.PC + 2, data, mode, register);
+		Operation oDest = cpu.resolveAddressingMode(Size.LONG, mode, register);
+		oDest.setData(data);
+		
+		oDest.getAddressingMode().setLong(oDest);
 		
 		calcFlags(data, Size.LONG.getMsb());
 	}

@@ -28,7 +28,9 @@ public class PCWithIndex implements AddressingMode {
 
 	@Override
 	public long getByte(Operation o) {
-		throw new RuntimeException();
+		long address = o.getAddress();
+		long data = cpu.bus.read(address);
+		return data;
 	}
 
 	@Override

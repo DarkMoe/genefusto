@@ -4,11 +4,11 @@ import gen.Gen68;
 import gen.GenInstruction;
 import gen.Size;
 
-public class ROXL implements GenInstructionHandler {
+public class ROXR implements GenInstructionHandler {
 
 	final Gen68 cpu;
 	
-	public ROXL(Gen68 cpu) {
+	public ROXR(Gen68 cpu) {
 		this.cpu = cpu;
 	}
 
@@ -112,7 +112,7 @@ public class ROXL implements GenInstructionHandler {
 	
 	@Override
 	public void generate() {
-		int base = 0xE110;
+		int base = 0xE010;
 		GenInstruction ins = null;
 		
 		for (int s = 0; s < 3; s++) {
@@ -120,21 +120,21 @@ public class ROXL implements GenInstructionHandler {
 				ins = new GenInstruction() {
 					@Override
 					public void run(int opcode) {
-						ROXLRegisterByte(opcode);
+						ROXRRegisterByte(opcode);
 					}
 				};
 			} else if (s == 0b01) {
 				ins = new GenInstruction() {
 					@Override
 					public void run(int opcode) {
-						ROXLRegisterWord(opcode);
+						ROXRRegisterWord(opcode);
 					}
 				};
 			} else if (s == 0b10) {
 				ins = new GenInstruction() {
 					@Override
 					public void run(int opcode) {
-						ROXLRegisterLong(opcode);
+						ROXRRegisterLong(opcode);
 					}
 				};
 			}
@@ -150,31 +150,11 @@ public class ROXL implements GenInstructionHandler {
 		}
 	}
 	
-	private void ROXLRegisterByte(int opcode) {
-		int register = (opcode & 0x7);
-		boolean ir = cpu.bitTest(opcode, 5);
-		int numRegister = (opcode >> 9) & 0x7;
-		
-		long toShift;
-		if (!ir) {
-			if (numRegister == 0) {
-				numRegister = 8;
-			}
-			toShift = numRegister;
-		} else {
-			toShift = cpu.getD(numRegister);
-		}
-		
-		int extended = cpu.isX() ? 1 : 0;
-		long res = ((cpu.getD(register) & 0xFF) << toShift) | extended;
-		cpu.setDByte(register, res);
-		
-		boolean carry = cpu.bitTest(res, 8);
-		
-		calcFlags(res, Size.BYTE.getMsb(), 0xFF, carry);
+	private void ROXRRegisterByte(int opcode) {
+		throw new RuntimeException("AA");
 	}
 	
-	private void ROXLRegisterWord(int opcode) {
+	private void ROXRRegisterWord(int opcode) {
 		int register = (opcode & 0x7);
 		boolean ir = cpu.bitTest(opcode, 5);
 		int numRegister = (opcode >> 9) & 0x7;
@@ -189,39 +169,26 @@ public class ROXL implements GenInstructionHandler {
 			toShift = cpu.getD(numRegister);
 		}
 		
-		int extended = cpu.isX() ? 1 : 0;
-		long res = ((cpu.getD(register) & 0xFFFF) << toShift) | extended;
+		long data = cpu.getD(register) & 0xFFFF;
+		
+		int extended = cpu.isX() ? 0x8000 : 0;
+		long res = (data >> toShift) | extended;
 		cpu.setDWord(register, res);
 		
-		boolean carry = cpu.bitTest(res, 16);
+		boolean carry = false;
+		if (toShift != 0) {
+			if (((data >> toShift - 1) & 1) > 0) {
+				carry = true;
+			}
+		}
 		
 		calcFlags(res, Size.WORD.getMsb(), 0xFFFF, carry);
 	}
-	
-	private void ROXLRegisterLong(int opcode) {
-		int register = (opcode & 0x7);
-		boolean ir = cpu.bitTest(opcode, 5);
-		int numRegister = (opcode >> 9) & 0x7;
-		
-		long toShift;
-		if (!ir) {
-			if (numRegister == 0) {
-				numRegister = 8;
-			}
-			toShift = numRegister;
-		} else {
-			toShift = cpu.getD(numRegister);
-		}
-		
-		int extended = cpu.isX() ? 1 : 0;
-		long res = (cpu.getD(register) << toShift) | extended;
-		cpu.setDLong(register, res);
-		
-		boolean carry = cpu.bitTest(res, 32);
-		
-		calcFlags(res, Size.LONG.getMsb(), 0xFFFF_FFFFL, carry);
+
+	private void ROXRRegisterLong(int opcode) {
+		throw new RuntimeException("AA");
 	}
-	
+
 	void calcFlags(long data, long msb, long maxSize, boolean carry) {
 		long wrapped = data & maxSize;
 		if (wrapped == 0) {
