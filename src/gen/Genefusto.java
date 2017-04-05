@@ -96,7 +96,6 @@ import gen.instruction.Scc;
 import gen.instruction.TRAP;
 import gen.instruction.TST;
 import gen.instruction.UNLK;
-import test.FileLoader;
 
 //	MEMORY MAP:	https://en.wikibooks.org/wiki/Genesis_Programming
 
@@ -250,8 +249,8 @@ public class Genefusto {
     
         JMenu menu = new JMenu("File");
         bar.add(menu);
-        JMenu viewMenu = new JMenu("View");
-        bar.add(viewMenu);
+//        JMenu viewMenu = new JMenu("View");
+//        bar.add(viewMenu);
         JMenu helpMenu = new JMenu("Nefusto");
         bar.add(helpMenu);
         
@@ -284,11 +283,11 @@ public class Genefusto {
             }
         });
         
-        for (int i = 1; i <= 4; i++) {
-        	JMenuItem zoomItem = new JMenuItem("x" + i);
-        	zoomItem.addActionListener(new ScreenListener(i));
-        	viewMenu.add(zoomItem);
-		}
+//        for (int i = 1; i <= 4; i++) {
+//        	JMenuItem zoomItem = new JMenuItem("x" + i);
+//        	zoomItem.addActionListener(new ScreenListener(i));
+//        	viewMenu.add(zoomItem);
+//		}
         
         JCheckBoxMenuItem biosItem = new JCheckBoxMenuItem("Use BIOS", true);
         biosItem.addItemListener(new ItemListener() {
@@ -301,7 +300,7 @@ public class Genefusto {
             	}
 			}
         });
-        viewMenu.add(biosItem);
+//        viewMenu.add(biosItem);
         
         JMenuItem aboutItem = new JMenuItem("About");
         aboutItem.addActionListener(new ActionListener() {
@@ -427,8 +426,8 @@ public class Genefusto {
         }
     }
 
-    String basePath = "C:\\Users\\Zotac\\workspace\\raul\\src\\gen\\";
-//	String basePath = "C:\\dev\\workspace\\test\\src\\gen\\";
+//    String basePath = "C:\\Users\\Zotac\\workspace\\raul\\src\\gen\\";
+	String basePath = "C:\\dev\\workspace\\test\\src\\gen\\";
     
     class MyRunnable implements Runnable {
         File file;

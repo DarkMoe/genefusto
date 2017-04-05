@@ -106,11 +106,9 @@ public class Gen68 {
 		cycles = 0;
 		
 //		print = true;
-//		
 		
-		if (PC == 0x8EAC) {
-//			print = true;
-//			System.out.println();
+		if (PC == 0x10568) {
+			System.out.println();
 		}
 		
  		GenInstruction instruction = getInstruction((int) opcode);

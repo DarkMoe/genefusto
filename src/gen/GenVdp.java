@@ -374,16 +374,9 @@ public class GenVdp {
 //			System.out.println(pad4(dmaLength));
 			
 			if (vramWrite) {
-				if (destAddr == 0x26) {
-					System.out.println();
-				}
-				
 				vram[destAddr] = data >> 8;
 				vram[destAddr + 1] = data & 0xFF;
 			} else if (cramWrite) {
-				if (data == 0xEEE) {
-					System.out.println();
-				}
 				cram[destAddr] = data >> 8;
 				cram[destAddr + 1] = data & 0xFF;
 			} else if (vsramWrite) {
@@ -527,17 +520,9 @@ public class GenVdp {
 			int data2 = (int) bus.read(sourceTrue + 1);
 			
 			if (vramWrite) {
-				if (destAddr == 0x26) {
-					System.out.println();
-				}
-				
 				vram[destAddr] = data1;
 				vram[destAddr + 1] = data2;
 			} else if (cramWrite) {
-				if (data2 == 0xEE){
-					System.out.println();
-				}
-				
 				cram[destAddr] = data1;
 				cram[destAddr + 1] = data2;
 			} else if (vsramWrite) {
@@ -599,10 +584,7 @@ public class GenVdp {
 		int data1 = (word >> 8) & 0xFF;
 		int data2 = (word >> 0) & 0xFF;
 		
-		if (offset == 0x26) {
-			System.out.println();
-		}
-		
+		//	hack por si se pasa
 		if (offset > 0xFFFE) {
 			return;
 		}
@@ -751,6 +733,15 @@ public class GenVdp {
     
 	public int[][] screenData = new int[320][256];
     
+	public int[][] planeA = new int[320][256];
+	public int[][] planeB = new int[320][256];
+	
+	public boolean[][] planePrioA = new boolean[320][256];
+	public boolean[][] planePrioB = new boolean[320][256];
+	
+	public int[][] planeIndexColorA = new int[320][256];
+	public int[][] planeIndexColorB = new int[320][256];
+	
 	public void run(int cycles) {
 		totalCycles += cycles;
 		if (totalCycles > 251503) {
@@ -762,12 +753,62 @@ public class GenVdp {
 				renderPlaneB();
 				renderWindow();
 				
+				compaginateImage();
+				
 				bus.emu.renderScreen();
 			}
 		}
 		
 	}
 
+	//The VDP has a complex system of priorities that can be used to achieve several complex effects. The priority order goes like follows, with the least priority being the first item in the list:
+	//
+	//Backdrop Colour
+	//Plane B with priority bit clear
+	//Plane A with priority bit clear
+	//Sprites with priority bit clear
+	//Window Plane with priority bit clear
+	//Plane B with priority bit set
+	//Plane A with priority bit set
+	//Sprites with priority bit set
+	//Window Plane with priority bit set
+	private void compaginateImage() {
+		int backLine = (registers[7] >> 4) & 0x3;
+		int backEntry = (registers[7]) & 0xF;
+		int backIndex = (backLine * 32) + (backEntry * 2);
+		int backColor = cram[backIndex] << 8 | cram[backIndex + 1];
+		
+		int r = (backColor >> 1) & 0x7;
+		int g = (backColor >> 5) & 0x7;
+		int b = (backColor >> 9) & 0x7;
+		
+		backColor = getColour(r, g, b);
+		
+		for (int i = 0; i < 320; i++) {
+			for (int j = 0; j < 256; j++) {
+				boolean aPrio = planePrioA[i][j];
+				boolean bPrio = planePrioB[i][j];
+
+				int aColor = planeIndexColorA[i][j];
+				int bColor = planeIndexColorB[i][j];
+				
+				int pix = 0;
+				if (aColor != 0) {
+					if (aPrio || !bPrio) {
+						pix = planeA[i][j];
+					} else {
+						pix = planeB[i][j];
+					}
+				} else if (bColor != 0) {
+					pix = planeB[i][j];
+				} else {
+					pix = backColor;
+				}
+				
+				screenData[i][j] = pix;
+			}
+		}
+	}
 
 //Register 02 - Plane A Name Table Location
 //7	6		5		4		3		2	1	0
@@ -783,9 +824,6 @@ public class GenVdp {
 			for (int horTile = 0; horTile < 40; horTile++) {//	40 words / tiles por scanline
 				int loc = tileLocator + (vertTile / (8 * 40));
 				
-				if (loc == 0xC59C) {
-					System.out.println();
-				}
 				int nameTable = vram[loc] << 8;
 				nameTable |= vram[loc + 1];
 				
@@ -802,10 +840,6 @@ public class GenVdp {
 				boolean priority = bitTest(nameTable, 15);
 				
 				int paletteLine = paletteLineIndex * 32;	//	16 colores por linea, 2 bytes por color
-				
-				if (nameTable != 0) {
-					System.out.println();
-				}
 				
 				tileIndex *= 0x20;
 				
@@ -827,9 +861,101 @@ public class GenVdp {
 						int grab = (tileIndex + point) + (pointVert * 4);
 						int data = vram[grab];
 						
-						if (data != 0) {
-							System.out.println();
+						int pixel1, pixel2;
+						if (horFlip) {
+							pixel1 = data & 0x0F;
+							pixel2 = (data & 0xF0) >> 4;
+						} else {
+							pixel1 = (data & 0xF0) >> 4;
+							pixel2 = data & 0x0F;
 						}
+						
+						int colorIndex1 = paletteLine + (pixel1 * 2);
+						int colorIndex2 = paletteLine + (pixel2 * 2);
+						
+						int color1 = cram[colorIndex1] << 8 | cram[colorIndex1 + 1];
+						int color2 = cram[colorIndex2] << 8 | cram[colorIndex2 + 1];
+						
+						int r = (color1 >> 1) & 0x7;
+						int g = (color1 >> 5) & 0x7;
+						int b = (color1 >> 9) & 0x7;
+						
+						int r2 = (color2 >> 1) & 0x7;
+						int g2 = (color2 >> 5) & 0x7;
+						int b2 = (color2 >> 9) & 0x7;
+						
+						int po = horTile * 8 + (k * 2);
+						int pu = vertTile * 8 + (filas);
+						
+						int theColor1 = getColour(r, g, b);
+						int theColor2 = getColour(r2, g2, b2);
+						
+						planeA[po][pu] = theColor1;
+						planeA[po + 1][pu] = theColor2;
+						
+						planePrioA[po][pu] = priority;
+						planePrioA[po + 1][pu] = priority;
+						
+						planeIndexColorA[po][pu] = pixel1;
+						planeIndexColorA[po + 1][pu] = pixel2;
+					}
+				}
+			}
+			tileLocator += 48;	// fuera del active view, 24 words o 48 bytes
+		}
+	}
+	
+//	$04 - Plane B Name Table Location
+//	Register 04 - Plane B Name Table Location
+//	7	6	5	4	3		2		1		0
+//	x	x	x	x	SB16	SB15	SB14	SB13
+//	SB15-SB13 defines the upper three bits of the VRAM location of Plane B's nametable. This value is effectively the address divided by $2000, meaning that the Plane B nametable has to be located at a VRAM address that's a multiple of $2000. For example, if the Plane A nametable was to be located at $E000 in VRAM, it would be divided by $2000, which results in $07, the proper value for this register.
+//	SB16 is only valid if 128 KB mode is enabled, and allows for rebasing the Plane B nametable to the second 64 KB of VRAM.
+	private void renderPlaneB() {
+		int nameTableLocation = (registers[4] & 0x7) << 3;	// bit 3 para modo extendido de vram, no lo emulo
+		nameTableLocation *= 0x400;
+		
+		int tileLocator = nameTableLocation;
+		for (int vertTile = 0; vertTile < 32; vertTile++) {
+			for (int horTile = 0; horTile < 40; horTile++) {//	40 words / tiles por scanline
+				int loc = tileLocator + (vertTile / (8 * 40));
+				
+				int nameTable = vram[loc] << 8;
+				nameTable |= vram[loc + 1];
+				
+				tileLocator += 2;
+			
+//				An entry in a name table is 16 bits, and works as follows:
+//				15			14 13	12				11		   			10 9 8 7 6 5 4 3 2 1 0
+//				Priority	Palette	Vertical Flip	Horizontal Flip		Tile Index
+				int tileIndex = (nameTable & 0x07FF);	// cada tile ocupa 32 bytes
+				
+				boolean horFlip = bitTest(nameTable, 11);
+				boolean vertFlip = bitTest(nameTable, 12);
+				int paletteLineIndex = (nameTable >> 13) & 0x3;
+				boolean priority = bitTest(nameTable, 15);
+				
+				int paletteLine = paletteLineIndex * 32;	//	16 colores por linea, 2 bytes por color
+				
+				tileIndex *= 0x20;
+				
+				for (int filas = 0; filas < 8; filas++) {
+					int pointVert;
+					if (vertFlip) {
+						pointVert = (filas - 7) * -1;
+					} else {
+						pointVert = filas;
+					}
+					for (int k = 0; k < 4; k++) {
+						int point;
+						if (horFlip) {
+							point = (k - 3) * -1;
+						} else {
+							point = k;
+						}
+						
+						int grab = (tileIndex + point) + (pointVert * 4);
+						int data = vram[grab];
 						
 						int pixel1, pixel2;
 						if (horFlip) {
@@ -846,10 +972,6 @@ public class GenVdp {
 						int color1 = cram[colorIndex1] << 8 | cram[colorIndex1 + 1];
 						int color2 = cram[colorIndex2] << 8 | cram[colorIndex2 + 1];
 						
-						if (color1 != 0) {
-							System.out.println();
-						}
-						
 						int r = (color1 >> 1) & 0x7;
 						int g = (color1 >> 5) & 0x7;
 						int b = (color1 >> 9) & 0x7;
@@ -861,8 +983,17 @@ public class GenVdp {
 						int po = horTile * 8 + (k * 2);
 						int pu = vertTile * 8 + (filas);
 						
-						screenData[po][pu] = getColour(r, g, b);
-						screenData[po + 1][pu] = getColour(r2, g2, b2);
+						int theColor1 = getColour(r, g, b);
+						int theColor2 = getColour(r2, g2, b2);
+						
+						planeB[po][pu] = theColor1;
+						planeB[po + 1][pu] = theColor2;
+						
+						planePrioB[po][pu] = priority;
+						planePrioB[po + 1][pu] = priority;
+						
+						planeIndexColorB[po][pu] = pixel1;
+						planeIndexColorB[po + 1][pu] = pixel2;
 					}
 				}
 			}
@@ -870,24 +1001,26 @@ public class GenVdp {
 		}
 	}
 	
+	private void renderWindow() {
+		
+	}
+	
 	private int getColour(int red, int green, int blue) {
-        int extrapoRed = ((red + 1) * 32) - 1;						//	el maximo (1F) es 31 en decimal, al multiplicarlo por 8 da 248 (el blanco puro siendo 255)
-        int extrapoGreen = ((green + 1) * 32) - 1;					//	asi esta extrapolado casi perfecto y linealmente. Solo queda el caso del negro, que en lugar
-        int extrapoBlue = ((blue + 1) * 32) - 1;						// de ser 0, queda en 7 (se puede poner un if y ya)
+        if (red != 0) {
+        	red = ((red + 1) * 32) - 1;
+        }
+        if (green != 0) {
+        	green = ((green + 1) * 32) - 1;
+        }
+        if (blue != 0) {
+        	blue = ((blue + 1) * 32) - 1;
+        }
         
-        int elco = extrapoRed << 16 | extrapoGreen << 8 | extrapoBlue;
+        int elco = red << 16 | green << 8 | blue;
         
         return elco;
 	}
 	
-	private void renderPlaneB() {
-		
-	}
-
-	private void renderWindow() {
-		
-	}
-
 	public boolean bitTest(long address, int position) {
         return ((address & (1 << position)) != 0);
     }
@@ -900,4 +1033,9 @@ public class GenVdp {
         return address & ~(1 << position);
     }
 	
+    private void printCRAM() {
+    	for (int i = 0; i < cram.length; i++) {
+			System.out.println(Integer.toHexString(i) + ": " + Integer.toHexString(cram[i]));
+		}
+    }
 }
