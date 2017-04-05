@@ -66,6 +66,7 @@ import gen.instruction.LSL;
 import gen.instruction.MOVE;
 import gen.instruction.MOVEA;
 import gen.instruction.MOVEM;
+import gen.instruction.MOVEP;
 import gen.instruction.MOVEQ;
 import gen.instruction.MOVE_FROM_SR;
 import gen.instruction.MOVE_TO_CCR;
@@ -190,6 +191,7 @@ public class Genefusto {
         new MOVE_TO_SR(cpu).generate();
         new MOVE_TO_FROM_USP(cpu).generate();
         new MOVEM(cpu).generate();
+        new MOVEP(cpu).generate();
         new MOVEQ(cpu).generate();
         new MULS(cpu).generate();
         new MULU(cpu).generate();
@@ -425,8 +427,8 @@ public class Genefusto {
         }
     }
 
-//    String basePath = "C:\\Users\\Zotac\\workspace\\raul\\src\\gen\\";
-	String basePath = "C:\\dev\\workspace\\test\\src\\gen\\";
+    String basePath = "C:\\Users\\Zotac\\workspace\\raul\\src\\gen\\";
+//	String basePath = "C:\\dev\\workspace\\test\\src\\gen\\";
     
     class MyRunnable implements Runnable {
         File file;
@@ -461,7 +463,7 @@ public class Genefusto {
             	}
             	cpu.runInstruction();
             	bus.checkInterrupts();
-            	vdp.run(18);
+            	vdp.run(24);
             	vdp.dmaOperation();
             }
         } catch (RuntimeException e) {

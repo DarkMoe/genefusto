@@ -147,7 +147,7 @@ public class BTST implements GenInstructionHandler {
 						continue;
 					}
 		
-					int opcode = base + ((register << 9) | (m << 3) | r);
+					int opcode = base | (register << 9) | (m << 3) | r;
 					if (m == 0) {
 						cpu.addInstruction(opcode, insLong);	// only long
 					} else {
@@ -184,7 +184,7 @@ public class BTST implements GenInstructionHandler {
 					continue;
 				}
 				
-				int opcode = base + ((m << 3) | r);
+				int opcode = base | (m << 3) | r;
 				if (m == 0) {
 					cpu.addInstruction(opcode, insLong);
 				} else {

@@ -955,7 +955,9 @@ public class Gen68 {
 		case 0b1110:	//	GT Greater Than     Z + (N (+) V) = 0
 			taken = !(isZ() && (isN() || isV()));
 			break;
-			
+		case 0b1111:	//	LE Less or Equal    Z + (N (+) V) = 1
+			taken = isZ() && (isN() || isV());
+			break;
 			default:
 				throw new RuntimeException("not impl " + cc);
 		}
