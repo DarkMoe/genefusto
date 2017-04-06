@@ -306,14 +306,18 @@ public class MOVEM implements GenInstructionHandler {
 			if (((registerListMaskA) & (1 << i)) != 0) {
 				data = cpu.getA(i) & 0xFFFF;
 				
-				cpu.writeAddressingMode(Size.WORD, 0, data, mode, register);
+				Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
+				cpu.writeKnownAddressingMode(o, data, Size.WORD);
 			}
 		}
 		for (int i = 7; i >= 0; i--) {
 			if (((registerListMaskD) & (1 << i)) != 0) {
 				data = cpu.getD(i) & 0xFFFF;
 				
-				cpu.writeAddressingMode(Size.WORD, 0, data, mode, register);
+				Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
+				cpu.writeKnownAddressingMode(o, data, Size.WORD);
+				
+//				cpu.writeAddressingMode(Size.WORD, 0, data, mode, register);
 			}
 		}
 		
@@ -347,14 +351,20 @@ public class MOVEM implements GenInstructionHandler {
 			if (((registerListMaskA) & (1 << i)) != 0) {
 				data = cpu.getA(i);
 				
-				cpu.writeAddressingMode(Size.LONG, 0, data, mode, register);
+				Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
+				cpu.writeKnownAddressingMode(o, data, Size.LONG);
+				
+//				cpu.writeAddressingMode(Size.LONG, 0, data, mode, register);
 			}
 		}
 		for (int i = 7; i >= 0; i--) {
 			if (((registerListMaskD) & (1 << i)) != 0) {
 				data = cpu.getD(i);
 				
-				cpu.writeAddressingMode(Size.LONG, 0, data, mode, register);
+				Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
+				cpu.writeKnownAddressingMode(o, data, Size.LONG);
+				
+//				cpu.writeAddressingMode(Size.LONG, 0, data, mode, register);
 			}
 		}
 		

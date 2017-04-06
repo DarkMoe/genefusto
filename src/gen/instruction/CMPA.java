@@ -141,7 +141,7 @@ public class CMPA implements GenInstructionHandler {
 		calcFlags(res, Size.LONG.getMsb(), 0xFFFF_FFFFL);
 	}
 	
-	void calcFlags(long data, int msb, long maxSize) {	// TODO V
+	void calcFlags(long data, long msb, long maxSize) {	// TODO V
 		if ((data & maxSize) == 0) {
 			cpu.setZ();
 		} else {

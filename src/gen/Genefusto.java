@@ -426,8 +426,8 @@ public class Genefusto {
         }
     }
 
-    String basePath = "C:\\Users\\Zotac\\workspace\\raul\\src\\gen\\";
-//	String basePath = "C:\\dev\\workspace\\test\\src\\gen\\";
+//    String basePath = "C:\\Users\\Zotac\\workspace\\raul\\src\\gen\\";
+	String basePath = "C:\\dev\\workspace\\test\\src\\gen\\";
     
     class MyRunnable implements Runnable {
         File file;
@@ -462,7 +462,7 @@ public class Genefusto {
             	}
             	cpu.runInstruction();
             	bus.checkInterrupts();
-            	vdp.run(24);
+            	vdp.run(8);
             	vdp.dmaOperation();
             }
         } catch (RuntimeException e) {

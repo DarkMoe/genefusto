@@ -140,6 +140,10 @@ public class GenVdp {
 	boolean cramWrite;
 	boolean vsramWrite;
 	
+	boolean vramRead;
+	boolean cramRead;
+	boolean vsramRead;
+	
 	long all;
 	
 	GenBus bus;
@@ -282,7 +286,7 @@ public class GenVdp {
 				int code = (int) ((first >> 14) | (((second >> 4) & 0xF) << 2));
 				int addr = (int) ((first & 0x3FFF) | ((second & 0x3) << 14));
 
-				System.out.println("second code " + code);
+				System.out.println("second code " + Integer.toHexString(code));
 				
 				addressPort = addr;
 				autoIncrementTotal = 0;	// reset este acumulador
@@ -293,14 +297,22 @@ public class GenVdp {
 					throw new RuntimeException("ADDR WRITE !");
 
 				} else if (addressMode == 0b0001) { // VRAM Write
+					cramRead = false;
+					
 					vramWrite = true;
 					cramWrite = false;
 					vsramWrite = false;
 
 				} else if (addressMode == 0b1000) { // CRAM Read
-					throw new RuntimeException("ADDR WRITE !");
+					cramRead = true;
+					
+					cramWrite = false;
+					vramWrite = false;
+					vsramWrite = false;
 
 				} else if (addressMode == 0b0011) { // CRAM Write
+					cramRead = false;
+					
 					cramWrite = true;
 					vramWrite = false;
 					vsramWrite = false;
@@ -309,6 +321,8 @@ public class GenVdp {
 					throw new RuntimeException("ADDR WRITE !");
 
 				} else if (addressMode == 0b0101) { // VSRAM Write
+					cramRead = false;
+					
 					vsramWrite = true;
 					vramWrite = false;
 					cramWrite = false;
@@ -502,7 +516,7 @@ public class GenVdp {
 		
 		long sourceAddr = ((registers[0x17] & 0x7F) << 16) | (registers[0x16] << 8) | (registers[0x15]);
 		long sourceTrue = sourceAddr << 1;	// duplica, trabaja asi
-		int destAddr = (int) (((commandWord & 0x3) << 14) | ((commandWord & 0x3F00_0000L) >> 16));
+		int destAddr = (int) (((commandWord & 0x3) << 14) | ((commandWord & 0x3FFF_0000L) >> 16));
 		
 		int index, data;
 		while (dmaLength > 0) {
@@ -1038,4 +1052,46 @@ public class GenVdp {
 			System.out.println(Integer.toHexString(i) + ": " + Integer.toHexString(cram[i]));
 		}
     }
+
+    // FIXME tiene q llegarle el tama;o aca !!!!
+	public long readDataPort() {
+		if (cramRead) {
+			long data = readCram();
+			return data;
+		} else {
+			throw new RuntimeException("IMPL !");
+		}
+	}
+
+	private long readCram() {
+		int index = nextFIFOReadEntry;
+		int address = addressPort;
+		
+		long first =  all >> 16;
+		long second = all & 0xFFFF;
+		
+		int code = (int) ((first >> 14) | (((second >> 4) & 0xF) << 2));
+		int addr = (int) ((first & 0x3FFF) | ((second & 0x3) << 14));
+		
+		int offset = addr + autoIncrementTotal;
+		
+		long data = ((cram[offset] << 8) | (cram[offset + 1]));
+		
+		System.out.println("addr: " + Integer.toHexString(offset));
+		System.out.println("addr: " + Integer.toHexString(offset + 1));
+		
+//		fifoAddress[index] = offset;
+//		fifoCode[index] = code;
+//		fifoData[index] = word;
+		
+		int incrementOffset = autoIncrementTotal + autoIncrementData;
+
+//		address = address + incrementOffset;	// FIXME wrap
+//		offset = offset + incrementOffset;
+//		index = (index + 1) % 4;
+//		
+//		nextFIFOReadEntry = index;
+//		nextFIFOWriteEntry = index;
+//		autoIncrementTotal = incrementOffset;
+	}
 }

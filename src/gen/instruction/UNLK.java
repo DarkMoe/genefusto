@@ -62,20 +62,17 @@ public class UNLK implements GenInstructionHandler {
 	private void UNLINKWord(int opcode) {
 		int register = opcode & 0x7;
 		
-		long data = cpu.getA(register);
+		long addr = cpu.getA(register);
 
 		long fromSP = 0;
-		fromSP |= (cpu.bus.read(cpu.SSP) << 24);
-		cpu.SSP++;
-		fromSP |= (cpu.bus.read(cpu.SSP) << 16);
-		cpu.SSP++;
-		fromSP |= (cpu.bus.read(cpu.SSP) << 8);
-		cpu.SSP++;
-		fromSP |= (cpu.bus.read(cpu.SSP));
-		cpu.SSP++;
+		fromSP |= (cpu.bus.read(addr) << 24);
+		fromSP |= (cpu.bus.read(addr + 1) << 16);
+		fromSP |= (cpu.bus.read(addr + 2) << 8);
+		fromSP |= (cpu.bus.read(addr + 3));
 		
 		cpu.setALong(register, fromSP);
-		long newSP = data + 4;
+		
+		long newSP = addr + 4;
 		cpu.setALong(7, newSP);
 	}
 

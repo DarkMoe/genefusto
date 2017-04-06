@@ -212,10 +212,12 @@ public class ADD implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 		
-		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
-		long data = o.getAddressingMode().getLong(o);
+		long data = cpu.getD(dataRegister);
 		
-		long tot = (cpu.getD(dataRegister) + data);
+		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
+		long toAdd = o.getAddressingMode().getLong(o);
+		
+		long tot = (data + toAdd);
 		cpu.setDLong(dataRegister, tot);
 		
 		calcFlags(tot, Size.LONG.getMsb(), 0xFFFF_FFFFL);
@@ -272,7 +274,7 @@ public class ADD implements GenInstructionHandler {
 		calcFlags(tot, Size.LONG.getMsb(), 0xFFFF_FFFFL);
 	}
 	
-	void calcFlags(long tot, int msb, long maxSize) {	//TODO  overflow
+	void calcFlags(long tot, long msb, long maxSize) {	//TODO  overflow
 		if ((tot & maxSize) == 0) {
 			cpu.setZ();
 		} else {

@@ -187,7 +187,7 @@ public class ADDI implements GenInstructionHandler {
 		calcFlags(tot, Size.LONG.getMsb(), Size.LONG.getMax());
 	}
 	
-	void calcFlags(long tot, int msb, long maxSize) {	//TODO  overflow
+	void calcFlags(long tot, long msb, long maxSize) {	//TODO  overflow
 		if ((tot & maxSize) == 0) {
 			cpu.setZ();
 		} else {

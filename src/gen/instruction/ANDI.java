@@ -179,7 +179,7 @@ public class ANDI implements GenInstructionHandler {
 		calcFlags(res, Size.LONG.getMsb());
 	}
 	
-	void calcFlags(long data, int msb) {
+	void calcFlags(long data, long msb) {
 		if (data == 0) {
 			cpu.setZ();
 		} else {

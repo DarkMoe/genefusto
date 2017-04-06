@@ -262,10 +262,12 @@ public class LSL implements GenInstructionHandler {
 			toShift = cpu.getD(numRegister);
 		}
 		
-		long res = cpu.getD(register) << toShift;
+		long data = cpu.getD(register);
+		
+		long res = data << toShift;
 		cpu.setDLong(register, res);
 		
-		boolean carry = cpu.bitTest(res, 32);
+		boolean carry = ((res >> 32) & 1) == 1;
 		
 		calcFlags(res, Size.LONG.getMsb(), 0xFFFF_FFFFL, carry);
 	}

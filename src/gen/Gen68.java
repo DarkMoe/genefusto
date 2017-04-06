@@ -107,13 +107,18 @@ public class Gen68 {
 		
 //		print = true;
 		
-		if (PC == 0x1E57e2) {
-			System.out.println();
-//			print = true;
-		}
 		if (  bus.memory.ram[0xEFB9] == 0x1c) {
 			System.out.println();
 		}
+		if (PC == 0x1B3c46) {
+			System.out.println();
+//			print = true;
+		}
+		if (PC == 0x1b27b0) {
+			System.out.println();
+			print = true;
+		}
+		
  		GenInstruction instruction = getInstruction((int) opcode);
  		instruction.run((int) opcode);
 		
@@ -393,7 +398,7 @@ public class Gen68 {
 			if ((displacement & 0x8000) > 0) {
 				displacement |= 0xFFFF_0000L;	// sign extend 32 bits
 			}
-			addr = (base + displacement);	// TODO wrap ?
+			addr = (int) (base + displacement);	// TODO verificar esto, al pasarlo a int hace el wrap bien parece
 //			data = bus.read(addr);
 			
 			oper.setAddress(addr);
@@ -589,265 +594,208 @@ public class Gen68 {
 		} else if (Size.LONG == size) {
 			addressing.setLong(o);
 		}
+	}
 		
-//		case dataRegisterDirect:
-//			int dataReg = o.getRegister();
-//			if (size == Size.byt) {
-//				long old = D[dataReg];
+//	public void writeAddressingMode(Size size, long offset, long data, int mode, int register) {
+//		long addr;
+//		
+//		if (mode == 0b000) {	//	Dn
+//			if (size == Size.BYTE) {
+//				long old = D[register];
 //				long v = (old & (0xFFFF_FF00)) | data;
-//				D[dataReg] = v;
+//				D[register] = v;	// size = byte, se escribe el ultimo byte
 //				
-//			} else if (size == Size.word) {
-//				long old = D[dataReg];
+//			} else if (size == Size.WORD) {
+//				long old = D[register];
 //				long v = (old & (0xFFFF_0000)) | data;
-//				D[dataReg] = v;
+//				D[register] = v;	// size = word, se escribe los 2 ultimos bytes
 //				
-//			} else if (size == Size.longW) {
-//				D[dataReg] = data;
+//			} else if (size == Size.LONG) {
+//				D[register] = data;
 //			}
-//			break;
 //			
-//		case addressRegisterInderect:
-//			if (size == Size.longW) {
-//				bus.write(o.getAddress(), (data >> 16) & 0xFFFF, size);
-//				bus.write(o.getAddress() + 2, data & 0xFFFF, size);
+//		} else if (mode == 0b001) {		//	An		Address Register Direct Mode 
+//			
+//			throw new RuntimeException("IMPL");
+//			
+//		} else if (mode == 0b010) {		//	(An)	Address Register Indirect Mode
+//			addr = A[register];
+//			
+//			if (size == Size.LONG) {
+//				bus.write(addr, (data >> 16), size);
+//				bus.write(addr + 2, (data & 0xFFFF), size);
+//				
+//			} else if (size == Size.WORD) {
+//				bus.write(addr, (data & 0xFFFF), size);
+//				
+//			} else if (size == Size.BYTE) {
+//				bus.write(addr, (data & 0xFF), size);
+//			}
+//			
+//		} else if (mode == 0b011) {		//	(An)+	 Address Register Indirect with Postincrement Mode 
+//			addr = A[register];
+//			
+//			if (size == Size.BYTE) {
+//				bus.write(addr, data & 0xFF, size);
+//				A[register]++;
+//			} else if (size == Size.WORD) {
+//				bus.write(addr, data & 0xFFFF, size);
+//				A[register] += 2;
+//			} else if (size == Size.LONG) {
+//				bus.write(addr, data >> 16, size);
+//				bus.write(addr + 2, data & 0xFFFF, size);
+//				A[register] += 4;
+//			}
+//		} else if (mode == 0b100) {		//	-(An)
+//			long address = A[register];
+//			
+//			if (size == Size.WORD) {
+//				address = (address - 2) & 0xFFFF_FFFFL;
+//				A[register] = address;	// predecrement
+//				
+//				bus.write(address, data, size);
+//			} else if (size == Size.LONG) {
+//				address = (address - 4) & 0xFFFF_FFFFL;
+//				A[register] = address;	// predecrement
+//				
+//				bus.write(address, (data >> 16) & 0xFFFF, size);
+//				bus.write(address + 2, (data & 0xFFFF), size);
+//				
 //			} else {
-//				bus.write(o.getAddress(), data, size);
+//				throw new RuntimeException("NOT " + size);
 //			}
-//			break;
 //			
-//		case addressRegisterIndirectPostIncrement:
-//			if (size == Size.longW) {
-//				bus.write(o.getAddress(), (data >> 16) & 0xFFFF, size);
-//				bus.write(o.getAddress() + 2, data & 0xFFFF, size);
+//		} else if (mode == 0b101) {		//	(d16,An)	Address with Displacement
+//			if (size == Size.BYTE) {	//	byte
+//				long base = A[register];
+//				long displac = (bus.read(offset) << 8);
+//				displac 	|= (bus.read(offset + 1));
+//				
+//				if ((displac & 0x80) > 0) {
+//					displac |= 0xFFFF_FF00L;	// sign extend 32 bits
+//				}
+//				addr = (base + displac);
+//				bus.write(addr, data & 0xFF, size);
+//				
+//			} else if (size == Size.WORD) {
+//				long base = A[register];
+//				long displac = (bus.read(offset) << 8);
+//				displac 	|= (bus.read(offset + 1));
+//				
+//				if ((displac & 0x8000) > 0) {
+//					displac |= 0xFFFF_0000L;	// sign extend 32 bits
+//				}
+//				addr = (base + displac);
+//				bus.write(addr, data & 0xFFFF, size);
+//				
+//			} else if (size == Size.LONG) {
+//				long base = A[register];
+//				long displac = (bus.read(offset) << 8);
+//				displac 	|= (bus.read(offset + 1));
+//				
+//				//	tiene sign extend esto ?
+//				
+//				addr = (base + displac);
+//				bus.write(addr, (data >> 16), Size.WORD);		// FIXME, manejar write como long word y arreglar todo
+//				bus.write(addr + 2, (data & 0xFFFF), Size.WORD);
+//			}
+//			
+//			PC += 2;
+//		
+//		} else if (mode == 0b110) {		//	 Address Register Indirect with Index (Base Displacement) Mode
+//			long exten  = (bus.read(PC + 2) << 8);
+//		         exten |= (bus.read(PC + 3));
+//			int displacement = (int) (exten & 0xFF);		// es 8 bits, siempre el ultimo byte ?
+//			
+//			if ((displacement & 0x80) > 0) { 	// sign extend
+//				displacement = 0xFFFF_FF00 | displacement;
+//			}
+//			int idxRegNumber = (int) ((exten >> 12) & 0x07);
+//			Size idxSize = ((exten & 0x0800) == 0x0800 ? Size.LONG : Size.WORD);
+//			boolean idxIsAddressReg = ((exten & 0x8000) == 0x8000);
+//			long idxVal;
+//			if (idxIsAddressReg) {
+//				if (idxSize == Size.WORD) {
+//					idxVal = getA(idxRegNumber);
+//					if ((data & 0x8000) > 0) {
+//						idxVal = 0xFFFF_0000 | idxVal;
+//					}
+//				} else {
+//					idxVal = getA(idxRegNumber);
+//				}
 //			} else {
-//				bus.write(o.getAddress(), data, size);
+//				if (idxSize == Size.WORD) {
+//					idxVal = getD(idxRegNumber);
+//					if ((data & 0x8000) > 0) {
+//						idxVal = 0xFFFF_0000 | idxVal;
+//					}
+//				} else {
+//					idxVal = getD(idxRegNumber);
+//				}
 //			}
-//			break;
 //			
-//		case addressRegisterIndirectPreIncrement:
-//			if (size == Size.longW) {
-//				bus.write(o.getAddress(), (data >> 16) & 0xFFFF, size);
-//				bus.write(o.getAddress() + 2, data & 0xFFFF, size);
+//			long address = getA(register) + displacement + idxVal;
+//			if (size == Size.BYTE) {
+//				bus.write(address, data, size);
+//			} else if (size == Size.WORD) {
+//				bus.write(address, data, size);
+//			} else if (size == Size.LONG) {
+//				bus.write(address, data, size);
+//			}
+//			
+//			PC += 2;
+//			
+//		} else if (mode == 0b111) {
+//			if (register == 0b000) {			//	Abs.W
+//				addr  = (bus.read(offset) << 8);
+//				addr |= (bus.read(offset + 1) << 0);
+//			
+//				if ((addr & 0x8000) > 0) {
+//					addr |= 0xFFFF_0000;
+//				}
+//				
+//				if (size == Size.BYTE) {
+//					bus.write(addr, data, size);
+//				} else if (size == Size.WORD) {
+//					bus.write(addr, data, size);
+//				} else if (size == Size.LONG) {
+//					bus.write(addr, (data >> 16), size);
+//					bus.write(addr + 2, data & 0xFFFF, size);
+//				}
+//				
+//				PC += 2;
+//				
+//			} else if (register == 0b001) {		//	Abs.L
+//				addr  = (bus.read(offset) << 24);
+//				addr |= (bus.read(offset + 1) << 16);
+//				addr |= (bus.read(offset + 2) << 8);
+//				addr |= (bus.read(offset + 3) << 0);
+//			
+//				if (size == Size.BYTE) {
+//					bus.write(addr, data & 0xFF, size);
+//					
+//				} else if (size == Size.WORD) {
+//					bus.write(addr, data & 0xFFFF, size);
+//					
+//				} else if (size == Size.LONG) {
+//					bus.write(addr, data >> 16, size);
+//					bus.write(addr + 2, data & 0xFFFF, size);
+//					
+//				}
+//				
+//				PC += 4;
+//				
+//			} else if (register == 0b010) {		//	(d16,PC)	Program Counter Indirect with Displacement Mode
+//				throw new RuntimeException("IMPL");
+//			} else if (register == 0b100) {		//	#data
+//				throw new RuntimeException("IMPL");
 //			} else {
-//				bus.write(o.getAddress(), data, size);
+//				throw new RuntimeException("Addressing no soportado: " + mode + " REG: " + register);
 //			}
-//			break;
-//			
-//		case absoluteWord:
-//			if (size == Size.longW) {
-//				bus.write(o.getAddress(), (data >> 16) & 0xFFFF, size);
-//				bus.write(o.getAddress() + 2, data & 0xFFFF, size);
-//			} else {
-//				bus.write(o.getAddress(), data, size);
-//			}
-//			break;
-//			
-//		default:
-//			throw new RuntimeException("NO ! " + o.getAddressingMode().toString());
+//		} else {
+//			throw new RuntimeException("Addressing no soportado: " + mode);
 //		}
-	}
-	
-	public void writeAddressingMode(Size size, long offset, long data, int mode, int register) {
-		long addr;
-		
-		if (mode == 0b000) {	//	Dn
-			if (size == Size.BYTE) {
-				long old = D[register];
-				long v = (old & (0xFFFF_FF00)) | data;
-				D[register] = v;	// size = byte, se escribe el ultimo byte
-				
-			} else if (size == Size.WORD) {
-				long old = D[register];
-				long v = (old & (0xFFFF_0000)) | data;
-				D[register] = v;	// size = word, se escribe los 2 ultimos bytes
-				
-			} else if (size == Size.LONG) {
-				D[register] = data;
-			}
-			
-		} else if (mode == 0b001) {		//	An		Address Register Direct Mode 
-			
-			throw new RuntimeException("IMPL");
-			
-		} else if (mode == 0b010) {		//	(An)	Address Register Indirect Mode
-			addr = A[register];
-			
-			if (size == Size.LONG) {
-				bus.write(addr, (data >> 16), size);
-				bus.write(addr + 2, (data & 0xFFFF), size);
-				
-			} else if (size == Size.WORD) {
-				bus.write(addr, (data & 0xFFFF), size);
-				
-			} else if (size == Size.BYTE) {
-				bus.write(addr, (data & 0xFF), size);
-			}
-			
-		} else if (mode == 0b011) {		//	(An)+	 Address Register Indirect with Postincrement Mode 
-			addr = A[register];
-			
-			if (size == Size.BYTE) {
-				bus.write(addr, data & 0xFF, size);
-				A[register]++;
-			} else if (size == Size.WORD) {
-				bus.write(addr, data & 0xFFFF, size);
-				A[register] += 2;
-			} else if (size == Size.LONG) {
-				bus.write(addr, data >> 16, size);
-				bus.write(addr + 2, data & 0xFFFF, size);
-				A[register] += 4;
-			}
-		} else if (mode == 0b100) {		//	-(An)
-			long address = A[register];
-			
-			if (size == Size.WORD) {
-				address = (address - 2) & 0xFFFF_FFFFL;
-				A[register] = address;	// predecrement
-				
-				bus.write(address, data, size);
-			} else if (size == Size.LONG) {
-				address = (address - 4) & 0xFFFF_FFFFL;
-				A[register] = address;	// predecrement
-				
-				bus.write(address, (data >> 16) & 0xFFFF, size);
-				bus.write(address + 2, (data & 0xFFFF), size);
-				
-			} else {
-				throw new RuntimeException("NOT " + size);
-			}
-			
-		} else if (mode == 0b101) {		//	(d16,An)	Address with Displacement
-			if (size == Size.BYTE) {	//	byte
-				long base = A[register];
-				long displac = (bus.read(offset) << 8);
-				displac 	|= (bus.read(offset + 1));
-				
-				if ((displac & 0x80) > 0) {
-					displac |= 0xFFFF_FF00L;	// sign extend 32 bits
-				}
-				addr = (base + displac);
-				bus.write(addr, data & 0xFF, size);
-				
-			} else if (size == Size.WORD) {
-				long base = A[register];
-				long displac = (bus.read(offset) << 8);
-				displac 	|= (bus.read(offset + 1));
-				
-				if ((displac & 0x8000) > 0) {
-					displac |= 0xFFFF_0000L;	// sign extend 32 bits
-				}
-				addr = (base + displac);
-				bus.write(addr, data & 0xFFFF, size);
-				
-			} else if (size == Size.LONG) {
-				long base = A[register];
-				long displac = (bus.read(offset) << 8);
-				displac 	|= (bus.read(offset + 1));
-				
-				//	tiene sign extend esto ?
-				
-				addr = (base + displac);
-				bus.write(addr, (data >> 16), Size.WORD);		// FIXME, manejar write como long word y arreglar todo
-				bus.write(addr + 2, (data & 0xFFFF), Size.WORD);
-			}
-			
-			PC += 2;
-		
-		} else if (mode == 0b110) {		//	 Address Register Indirect with Index (Base Displacement) Mode
-			long exten  = (bus.read(PC + 2) << 8);
-		         exten |= (bus.read(PC + 3));
-			int displacement = (int) (exten & 0xFF);		// es 8 bits, siempre el ultimo byte ?
-			
-			if ((displacement & 0x80) > 0) { 	// sign extend
-				displacement = 0xFFFF_FF00 | displacement;
-			}
-			int idxRegNumber = (int) ((exten >> 12) & 0x07);
-			Size idxSize = ((exten & 0x0800) == 0x0800 ? Size.LONG : Size.WORD);
-			boolean idxIsAddressReg = ((exten & 0x8000) == 0x8000);
-			long idxVal;
-			if (idxIsAddressReg) {
-				if (idxSize == Size.WORD) {
-					idxVal = getA(idxRegNumber);
-					if ((data & 0x8000) > 0) {
-						idxVal = 0xFFFF_0000 | idxVal;
-					}
-				} else {
-					idxVal = getA(idxRegNumber);
-				}
-			} else {
-				if (idxSize == Size.WORD) {
-					idxVal = getD(idxRegNumber);
-					if ((data & 0x8000) > 0) {
-						idxVal = 0xFFFF_0000 | idxVal;
-					}
-				} else {
-					idxVal = getD(idxRegNumber);
-				}
-			}
-			
-			long address = getA(register) + displacement + idxVal;
-			if (size == Size.BYTE) {
-				bus.write(address, data, size);
-			} else if (size == Size.WORD) {
-				bus.write(address, data, size);
-			} else if (size == Size.LONG) {
-				bus.write(address, data, size);
-			}
-			
-			PC += 2;
-			
-		} else if (mode == 0b111) {
-			if (register == 0b000) {			//	Abs.W
-				addr  = (bus.read(offset) << 8);
-				addr |= (bus.read(offset + 1) << 0);
-			
-				if ((addr & 0x8000) > 0) {
-					addr |= 0xFFFF_0000;
-				}
-				
-				if (size == Size.BYTE) {
-					bus.write(addr, data, size);
-				} else if (size == Size.WORD) {
-					bus.write(addr, data, size);
-				} else if (size == Size.LONG) {
-					bus.write(addr, (data >> 16), size);
-					bus.write(addr + 2, data & 0xFFFF, size);
-				}
-				
-				PC += 2;
-				
-			} else if (register == 0b001) {		//	Abs.L
-				addr  = (bus.read(offset) << 24);
-				addr |= (bus.read(offset + 1) << 16);
-				addr |= (bus.read(offset + 2) << 8);
-				addr |= (bus.read(offset + 3) << 0);
-			
-				if (size == Size.BYTE) {
-					bus.write(addr, data & 0xFF, size);
-					
-				} else if (size == Size.WORD) {
-					bus.write(addr, data & 0xFFFF, size);
-					
-				} else if (size == Size.LONG) {
-					bus.write(addr, data >> 16, size);
-					bus.write(addr + 2, data & 0xFFFF, size);
-					
-				}
-				
-				PC += 4;
-				
-			} else if (register == 0b010) {		//	(d16,PC)	Program Counter Indirect with Displacement Mode
-				throw new RuntimeException("IMPL");
-			} else if (register == 0b100) {		//	#data
-				throw new RuntimeException("IMPL");
-			} else {
-				throw new RuntimeException("Addressing no soportado: " + mode + " REG: " + register);
-			}
-		} else {
-			throw new RuntimeException("Addressing no soportado: " + mode);
-		}
-	}
+//	}
 	
 	public boolean bitTest(long address, int position) {
         return ((address & (1 << position)) != 0);
