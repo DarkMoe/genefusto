@@ -285,8 +285,15 @@ public class LSL implements GenInstructionHandler {
 			toShift = cpu.getD(numRegister);
 		}
 
-		boolean carry = (cpu.getD(register) & 0x1) == 0x1;
-		long res = (cpu.getD(register) & 0xFF) >> toShift;
+		long data = cpu.getD(register) & 0xFF;
+		long res = data >> toShift;
+		
+		boolean carry = false;
+		if (toShift != 0) {
+			if (((data >> toShift - 1) & 1) > 0) {
+				carry = true;
+			}
+		}
 		cpu.setDByte(register, res);
 		
 		calcFlags(res, Size.BYTE.getMsb(), 0xFF, carry);
@@ -307,8 +314,16 @@ public class LSL implements GenInstructionHandler {
 			toShift = cpu.getD(numRegister);
 		}
 
-		boolean carry = (cpu.getD(register) & 0x1) == 0x1;
-		long res = (cpu.getD(register) & 0xFFFF) >> toShift;
+		long data = cpu.getD(register) & 0xFFFF;
+		long res = data >> toShift;
+						
+		boolean carry = false;
+		if (toShift != 0) {
+			if (((data >> toShift - 1) & 1) > 0) {
+				carry = true;
+			}
+		}
+						
 		cpu.setDWord(register, res);
 		
 		calcFlags(res, Size.WORD.getMsb(), 0xFFFF, carry);
@@ -329,8 +344,16 @@ public class LSL implements GenInstructionHandler {
 			toShift = cpu.getD(numRegister);
 		}
 
-		boolean carry = (cpu.getD(register) & 0x1) == 0x1;
-		long res = (cpu.getD(register)) >> toShift;
+		long data = cpu.getD(register);
+		long res = data >> toShift;
+		
+		boolean carry = false;
+		if (toShift != 0) {
+			if (((data >> toShift - 1) & 1) > 0) {
+				carry = true;
+			}
+		}
+		
 		cpu.setDLong(register, res);
 		
 		calcFlags(res, Size.LONG.getMsb(), 0xFFFF_FFFFL, carry);

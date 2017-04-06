@@ -204,34 +204,36 @@ public class GenBus {
 	//	https://www.gamefaqs.com/genesis/916377-genesis/faqs/9755
 	//	http://darkdust.net/writings/megadrive/initializing
 	public void checkInterrupts() {
-		if (vdp.vip == 1) {		//	level 6 interrupt
-			int mask = cpu.getInterruptMask();
-			if (mask <= 0x6) {
-				long oldPC = cpu.PC;
-				int oldSR = cpu.SR;
-				int ssp = cpu.SSP;
-				
-				ssp--;
-				write(ssp, oldPC & 0xFF, Size.BYTE);
-				ssp--;
-				write(ssp, (oldPC >> 8) & 0xFF, Size.BYTE);
-				ssp--;
-				write(ssp, (oldPC >> 16) & 0xFF, Size.BYTE);
-				ssp--;
-				write(ssp, (oldPC >> 24), Size.BYTE);
-				
-				ssp--;
-				write(ssp, oldSR & 0xFF, Size.BYTE);
-				ssp--;
-				write(ssp, (oldSR >> 8) & 0xFF, Size.BYTE);
-				
-				cpu.setALong(7, ssp);
-				
-				long address = readInterruptVector(0x78);
-				cpu.PC = address;
-				cpu.SR = (cpu.SR & 0xF8FF) | 0x0600;
-				
-				vdp.vip = 0;
+		if (vdp.ie0) {				//	vint on
+			if (vdp.vip == 1) {		//	level 6 interrupt
+				int mask = cpu.getInterruptMask();
+				if (mask <= 0x6) {
+					long oldPC = cpu.PC;
+					int oldSR = cpu.SR;
+					int ssp = cpu.SSP;
+					
+					ssp--;
+					write(ssp, oldPC & 0xFF, Size.BYTE);
+					ssp--;
+					write(ssp, (oldPC >> 8) & 0xFF, Size.BYTE);
+					ssp--;
+					write(ssp, (oldPC >> 16) & 0xFF, Size.BYTE);
+					ssp--;
+					write(ssp, (oldPC >> 24), Size.BYTE);
+					
+					ssp--;
+					write(ssp, oldSR & 0xFF, Size.BYTE);
+					ssp--;
+					write(ssp, (oldSR >> 8) & 0xFF, Size.BYTE);
+					
+					cpu.setALong(7, ssp);
+					
+					long address = readInterruptVector(0x78);
+					cpu.PC = address;
+					cpu.SR = (cpu.SR & 0xF8FF) | 0x0600;
+					
+					vdp.vip = 0;
+				}
 			}
 		}
 	}

@@ -109,14 +109,14 @@ public class ASR implements GenInstructionHandler {
 //	---------------------------------
 //
 //RESULT
-//	X - Set according to the list bit shifted out of the operand.
+//	X - Set according to the last bit shifted out of the operand.
 //	    Unaffected for a shift count of zero.
 //	N - Set if the most-significant bit of the result is set. Cleared
 //	    otherwise.
 //	Z - Set if the result is zero. Cleared otherwise.
 //	V - Set if the most significant bit is changed at any time during
 //	    the shift operation. Cleared otherwise.
-//	C - Set according to the list bit shifted out of the operand.
+//	C - Set according to the last bit shifted out of the operand.
 //	    Cleared for a shift count of zero.
 	
 	@Override
@@ -282,11 +282,19 @@ public class ASR implements GenInstructionHandler {
 			toShift = cpu.getD(numRegister);
 		}
 		
-		long shiftee = cpu.getD(register) & 0xFF;
-		long res = shiftee >> toShift;
+		long data = cpu.getD(register) & 0xFF;
+		long res = data >> toShift;
+								
+		boolean carry = false;
+		if (toShift != 0) {
+			if (((data >> toShift - 1) & 1) > 0) {
+				carry = true;
+			}
+		}
+		
 		cpu.setDByte(register, res);
 					
-		calcFlags(res, shiftee, Size.BYTE.getMsb(), 0xFF);
+		calcFlagsRight(res, data, Size.BYTE.getMsb(), carry, 0xFF);
 	}
 	
 	private void ASRWord(int opcode) {
@@ -305,11 +313,19 @@ public class ASR implements GenInstructionHandler {
 			toShift = cpu.getD(numRegister);
 		}
 		
-		long shiftee = cpu.getD(register) & 0xFFFF;
-		long res = shiftee >> toShift;
+		long data = cpu.getD(register) & 0xFFFF;
+		long res = data >> toShift;
+								
+		boolean carry = false;
+		if (toShift != 0) {
+			if (((data >> toShift - 1) & 1) > 0) {
+				carry = true;
+			}
+		}
+								
 		cpu.setDWord(register, res);
 					
-		calcFlags(res, shiftee, Size.WORD.getMsb(), 0xFFFF);
+		calcFlagsRight(res, data, Size.WORD.getMsb(), carry, 0xFFFF);
 	}
 	
 	private void ASRLong(int opcode) {
@@ -328,11 +344,19 @@ public class ASR implements GenInstructionHandler {
 			toShift = cpu.getD(numRegister);
 		}
 		
-		long shiftee = cpu.getD(register);
-		long res = shiftee >> toShift;
+		long data = cpu.getD(register);
+		long res = data >> toShift;
+		
+		boolean carry = false;
+		if (toShift != 0) {
+			if (((data >> toShift - 1) & 1) > 0) {
+				carry = true;
+			}
+		}
+		
 		cpu.setDLong(register, res);
 					
-		calcFlags(res, shiftee, Size.LONG.getMsb(), 0xFFFF_FFFFL);
+		calcFlagsRight(res, data, Size.LONG.getMsb(), carry,  0xFFFF_FFFFL);
 	}
 
 	void calcFlags(long data, long old, long msb, long maxSize) {
@@ -354,6 +378,33 @@ public class ASR implements GenInstructionHandler {
 		}
 		
 		if (data > maxSize) {
+			cpu.setC();
+			cpu.setX();
+		} else {
+			cpu.clearC();
+			cpu.clearX();
+		}
+	}
+	
+	void calcFlagsRight(long data, long old, long msb, boolean carry, long maxSize) {	//	sacar el otro calc y usar este
+		if ((data & maxSize) == 0) {
+			cpu.setZ();
+		} else {
+			cpu.clearZ();
+		}
+		if ((data & msb) > 0) {
+			cpu.setN();
+		} else {
+			cpu.clearN();
+		}
+		
+		if (((data & msb) ^ (old & msb)) == msb) {
+			cpu.setV();
+		} else {
+			cpu.clearV();
+		}
+		
+		if (carry) {
 			cpu.setC();
 			cpu.setX();
 		} else {

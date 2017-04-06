@@ -107,12 +107,15 @@ public class Gen68 {
 		
 //		print = true;
 		
-		if (PC == 0x10568) {
+		if (PC == 0x1E57e2) {
+			System.out.println();
+//			print = true;
+		}
+		if (  bus.memory.ram[0xEFB9] == 0x1c) {
 			System.out.println();
 		}
-		
  		GenInstruction instruction = getInstruction((int) opcode);
-  		instruction.run((int) opcode);
+ 		instruction.run((int) opcode);
 		
 		PC += 2;
 		
