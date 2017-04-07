@@ -231,13 +231,13 @@ public class GenVdp {
 				es = 	((data >> 0) & 1) == 1;
 				
 			} else if (reg == 0x01) {
-				if ((disp) && ((data & 0x40) == 0x40)) {	// el display estaba prendido pero se apago
-					for (int i = 0; i < 320; i++) {
-						for (int j = 0; j < 256; j++) {
-							screenData[i][j] = 0;
-							bus.emu.renderScreen();
-						}
-					}
+				if ((disp) && ((data & 0x40) == 0x40)) {	// el display estaba prendido pero se apago	COMENTADO PORQ PARECE Q APAGA Y PRENDE Y NO BLANQUEA PANTALLA
+//					for (int i = 0; i < 320; i++) {
+//						for (int j = 0; j < 256; j++) {
+//							screenData[i][j] = 0;
+//						}
+//					}
+//					bus.emu.renderScreen();
 				}
 				
 				evram = ((data >> 7) & 1) == 1;
@@ -326,7 +326,6 @@ public class GenVdp {
 					vsramWrite = true;
 					vramWrite = false;
 					cramWrite = false;
-
 				}
 				
 				//	https://wiki.megadrive.org/index.php?title=VDP_DMA
@@ -606,8 +605,8 @@ public class GenVdp {
 		vram[offset] 	 = data1;
 		vram[offset + 1] = data2;
 		
-		System.out.println("addr: " + Integer.toHexString(offset) + " - data: " + Integer.toHexString(data1));
-		System.out.println("addr: " + Integer.toHexString(offset + 1) + " - data: " + Integer.toHexString(data2));
+//		System.out.println("addr: " + Integer.toHexString(offset) + " - data: " + Integer.toHexString(data1));
+//		System.out.println("addr: " + Integer.toHexString(offset + 1) + " - data: " + Integer.toHexString(data2));
 		
 		fifoAddress[index] = offset;
 		fifoCode[index] = code;
@@ -1054,16 +1053,16 @@ public class GenVdp {
     }
 
     // FIXME tiene q llegarle el tama;o aca !!!!
-	public long readDataPort() {
+	public long readDataPort(boolean incrementAddr) {
 		if (cramRead) {
-			long data = readCram();
+			long data = readCram(incrementAddr);
 			return data;
 		} else {
 			throw new RuntimeException("IMPL !");
 		}
 	}
 
-	private long readCram() {
+	private long readCram(boolean incrementAddr) {
 		int index = nextFIFOReadEntry;
 		int address = addressPort;
 		
@@ -1075,23 +1074,30 @@ public class GenVdp {
 		
 		int offset = addr + autoIncrementTotal;
 		
-		long data = ((cram[offset] << 8) | (cram[offset + 1]));
+		long data1 = cram[offset] & 0xEEE;
+		long data2 = cram[offset + 1] & 0xEEE;
 		
-		System.out.println("addr: " + Integer.toHexString(offset));
-		System.out.println("addr: " + Integer.toHexString(offset + 1));
+		long data = ((data1 << 8) | (data2));
+		
+		System.out.println("addr: " + Integer.toHexString(offset) + "-" + Integer.toHexString(offset + 1) + ": " + Integer.toHexString((int) data));
+		
 		
 //		fifoAddress[index] = offset;
 //		fifoCode[index] = code;
 //		fifoData[index] = word;
 		
-		int incrementOffset = autoIncrementTotal + autoIncrementData;
+		if (incrementAddr) {
+			int incrementOffset = autoIncrementTotal + autoIncrementData;
+			autoIncrementTotal = incrementOffset;
+		}
 
+		return data;
+		
 //		address = address + incrementOffset;	// FIXME wrap
 //		offset = offset + incrementOffset;
 //		index = (index + 1) % 4;
 //		
 //		nextFIFOReadEntry = index;
 //		nextFIFOWriteEntry = index;
-//		autoIncrementTotal = incrementOffset;
 	}
 }

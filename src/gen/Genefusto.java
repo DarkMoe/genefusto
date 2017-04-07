@@ -43,6 +43,7 @@ import gen.instruction.ADDI;
 import gen.instruction.ADDQ;
 import gen.instruction.AND;
 import gen.instruction.ANDI;
+import gen.instruction.ANDI_CCR;
 import gen.instruction.ANDI_SR;
 import gen.instruction.ASR;
 import gen.instruction.BCC;
@@ -163,6 +164,7 @@ public class Genefusto {
         new ADDQ(cpu).generate();
         new AND(cpu).generate();
         new ANDI(cpu).generate();
+        new ANDI_CCR(cpu).generate();
         new ANDI_SR(cpu).generate();
         new ASR(cpu).generate();
         new BCC(cpu).generate();
@@ -444,6 +446,9 @@ public class Genefusto {
                 memory.cartridge = FileLoader.readFile(file);
             }
         
+            String rom = file.getName();
+            jframe.setTitle(jframe.getTitle() + " - " + rom);
+            
             cpu.reset();
             cpu.initialize();
             vdp.init();
@@ -462,7 +467,7 @@ public class Genefusto {
             	}
             	cpu.runInstruction();
             	bus.checkInterrupts();
-            	vdp.run(8);
+            	vdp.run(24);
             	vdp.dmaOperation();
             }
         } catch (RuntimeException e) {

@@ -216,7 +216,19 @@ public class SUB implements GenInstructionHandler {
 	}
 	
 	private void SUB_EADest_Byte(int opcode) {
-		throw new RuntimeException("A");
+		int dataRegister = (opcode >> 9) & 0x7;
+		int mode = (opcode >> 3) & 0x7;
+		int register = (opcode & 0x7);
+		
+		Operation o = cpu.resolveAddressingMode(Size.BYTE, mode, register);
+		long data = o.getAddressingMode().getByte(o);
+		
+		long toSub = cpu.getD(dataRegister) & 0xFF;
+		long tot = (data - toSub);
+	
+		cpu.writeKnownAddressingMode(o, tot, Size.BYTE);
+		
+		calcFlags(tot, Size.BYTE.getMsb(), Size.BYTE.getMax());
 	}
 	
 	private void SUB_EADest_Word(int opcode) {
@@ -236,7 +248,19 @@ public class SUB implements GenInstructionHandler {
 	}
 	
 	private void SUB_EADest_Long(int opcode) {
-		throw new RuntimeException("A");
+		int dataRegister = (opcode >> 9) & 0x7;
+		int mode = (opcode >> 3) & 0x7;
+		int register = (opcode & 0x7);
+		
+		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
+		long data = o.getAddressingMode().getLong(o);
+		
+		long toSub = cpu.getD(dataRegister);
+		long tot = (data - toSub);
+	
+		cpu.writeKnownAddressingMode(o, tot, Size.LONG);
+		
+		calcFlags(tot, Size.LONG.getMsb(), Size.LONG.getMax());
 	}
 	
 	void calcFlags(long tot, long msb, long maxSize) {//TODO  overflow

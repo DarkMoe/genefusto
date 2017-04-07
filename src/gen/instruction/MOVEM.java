@@ -3,6 +3,8 @@ package gen.instruction;
 import gen.Gen68;
 import gen.GenInstruction;
 import gen.Size;
+import gen.addressing.AddressRegisterIndirectPostIncrement;
+import gen.addressing.AddressRegisterIndirectPreDecrement;
 
 public class MOVEM implements GenInstructionHandler {
 
@@ -214,15 +216,16 @@ public class MOVEM implements GenInstructionHandler {
 	private void MOVEMMemToRegsWord(int opcode) {
 		int mode = (opcode >> 3) & 0x7;
 		int register = opcode & 0x7;
-		Operation o;
 		long data;
 		
 		int registerListMaskA = (int) cpu.bus.read(cpu.PC + 2);	// TODO ojo q con pre decrement es al reves la interpretacion
 		int registerListMaskD = (int) cpu.bus.read(cpu.PC + 3);
+
+		cpu.PC += 2;
 		
+		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
 		for (int i = 0; i < 8; i++) {
 			if (((registerListMaskD) & (1 << i)) != 0) {
-				o = cpu.resolveAddressingMode(Size.WORD, mode, register);
 				data = o.getAddressingMode().getWord(o);
 				
 				if ((data & 0x8000) > 0) {	//	sign extend para registros destino y size word
@@ -230,55 +233,74 @@ public class MOVEM implements GenInstructionHandler {
 				}
 				
 				cpu.setDLong(i, data);
+				
+				if (o.getAddressingMode() instanceof AddressRegisterIndirectPostIncrement) {
+					o.setAddress(o.getAddress() + 2);
+					cpu.setAWord(register, o.getAddress());
+				} else {
+					// ?
+				}
 			}
 		}
 		for (int i = 0; i < 8; i++) {
 			if (((registerListMaskA) & (1 << i)) != 0) {
-				o = cpu.resolveAddressingMode(Size.WORD, mode, register);
 				data = o.getAddressingMode().getWord(o);
 				
-				if ((data & 0x8000) > 0) {
+				if ((data & 0x8000) > 0) {	//	sign extend para registros destino y size word
 					data |= 0xFFFF_0000L;
 				}
 				
 				cpu.setALong(i, data);
+				
+				if (o.getAddressingMode() instanceof AddressRegisterIndirectPostIncrement) {
+					o.setAddress(o.getAddress() + 2);
+					cpu.setAWord(register, o.getAddress());
+				} else {
+					// ?
+				}
 			}
 		}
-		
-		cpu.SSP = (int) cpu.getA(7);
-		
-		cpu.PC += 2;
 	}
 	
 	private void MOVEMMemToRegsLong(int opcode) {
 		int mode = (opcode >> 3) & 0x7;
 		int register = opcode & 0x7;
-		Operation o;
 		long data;
 		
-		int registerListMaskA = (int) cpu.bus.read(cpu.PC + 2);	// TODO ojo q con pre decrement es al reves la interpretacion
+		int registerListMaskA = (int) cpu.bus.read(cpu.PC + 2);
 		int registerListMaskD = (int) cpu.bus.read(cpu.PC + 3);
+
+		cpu.PC += 2;
 		
+		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
 		for (int i = 0; i < 8; i++) {
 			if (((registerListMaskD) & (1 << i)) != 0) {
-				o = cpu.resolveAddressingMode(Size.LONG, mode, register);
 				data = o.getAddressingMode().getLong(o);
 				
 				cpu.setDLong(i, data);
+				
+				if (o.getAddressingMode() instanceof AddressRegisterIndirectPostIncrement) {
+					o.setAddress(o.getAddress() + 4);
+					cpu.setALong(register, o.getAddress());
+				} else {
+					// ?
+				}
 			}
 		}
 		for (int i = 0; i < 8; i++) {
 			if (((registerListMaskA) & (1 << i)) != 0) {
-				o = cpu.resolveAddressingMode(Size.LONG, mode, register);
 				data = o.getAddressingMode().getLong(o);
 				
 				cpu.setALong(i, data);
+				
+				if (o.getAddressingMode() instanceof AddressRegisterIndirectPostIncrement) {
+					o.setAddress(o.getAddress() + 4);
+					cpu.setALong(register, o.getAddress());
+				} else {
+					// ?
+				}
 			}
 		}
-		
-		cpu.SSP = (int) cpu.getA(7);
-		
-		cpu.PC += 2;
 	}
 	
 	private void MOVEMRegsToMemWord(int opcode) {
@@ -289,41 +311,72 @@ public class MOVEM implements GenInstructionHandler {
 		int msb = (int) cpu.bus.read(cpu.PC + 2);
 		int lsb = (int) cpu.bus.read(cpu.PC + 3);
 		
-		int registerListMaskD = 0;
-		for (int i = 0; i < 8; i++) {
-			registerListMaskD <<= 1;
-			registerListMaskD |= (msb & 1);
-			msb >>= 1;
-		}
-		int registerListMaskA = 0;
-		for (int i = 0; i < 8; i++) {
-			registerListMaskA <<= 1;
-			registerListMaskA |= (lsb & 1);
-			lsb >>= 1;
-		}
-		
-		for (int i = 7; i >= 0; i--) {
-			if (((registerListMaskA) & (1 << i)) != 0) {
-				data = cpu.getA(i) & 0xFFFF;
-				
-				Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
-				cpu.writeKnownAddressingMode(o, data, Size.WORD);
-			}
-		}
-		for (int i = 7; i >= 0; i--) {
-			if (((registerListMaskD) & (1 << i)) != 0) {
-				data = cpu.getD(i) & 0xFFFF;
-				
-				Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
-				cpu.writeKnownAddressingMode(o, data, Size.WORD);
-				
-//				cpu.writeAddressingMode(Size.WORD, 0, data, mode, register);
-			}
-		}
-		
-		cpu.SSP = (int) cpu.getA(7);
-		
 		cpu.PC += 2;
+		
+		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
+	
+		int registerListMaskD = 0;
+		int registerListMaskA = 0;
+		if (o.getAddressingMode() instanceof AddressRegisterIndirectPreDecrement) {
+			for (int i = 0; i < 8; i++) {
+				registerListMaskD <<= 1;
+				registerListMaskD |= (msb & 1);
+				msb >>= 1;
+			}
+			for (int i = 0; i < 8; i++) {
+				registerListMaskA <<= 1;
+				registerListMaskA |= (lsb & 1);
+				lsb >>= 1;
+			}
+			
+			for (int i = 7; i >= 0; i--) {
+				if (((registerListMaskA) & (1 << i)) != 0) {
+					data = cpu.getA(i);
+					
+					cpu.writeKnownAddressingMode(o, data, Size.WORD);
+					
+					o.setAddress(o.getAddress() - 4);
+				}
+			}
+			for (int i = 7; i >= 0; i--) {
+				if (((registerListMaskD) & (1 << i)) != 0) {
+					data = cpu.getD(i);
+					
+					cpu.writeKnownAddressingMode(o, data, Size.WORD);
+					
+					o.setAddress(o.getAddress() - 2);
+				}
+			}
+			if (registerListMaskD != 0 || registerListMaskA != 0) {
+				o.setAddress(o.getAddress() + 2);
+			}
+			
+			cpu.setAWord(register, o.getAddress() & 0xFFFF);
+			
+		} else {
+			registerListMaskD = msb;
+			registerListMaskA = lsb;
+			
+			for (int i = 0; i < 8; i++) {
+				if (((registerListMaskD) & (1 << i)) != 0) {
+					data = cpu.getD(i);
+					
+					cpu.writeKnownAddressingMode(o, data, Size.WORD);
+					
+					o.setAddress(o.getAddress() + 2);
+				}
+			}
+			for (int i = 0; i < 8; i++) {
+				if (((registerListMaskA) & (1 << i)) != 0) {
+					data = cpu.getA(i);
+					
+					cpu.writeKnownAddressingMode(o, data, Size.WORD);
+					
+					o.setAddress(o.getAddress() + 2);
+				}
+			}
+		}
+		
 	}
 	
 	private void MOVEMRegsToMemLong(int opcode) {
@@ -334,43 +387,72 @@ public class MOVEM implements GenInstructionHandler {
 		int msb = (int) cpu.bus.read(cpu.PC + 2);
 		int lsb = (int) cpu.bus.read(cpu.PC + 3);
 		
-		int registerListMaskD = 0;
-		for (int i = 0; i < 8; i++) {
-			registerListMaskD <<= 1;
-			registerListMaskD |= (msb & 1);
-			msb >>= 1;
-		}
-		int registerListMaskA = 0;
-		for (int i = 0; i < 8; i++) {
-			registerListMaskA <<= 1;
-			registerListMaskA |= (lsb & 1);
-			lsb >>= 1;
-		}
-		
-		for (int i = 7; i >= 0; i--) {
-			if (((registerListMaskA) & (1 << i)) != 0) {
-				data = cpu.getA(i);
-				
-				Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
-				cpu.writeKnownAddressingMode(o, data, Size.LONG);
-				
-//				cpu.writeAddressingMode(Size.LONG, 0, data, mode, register);
-			}
-		}
-		for (int i = 7; i >= 0; i--) {
-			if (((registerListMaskD) & (1 << i)) != 0) {
-				data = cpu.getD(i);
-				
-				Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
-				cpu.writeKnownAddressingMode(o, data, Size.LONG);
-				
-//				cpu.writeAddressingMode(Size.LONG, 0, data, mode, register);
-			}
-		}
-		
-		cpu.SSP = (int) cpu.getA(7);
-		
 		cpu.PC += 2;
+		
+		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
+	
+		int registerListMaskD = 0;
+		int registerListMaskA = 0;
+		if (o.getAddressingMode() instanceof AddressRegisterIndirectPreDecrement) {
+			for (int i = 0; i < 8; i++) {
+				registerListMaskD <<= 1;
+				registerListMaskD |= (msb & 1);
+				msb >>= 1;
+			}
+			for (int i = 0; i < 8; i++) {
+				registerListMaskA <<= 1;
+				registerListMaskA |= (lsb & 1);
+				lsb >>= 1;
+			}
+			
+			for (int i = 7; i >= 0; i--) {
+				if (((registerListMaskA) & (1 << i)) != 0) {
+					data = cpu.getA(i);
+					
+					cpu.writeKnownAddressingMode(o, data, Size.LONG);
+					
+					o.setAddress(o.getAddress() - 4);
+				}
+			}
+			for (int i = 7; i >= 0; i--) {
+				if (((registerListMaskD) & (1 << i)) != 0) {
+					data = cpu.getD(i);
+					
+					cpu.writeKnownAddressingMode(o, data, Size.LONG);
+					
+					o.setAddress(o.getAddress() - 4);
+				}
+			}
+			if (registerListMaskD != 0 || registerListMaskA != 0) {
+				o.setAddress(o.getAddress() + 4);
+			}
+			
+			cpu.setALong(7, o.getAddress());
+			
+		} else {
+			registerListMaskD = msb;
+			registerListMaskA = lsb;
+			
+			for (int i = 0; i < 8; i++) {
+				if (((registerListMaskD) & (1 << i)) != 0) {
+					data = cpu.getD(i);
+					
+					cpu.writeKnownAddressingMode(o, data, Size.LONG);
+					
+					o.setAddress(o.getAddress() + 4);
+				}
+			}
+			for (int i = 0; i < 8; i++) {
+				if (((registerListMaskA) & (1 << i)) != 0) {
+					data = cpu.getA(i);
+					
+					cpu.writeKnownAddressingMode(o, data, Size.LONG);
+					
+					o.setAddress(o.getAddress() + 4);
+				}
+			}
+		}
+		
 	}
 	
 }

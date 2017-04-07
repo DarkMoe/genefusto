@@ -61,6 +61,12 @@ public class GenBus {
 		} else if (address == 0xA11100 || address == 0xA11101) {	//	Z80 bus request	
 			return (z80.reset) ? 1 : 0;
 		
+		} else if (address == 0xC00000 || address == 0xC00002) {	// VDP Data
+			return (vdp.readDataPort(false) >> 8);
+
+		} else if (address == 0xC00001 || address == 0xC00003) {	// VDP Data
+			return (vdp.readDataPort(true) & 0xFF);
+			
 		} else if (address == 0xC00004 || address == 0xC00006) {	// VDP Control
 			return (vdp.readControl() >> 8);
 
@@ -124,7 +130,7 @@ public class GenBus {
 			//	 #$0000 needs to be written to $A11100 to return the bus back to the Z80
 			} else if (data == 0x0000) {
 				z80.devolverBus();
-				z80.reset = false;
+				z80.reset = true;		// revisar esta logica TODO
 				emu.runZ80 = false;
 			}
 		} else if (addressL == 0xA11200 || addressL == 0xA11201) {	//	Z80 bus reset

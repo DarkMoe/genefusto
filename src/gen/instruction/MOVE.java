@@ -159,7 +159,7 @@ public class MOVE implements GenInstructionHandler {
 		int sourceMode = (opcode >> 3) & 0x7;
 		int sourceReg = (opcode & 0x7);
 		
-		Operation o = cpu.resolveAddressingMode(cpu.PC + 2, Size.BYTE, sourceMode, sourceReg);
+		Operation o = cpu.resolveAddressingMode(Size.BYTE, sourceMode, sourceReg);
 		long data = o.getAddressingMode().getByte(o);
 		
 		Operation oDest = cpu.resolveAddressingMode(Size.BYTE, mode, register);

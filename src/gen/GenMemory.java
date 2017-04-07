@@ -28,7 +28,7 @@ public class GenMemory {
 		if (address <= 0xFFFF) {
 			ram[(int) address] = (int) data;
 		} else {
-			throw new RuntimeException("READ NOT MAPPED");
+			throw new RuntimeException("READ NOT MAPPED: " + Integer.toHexString((int) address));
 		}
 	}
 	

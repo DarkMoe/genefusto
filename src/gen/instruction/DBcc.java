@@ -82,9 +82,11 @@ public class DBcc implements GenInstructionHandler {
 		long offset = cpu.bus.read(cpu.PC + 2) << 8;
 		offset 	   |= cpu.bus.read(cpu.PC + 3);
 	
+//		cpu.PC += 2;
+		
 		long counter = cpu.getD(register) & 0xFFFF;
 		
-		if (condition == 0b0001) {
+		if (condition == 0b0001) {	//	override para que no haga un jump
 			if (counter != 0) {
 				if ((offset & 0x8000) > 0) {
 					offset = offset - 0xFFFF - 1;	// para que sea signed, TODO arreglar esto
@@ -94,9 +96,23 @@ public class DBcc implements GenInstructionHandler {
 				cpu.PC += 2;
 			}
 			counter = (counter - 1) & 0xFFFF;
-			cpu.setDWord(register, counter); 
+			cpu.setDWord(register, counter);
 		} else {
-			throw new RuntimeException("AA");
+			boolean condTrue = cpu.evaluateBranchCondition(condition, Size.WORD);
+			if (condTrue) {
+				cpu.PC += 2;
+			} else {
+				if (counter != 0) {
+					if ((offset & 0x8000) > 0) {
+						offset = offset - 0xFFFF - 1;	// para que sea signed, TODO arreglar esto
+					}
+					cpu.PC += offset;
+				} else {
+					cpu.PC += 2;
+				}
+				counter = (counter - 1) & 0xFFFF;
+				cpu.setDWord(register, counter); 
+			}
 		}
 		
 	}

@@ -16,6 +16,10 @@ public class AddressRegisterDirect implements AddressingMode {
 		int register = o.getRegister();
 		long data = o.getData();
 		
+		if (register == 7) {
+			System.out.println("CHECK A7 VALUE !");
+		}
+		
 		cpu.setAByte(register, data);
 	}
 

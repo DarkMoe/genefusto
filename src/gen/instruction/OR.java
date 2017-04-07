@@ -262,7 +262,20 @@ public class OR implements GenInstructionHandler {
 	}
 	
 	private void ORDestEAWord(int opcode) {
-		throw new RuntimeException();
+		int register = (opcode & 0x7);
+		int mode = (opcode >> 3) & 0x7;
+		int sourceRegister = (opcode >> 9) & 0x7;
+		
+		long toOr = cpu.getD(sourceRegister) & 0xFFFF;
+		
+		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
+		long data = o.getAddressingMode().getWord(o);
+		
+		long res = toOr | data;
+		
+		cpu.writeKnownAddressingMode(o, res, Size.WORD);
+		
+		calcFlags(res, Size.WORD.getMsb());
 	}
 	
 	private void ORDestEALong(int opcode) {

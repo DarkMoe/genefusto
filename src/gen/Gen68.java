@@ -110,13 +110,22 @@ public class Gen68 {
 		if (  bus.memory.ram[0xEFB9] == 0x1c) {
 			System.out.println();
 		}
-		if (PC == 0x1B3c46) {
+		if (PC == 0x1A26) {
 			System.out.println();
 //			print = true;
 		}
-		if (PC == 0x1b27b0) {
+		if (PC == 0x1cbad8) {
 			System.out.println();
-			print = true;
+//			print = true;
+		}
+		
+		if (PC == 0x838e) {
+			System.out.println();
+//			print = true;
+		}
+		if (D[3] == 0x156) {
+			System.out.println();
+//			print = true;
 		}
 		
  		GenInstruction instruction = getInstruction((int) opcode);
@@ -324,15 +333,17 @@ public class Gen68 {
 			oper.setAddress(addr);
 			
 		} else if (mode == 0b011) {		//	(An)+	 Address Register Indirect with Postincrement Mode 
-			addr = A[register];
+			addr = getA(register);
 			oper.setAddress(addr);
 			
 			if (size == Size.BYTE) {	//	byte
 //				data = bus.read(addr);
-				A[register]++;
-				if (register == 7) {
-					SSP = (int) A[register];
+				if (register == 7) {	// stack pointer siempre alineado de a 2
+					addr += 2;
+				} else {
+					addr += 1;
 				}
+				setALong(register, addr);
 				
 			} else if (size == Size.WORD) {	//	word
 //				data  = (bus.read(addr)     << 8);
@@ -358,12 +369,12 @@ public class Gen68 {
 			addr = A[register];
 			
 			if (size == Size.BYTE) {	//	byte
-				addr--;
-				A[register] = addr;
-				if (register == 7) {
-					SSP = (int) addr;
+				if (register == 7) {	// stack pointer siempre alineado de a 2
+					addr -= 2;
+				} else {
+					addr -= 1;
 				}
-//				data = bus.read(addr);
+				setALong(register, addr);
 				
 			} else if (size == Size.WORD) {	//	word
 				addr -= 2;
@@ -896,13 +907,13 @@ public class Gen68 {
 			taken = isN();
 			break;
 		case 0b1100:
-			taken = !(isN() || isV());
+			taken = !(isN() || isV());		// validar si el not va en cada argumento
 			break;
 		case 0b1101:	//	LT Less Than        N (+) V = 1
 			taken = isN() || isV();
 			break;
 		case 0b1110:	//	GT Greater Than     Z + (N (+) V) = 0
-			taken = !(isZ() && (isN() || isV()));
+			taken = !isZ() && (!isN() || !isV());
 			break;
 		case 0b1111:	//	LE Less or Equal    Z + (N (+) V) = 1
 			taken = isZ() && (isN() || isV());
