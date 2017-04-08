@@ -112,6 +112,9 @@ public class GenBus {
 			
 		} else if (address == 0xA10004 || address == 0xA10005) {	//	Controller 2 data
 			joypad.writeDataRegister2(data);
+		
+		} else if (address == 0xA10006 || address == 0xA10007) {	//	Expansion port data
+			// ???
 			
 		} else if (addressL == 0xA10009) {	//	Controller 1 control
 			joypad.writeControlRegister1(data);
@@ -121,6 +124,15 @@ public class GenBus {
 			
 		} else if (addressL == 0xA1000D) {	//	Controller 2 control
 			joypad.writeControlRegister3(data);
+		
+		} else if (address == 0xA10012 || address == 0xA10013) {	//	Controller 1 serial control
+			System.out.println("IMPL CONTR 1 !!");
+			
+		} else if (address == 0xA10018 || address == 0xA10019) {	//	Controller 2 serial control
+			System.out.println("IMPL CONTR 2 !!");
+		
+		} else if (address == 0xA1001E || address == 0xA1001F) {	//	Expansion port serial control
+			System.out.println("expansion port serial control !!");
 			
 		} else if (addressL == 0xA11100 || addressL == 0xA11101) {	//	Z80 bus request
 			//	To stop the Z80 and send a bus request, #$0100 must be written to $A11100.

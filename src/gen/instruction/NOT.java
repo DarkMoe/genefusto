@@ -147,7 +147,16 @@ public class NOT implements GenInstructionHandler {
 	}
 
 	private void NOTLong(int opcode) {
-		throw new RuntimeException("");
+		int mode = (opcode >> 3) & 0x7;
+		int register = (opcode & 0x7);
+		
+		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
+		long data = o.getAddressingMode().getLong(o);
+		data = (~data) & 0xFFFF_FFFFL;
+
+		cpu.writeKnownAddressingMode(o, data, Size.LONG);
+				
+		calcFlags(data, Size.LONG.getMsb());
 	}
 	
 	void calcFlags(long data, long msb) {

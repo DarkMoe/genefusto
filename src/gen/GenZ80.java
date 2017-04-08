@@ -5902,6 +5902,7 @@ public class GenZ80 {
 
 	public void requestBus() {
 		busRequested = true;
+		reset = false;
 	}
 
 	public void devolverBus() {

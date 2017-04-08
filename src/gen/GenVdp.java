@@ -294,9 +294,19 @@ public class GenVdp {
 				int addressMode = code & 0xF;	// solo el primer byte, el bit 4 y 5 son para DMA
 												// que ya fue contemplado arriba
 				if (addressMode == 0b0000) { // VRAM Read
-					throw new RuntimeException("ADDR WRITE !");
+					System.out.println("vramRead");
+					
+					vramRead = true;
+					cramRead = false;
+					
+					cramWrite = false;
+					vramWrite = false;
+					vsramWrite = false;
 
 				} else if (addressMode == 0b0001) { // VRAM Write
+					System.out.println("vramWrite");
+					
+					vramRead = false;
 					cramRead = false;
 					
 					vramWrite = true;
@@ -304,6 +314,9 @@ public class GenVdp {
 					vsramWrite = false;
 
 				} else if (addressMode == 0b1000) { // CRAM Read
+					System.out.println("cramRead");
+					
+					vramRead = false;
 					cramRead = true;
 					
 					cramWrite = false;
@@ -311,6 +324,9 @@ public class GenVdp {
 					vsramWrite = false;
 
 				} else if (addressMode == 0b0011) { // CRAM Write
+					System.out.println("cramWrite");
+					
+					vramRead = false;
 					cramRead = false;
 					
 					cramWrite = true;
@@ -321,6 +337,9 @@ public class GenVdp {
 					throw new RuntimeException("ADDR WRITE !");
 
 				} else if (addressMode == 0b0101) { // VSRAM Write
+					System.out.println("vsramRead");
+					
+					vramRead = false;
 					cramRead = false;
 					
 					vsramWrite = true;
@@ -351,7 +370,7 @@ public class GenVdp {
 						
 					} else if ((dmaBits & 0b11) > 0) {		//	VRAM Copy
 						dmaModo = DmaMode.VRAM_COPY;
-						
+						throw new RuntimeException();
 					}
 				}
 			}
@@ -364,39 +383,53 @@ public class GenVdp {
 		if (dma == 1) {
 			int dmaLength = (dmaLengthCounterHi << 8) | dmaLengthCounterLo;
 			
-			int index, data, destAddr;
-			if (dmaRecien) {
-				System.out.println("DMA MODE: " + dmaModo);
-				
-				currentFIFOReadEntry = nextFIFOReadEntry;
-				currentFIFOWriteEntry = nextFIFOWriteEntry;
-				index = currentFIFOReadEntry;
-				data = dataPort;
-				destAddr = addressPort;
-				
-//				int code = (int) ((first >> 14) | (((second >> 4) & 0xF) << 2));
-				
-				fifoData[index] = data;
-//				fifoCode[index] = code;		// TODO implementar el code como esta en los otros writes de memory
-			} else {
-				index = currentFIFOReadEntry;
-				data = fifoData[index];
-				destAddr = fifoAddress[index];
-			}
+			int index;
+			long data;
+//			if (dmaRecien) {
+//				System.out.println("DMA MODE: " + dmaModo);
+//				
+//				currentFIFOReadEntry = nextFIFOReadEntry;
+//				currentFIFOWriteEntry = nextFIFOWriteEntry;
+//				index = currentFIFOReadEntry;
+//				data = dataPort;
+//				destAddr = addressPort;
+//				
+////				int code = (int) ((first >> 14) | (((second >> 4) & 0xF) << 2));
+//				
+//				fifoData[index] = data;
+////				fifoCode[index] = code;		// TODO implementar el code como esta en los otros writes de memory
+//			} else {
+//				index = currentFIFOReadEntry;
+//				data = fifoData[index];
+//				destAddr = fifoAddress[index];
+//			}
 			
 //			System.out.println(pad4(dmaLength));
 			
+			long first =  all >> 16;
+			long second = all & 0xFFFF;
+			
+			int code = (int) ((first >> 14) | (((second >> 4) & 0xF) << 2));
+			int addr = (int) ((first & 0x3FFF) | ((second & 0x3) << 13));
+			
+			long sourceAddr = ((registers[0x17] & 0x7F) << 16) | (registers[0x16] << 8) | (registers[0x15]);
+			long sourceTrue = sourceAddr << 1;	// duplica, trabaja asi
+			int destAddr = (int) (((all & 0x3) << 14) | ((all & 0x3FFF_0000L) >> 16));
+			
+			sourceTrue += autoIncrementTotal;
+			destAddr += autoIncrementTotal;
+			
+			int data1 = (dataPort >> 8) & 0xFF;
+			int data2 = dataPort & 0xFF;
+			
+//			int data1 = (int) bus.read(sourceTrue);
+//			int data2 = (int) bus.read(sourceTrue + 1);
+			
 			if (vramWrite) {
-				vram[destAddr] = data >> 8;
-				vram[destAddr + 1] = data & 0xFF;
-			} else if (cramWrite) {
-				cram[destAddr] = data >> 8;
-				cram[destAddr + 1] = data & 0xFF;
-			} else if (vsramWrite) {
-				vsram[destAddr] = data >> 8;
-				vsram[destAddr + 1] = data & 0xFF;
+				vram[destAddr] = data1;
+				vram[destAddr + 1] = data2;
 			} else {
-				throw new RuntimeException("not");
+				throw new RuntimeException("SOLO ESCRIBE EN VRAM !! pasa este caso ?");
 			}
 			
 			dmaLength = (dmaLength - 2);	// idem FIXME no es fijo
@@ -405,20 +438,25 @@ public class GenVdp {
 				return;
 			}
 			
+			autoIncrementTotal += 2;
+			
 			dmaLength = dmaLength & 0xFFFF;
 			dmaLengthCounterHi = dmaLength >> 8;
 			dmaLengthCounterLo = dmaLength & 0xFF;
 			
-			addressPort += 2;
-			fifoAddress[index] = destAddr + 2;	//	FIXME, no es fijo, se actualiza en paralelo mientras se siguen ejecutando instrucciones, hay q contar ciclos de cpu
+			registers[0x14] = dmaLength >> 8;
+			registers[0x13] = dmaLength & 0xFF;
 			
-			if (dmaRecien) {
-				dmaRecien = false;
-				
-				index = (index + 1) % 4;
-				nextFIFOReadEntry = index;
-				nextFIFOWriteEntry = index;
-			}
+			addressPort += 2;
+//			fifoAddress[index] = destAddr + 2;	//	FIXME, no es fijo, se actualiza en paralelo mientras se siguen ejecutando instrucciones, hay q contar ciclos de cpu
+//			
+//			if (dmaRecien) {
+//				dmaRecien = false;
+//				
+//				index = (index + 1) % 4;
+//				nextFIFOReadEntry = index;
+//				nextFIFOWriteEntry = index;
+//			}
 		}
 	}
 
@@ -556,6 +594,11 @@ public class GenVdp {
 		registers[0x16] = (newSource >> 8) & 0xFF;
 		registers[0x15] = newSource & 0xFF;
 				
+		dmaLengthCounterHi = 0;
+		dmaLengthCounterLo = 0;
+		registers[0x14] = 0;
+		registers[0x13] = 0;
+		
 //				int code = (int) ((first >> 14) | (((second >> 4) & 0xF) << 2));
 		
 //				fifoCode[index] = code;		// TODO implementar el code como esta en los otros writes de memory
@@ -1054,14 +1097,58 @@ public class GenVdp {
 
     // FIXME tiene q llegarle el tama;o aca !!!!
 	public long readDataPort(boolean incrementAddr) {
-		if (cramRead) {
+		if (vramRead) {
+			long data = readVram(incrementAddr);
+			return data;
+			
+		} else if (cramRead) {
 			long data = readCram(incrementAddr);
 			return data;
+			
 		} else {
 			throw new RuntimeException("IMPL !");
 		}
 	}
 
+	private long readVram(boolean incrementAddr) {
+		int index = nextFIFOReadEntry;
+		int address = addressPort;
+		
+		long first =  all >> 16;
+		long second = all & 0xFFFF;
+		
+		int code = (int) ((first >> 14) | (((second >> 4) & 0xF) << 2));
+		int addr = (int) ((first & 0x3FFF) | ((second & 0x3) << 14));
+		
+		int offset = addr + autoIncrementTotal;
+		
+		long data1 = vram[offset];
+		long data2 = vram[offset + 1];
+		
+		long data = ((data1 << 8) | (data2));
+		
+		System.out.println("addr: " + Integer.toHexString(offset) + "-" + Integer.toHexString(offset + 1) + ": " + Integer.toHexString((int) data));
+		
+		
+//		fifoAddress[index] = offset;
+//		fifoCode[index] = code;
+//		fifoData[index] = word;
+		
+		if (incrementAddr) {
+			int incrementOffset = autoIncrementTotal + autoIncrementData;
+			autoIncrementTotal = incrementOffset;
+		}
+
+		return data;
+		
+//		address = address + incrementOffset;	// FIXME wrap
+//		offset = offset + incrementOffset;
+//		index = (index + 1) % 4;
+//		
+//		nextFIFOReadEntry = index;
+//		nextFIFOWriteEntry = index;
+	}
+	
 	private long readCram(boolean incrementAddr) {
 		int index = nextFIFOReadEntry;
 		int address = addressPort;
