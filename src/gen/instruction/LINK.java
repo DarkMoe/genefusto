@@ -114,11 +114,18 @@ public class LINK implements GenInstructionHandler {
 		cpu.SSP--;
 		cpu.bus.write(cpu.SSP, (data >> 24), Size.BYTE);
 		
-		long oldSSP = cpu.SSP;
+		long oldSSP = cpu.SSP & 0xFFFF_FFFFL;
 		
 		cpu.setALong(register, oldSSP);
 		
-		long newSSP = (oldSSP + offset) & 0xFFFF_FFFFL;
+		long newSSP;
+		if ((offset & 0x8000) > 0) {
+			offset = -offset;
+			offset &= 0xFFFF;
+			newSSP = (oldSSP - offset) & 0xFFFF_FFFFL;
+		} else {
+			newSSP = (oldSSP + offset) & 0xFFFF_FFFFL;
+		}
 		
 		cpu.setALong(7, newSSP);
 	}

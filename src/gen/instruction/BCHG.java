@@ -4,28 +4,28 @@ import gen.Gen68;
 import gen.GenInstruction;
 import gen.Size;
 
-public class BSET implements GenInstructionHandler {
+public class BCHG implements GenInstructionHandler {
 
 	final Gen68 cpu;
 	
-	public BSET(Gen68 cpu) {
+	public BCHG(Gen68 cpu) {
 		this.cpu = cpu;
 	}
 
 //	NAME
-//	BSET -- Bit set
+//	BCHG -- Bit change
 //
 //SYNOPSIS
-//	BSET	Dn,<ea>
-//	BSET	#<data>,<ea>
+//	BCHG	Dn,<ea>
+//	BCHG	#<data>,<ea>
 //
 //	Size = (Byte, Long)
 //
 //FUNCTION
-//	Tests a bit in the destination operand and sets the Z condition code
-//	appropriately, then sets the bit in the destination.
+//	Tests a bit in the destination operand and sets the Z condition
+//	code appropriately, then inverts the bit in the destination.
 //	If the destination is a data register, any of the 32 bits can be
-//	specifice by the modulo 32 number. When the distination is a memory
+//	specified by the modulo 32 number. When the destination is a memory
 //	location, the operation must be a byte operation, and therefore the
 //	bit number is modulo 8. In all cases, bit zero is the least
 //	significant bit. The bit number for this operation may be specified
@@ -35,22 +35,22 @@ public class BSET implements GenInstructionHandler {
 //	2. Register  -- The specified data register contains the bit number.
 //
 //FORMAT
-//	In the case of BSET Dn,<ea>:
+//	In the case of BCHG Dn,<ea>:
 //	~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //	-----------------------------------------------------------------
 //	|15 |14 |13 |12 |11 |10 | 9 | 8 | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
 //	|---|---|---|---|-----------|---|---|---|-----------|-----------|
-//	| 0 | 0 | 0 | 0 |  REGISTER | 1 | 1 | 1 |    MODE   | REGISTER  |
+//	| 0 | 0 | 0 | 0 |  REGISTER | 1 | 0 | 1 |    MODE   | REGISTER  |
 //	----------------------------------------=========================
 //	                                                  <ea>
 //
-//	In the case of BSET #<data,<ea>:
+//	In the case of BCHG #<data,<ea>:
 //	~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //	                                                  <ea>
 //	----------------------------------------=========================
 //	|15 |14 |13 |12 |11 |10 | 9 | 8 | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
 //	|---|---|---|---|---|---|---|---|---|---|-----------|-----------|
-//	| 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 1 | 1 |    MODE   | REGISTER  |
+//	| 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 1 |    MODE   | REGISTER  |
 //	|---|---|---|---|---|---|---|---|-------------------------------|
 //	| 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |       NUMBER OF THE BIT       |
 //	-----------------------------------------------------------------
@@ -96,53 +96,17 @@ public class BSET implements GenInstructionHandler {
 	}
 	
 	private void generateRegister(Gen68 cpu) {
-		int base = 0x01C0;
-		GenInstruction insRegByte = new GenInstruction() {
-			@Override
-			public void run(int opcode) {
-				BSETRegisterByte(opcode);
-			}
-		};
-		GenInstruction insRegLong = new GenInstruction() {
-			@Override
-			public void run(int opcode) {
-				BSETRegisterLong(opcode);
-			}
-		};
-		
-		for (int m = 0; m < 8; m++) {
-			if (m == 1) {
-				continue;
-			}
-			
-			for (int r = 0; r < 8; r++) {
-				if ((m == 0b111) && r > 0b001) {
-					continue;
-				}
-				for (int register = 0; register < 8; register++) {
-					int opcode = base | (register << 9) | (m << 3) | r;
-					if (m == 0) {
-						cpu.addInstruction(opcode, insRegLong);
-					} else {
-						cpu.addInstruction(opcode, insRegByte);
-					}
-				}
-			}
-		}
-	}
-
-	private void generateImmediate(Gen68 cpu) {
-		int base = 0x08C0;
+		int base = 0x0140;
 		GenInstruction insByte = new GenInstruction() {
 			@Override
 			public void run(int opcode) {
-				BSETImmediateByte(opcode);
+				BCHGRegisterByte(opcode);
 			}
 		};
 		GenInstruction insLong = new GenInstruction() {
 			@Override
 			public void run(int opcode) {
-				BSETImmediateLong(opcode);
+				BCHGRegisterLong(opcode);
 			}
 		};
 		
@@ -156,7 +120,7 @@ public class BSET implements GenInstructionHandler {
 					continue;
 				}
 				
-				int opcode = base + ((m << 3) | r);
+				int opcode = base | (m << 3) | r;
 				if (m == 0) {
 					cpu.addInstruction(opcode, insLong);
 				} else {
@@ -166,7 +130,43 @@ public class BSET implements GenInstructionHandler {
 		}
 	}
 
-	private void BSETImmediateByte(int opcode) {
+	private void generateImmediate(Gen68 cpu) {
+		int base = 0x0840;
+		GenInstruction insByte = new GenInstruction() {
+			@Override
+			public void run(int opcode) {
+				BCHGImmediateByte(opcode);
+			}
+		};
+		GenInstruction insLong = new GenInstruction() {
+			@Override
+			public void run(int opcode) {
+				BCHGImmediateLong(opcode);
+			}
+		};
+		
+		for (int m = 0; m < 8; m++) {
+			if (m == 1) {
+				continue;
+			}
+			
+			for (int r = 0; r < 8; r++) {
+				if ((m == 0b111) && r > 0b001) {
+					continue;
+				}
+				
+				int opcode = base | (m << 3) | r;
+				if (m == 0) {
+					cpu.addInstruction(opcode, insLong);
+				} else {
+					cpu.addInstruction(opcode, insByte);
+				}
+			}
+		}
+		
+	}
+
+	private void BCHGImmediateByte(int opcode) {
 		int mode = (opcode >> 3) & 0x7;
 		int register = opcode & 0x7;
 		
@@ -181,13 +181,17 @@ public class BSET implements GenInstructionHandler {
 		
 		calcFlags(data, (int) numberBit);
 	
-		data = cpu.bitSet((int) data, (int) numberBit);
+		if (cpu.bitTest((int) data, (int) numberBit)) {
+			data = cpu.bitReset((int) data, (int) numberBit);
+		} else {
+			data = cpu.bitSet((int) data, (int) numberBit);
+		}
 		o.setData(data);
 		
 		cpu.writeKnownAddressingMode(o, data, Size.BYTE);
 	}
 	
-	private void BSETImmediateLong(int opcode) {
+	private void BCHGImmediateLong(int opcode) {
 		int mode = (opcode >> 3) & 0x7;
 		int register = opcode & 0x7;
 		
@@ -202,32 +206,22 @@ public class BSET implements GenInstructionHandler {
 		
 		calcFlags(data, (int) numberBit);
 	
-		data = cpu.bitSet((int) data, (int) numberBit);
+		if (cpu.bitTest((int) data, (int) numberBit)) {
+			data = cpu.bitReset((int) data, (int) numberBit);
+		} else {
+			data = cpu.bitSet((int) data, (int) numberBit);
+		}
 		o.setData(data);
 		
 		cpu.writeKnownAddressingMode(o, data, Size.LONG);
 	}
 	
-	private void BSETRegisterByte(int opcode) {
+	private void BCHGRegisterByte(int opcode) {
 		throw new RuntimeException();
 	}
 	
-	private void BSETRegisterLong(int opcode) {
-		int dataRegister = (opcode >> 9) & 0x7;
-		int mode = (opcode >> 3) & 0x7;
-		int register = opcode & 0x7;
-		
-		int numberBit = (int) cpu.getD(dataRegister);
-		
-		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
-		long data = o.getAddressingMode().getLong(o);
-		
-		calcFlags(data, (int) numberBit);
-	
-		data = cpu.bitSet((int) data, (int) numberBit);
-		o.setData(data);
-		
-		cpu.writeKnownAddressingMode(o, data, Size.LONG);
+	private void BCHGRegisterLong(int opcode) {
+		throw new RuntimeException();
 	}
 	
 	void calcFlags(long data, int bit) {

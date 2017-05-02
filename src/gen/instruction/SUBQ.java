@@ -154,13 +154,10 @@ public class SUBQ implements GenInstructionHandler {
 			dataToSub = 8;
 		}
 
-//		OTROS MODOS DE REGISTERS TAMBIEN APLICAN ESTO Y LOS OtROS METODOS ACA DENTRO TAMBIEN FLATAN
 		if (mode == 1) {	//	address register, siempre guarda longword y no calcula flags
-			Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
-			long data = o.getAddressingMode().getLong(o);
-			
-			long total = (data - dataToSub);
-			cpu.writeKnownAddressingMode(o, total, Size.LONG);
+			long data = cpu.getA(register);
+			long tot = (data - dataToSub);
+			cpu.setALong(register, tot);
 			
 		} else {
 			Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
@@ -191,14 +188,13 @@ public class SUBQ implements GenInstructionHandler {
 		
 		cpu.writeKnownAddressingMode(o, total, Size.LONG);
 		
-		if (mode == 1) {
-			
-		} else {
+		// if destination is An no cambian los flags
+		if (mode != 1) {
 			calcFlags(tot, Size.LONG.getMsb(), Size.LONG.getMax());
 		}
 	}
 	
-	void calcFlags(long tot, long msb, long maxSize) {//TODO  overflow
+	void calcFlags(long tot, long msb, long maxSize) {	//	TODO  overflow
 		if ((tot & maxSize) == 0) {
 			cpu.setZ();
 		} else {

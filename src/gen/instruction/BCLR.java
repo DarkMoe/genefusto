@@ -177,8 +177,6 @@ public class BCLR implements GenInstructionHandler {
 		
 		long bitNumber = cpu.getD(dataRegister) & 0xFF;
 		
-		cpu.PC += 2;
-		
 		calcFlags(data, (int) bitNumber);
 	
 		data = cpu.bitReset((int) data, (int) bitNumber);
@@ -196,8 +194,6 @@ public class BCLR implements GenInstructionHandler {
 		long data = o.getAddressingMode().getLong(o);
 		
 		long bitNumber = cpu.getD(dataRegister);
-		
-		cpu.PC += 2;
 		
 		calcFlags(data, (int) bitNumber);
 	

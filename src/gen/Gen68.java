@@ -116,23 +116,19 @@ public class Gen68 {
 			System.out.println();
 		}
 		
-		if (PC == 0x615a) {
+		if (PC == 0x081C) {
 			System.out.println();
-			print = true;
-		}
-		if (PC == 0x53c0) {
-			System.out.println();
-			print = true;
+//			print = true;
 		}
 		
 		if (PC == 0x5b4e) {
 			System.out.println();
-			print = true;
+//			print = true;
 		}
 		
-		if (PC == 0x56da) {
+		if (PC == 0x428C) {
 			System.out.println();
-			print = true;
+//			print = true;
 		}
 		
  		GenInstruction instruction = getInstruction((int) opcode);
@@ -854,10 +850,6 @@ public class Gen68 {
 	public boolean evaluateBranchCondition(int cc, Size size) {
 		boolean taken;
 		
-		if ( cc >=0b1100) {
-			System.out.println();
-		}
-		
 		switch (cc) {
 		case 0b0000:
 			taken = true;
@@ -927,7 +919,7 @@ public class Gen68 {
 			taken = (!isZ() && !isN() && !isV()) || (!isZ() && isN() && isV());
 			break;
 		case 0b1111:	//	BLE Less or Equal    Z + (N (+) V) = 1		1) The Z flag is clear 2) The N flag is clear, but the V flag is set 3) The N flag is set, but the V flag is clear
-			taken = !isZ() || (!isN() && isV()) || (isN() && !isV());
+			taken = isZ() || (!isZ() && !isN() && isV()) || (!isZ() && isN() && !isV());
 			break;
 			default:
 				throw new RuntimeException("not impl " + cc);

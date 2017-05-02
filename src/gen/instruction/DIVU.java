@@ -4,28 +4,25 @@ import gen.Gen68;
 import gen.GenInstruction;
 import gen.Size;
 
-public class DIVS implements GenInstructionHandler {
+public class DIVU implements GenInstructionHandler {
 
 	final Gen68 cpu;
 	
-	public DIVS(Gen68 cpu) {
+	public DIVU(Gen68 cpu) {
 		this.cpu = cpu;
 	}
 
 //	NAME
-//	DIVS, DIVSL -- Signed divide
+//	DIVU, DIVUL -- Unsigned divide
 //
 //SYNOPSIS
-//	DIVS.W	<ea>,Dn     32/16 -> 16r:16q
-//	DIVS.L	<ea>,Dq     32/32 -> 32q      (68020+)
-//	DIVS.L	<ea>,Dr:Dq  64/32 -> 32r:32q  (68020+)
-//	DIVSL.L	<ea>,Dr:Dq  32/32 -> 32r:32q  (68020+)
+//	DIVU.W	<ea>,Dn     32/16 -> 16r:16q
 //
 //	Size = (Word, Long)
 //
 //FUNCTION
-//	Divides the signed destination operand by the signed source
-//	operand and stores the signed result in the destination.
+//	Divides the unsigned destination operand by the unsigned
+//	source operand and stores the unsigned result in the destination.
 //
 //	The instruction has a word form and three long forms. For the
 //	word form, the destination operand is a long word and the source
@@ -34,43 +31,16 @@ public class DIVS implements GenInstructionHandler {
 //	upper word of the destination. The sign of the remainder is the
 //	same as the sign of the dividend.
 //
-//	In the first long form, the destination and the source are both
-//	long words. The quotient is placed in the longword of the destination
-//	and the remainder is discarded.
-//
-//	The second long form has the destination as a quadword (eight bytes),
-//	specified by any two data registers, and the source is a long word.
-//	The resultant remainder and quotient are both long words and are
-//	placed in the destination registers.
-//
-//	The final long form has both the source and the destination as long
-//	words and the resultant quotient and remainder as long words.
-//
 //FORMAT
-//	In the case of DIVS.W:
+//	In the case of DIVU.W:
 //	~~~~~~~~~~~~~~~~~~~~~                              <ea>
 //	----------------------------------------=========================
 //	|15 |14 |13 |12 |11 |10 | 9 | 8 | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
 //	|---|---|---|---|-----------|---|---|---|-----------|-----------|
-//	| 1 | 0 | 0 | 0 | REGISTER  | 1 | 1 | 1 |    MODE   | REGISTER  |
+//	| 1 | 0 | 0 | 0 | REGISTER  | 0 | 1 | 1 |    MODE   | REGISTER  |
 //	-----------------------------------------------------------------
 //
 //	"REGISTER" indicates the number of data register.
-//
-//	"Dq REGISTER" indicates the number of data register for destination
-//	operand. This register first contains 32 bits of low weight of
-//	dividend, and after the value of quotient on 32 bits.
-//
-//	"SIZE" specifies if dividend is on 32 or 64 bits:
-//	0-> 32 bits dividend placed in Dq.
-//	1-> 64 bits dividend placed in Dr:Dq.
-//
-//	"Dr REGISTER" indicates the number of data register for destination
-//	operand. This register first contains 32 bits of upper weight of
-//	dividend if "SIZE" = 1, and after the value of rest on 32 bits.
-//
-//	If Dr and Dq represents the same register, only quotient on 32 bits
-//	is put in Dq.
 //
 //	<ea> field specifies source operand, allowed addressing modes are:
 //
@@ -99,9 +69,9 @@ public class DIVS implements GenInstructionHandler {
 //	---------------------------------
 //
 //RESULT
+//
 //	X - Not affected
-//	N - Set if the quotient is negative, cleared otherwise. Undefined if
-//	    overflow or divide by zero occurs.
+//	N - See below.
 //	Z - Set if the quotient is zero, cleared otherwise. Undefined if
 //	    overflow or divide by zero occurs.
 //	V - Set if overflow occurs, cleared otherwise. Undefined if divide by
@@ -111,19 +81,23 @@ public class DIVS implements GenInstructionHandler {
 //	Notes:
 //	1. If divide by zero occurs, an exception occurs.
 //	2. If overflow occurs, neither operand is affected.
+//
+//	According to the Motorola data books, the N flag is set if the
+//	quotient is negative, but in an unsigned divide, this seems to
+//	be impossible.
 	
 	@Override
 	public void generate() {
-		int base = 0x81C0;
+		int base = 0x80C0;
 		GenInstruction ins = null;
 		
 		ins = new GenInstruction() {
 			@Override
 			public void run(int opcode) {
-				DIVSWord(opcode);
+				DIVUWord(opcode);
 			}
 		};
-		
+			
 		for (int register = 0; register < 8; register++) {
 			for (int m = 0; m < 8; m++) {
 				if (m == 1) {
@@ -133,7 +107,7 @@ public class DIVS implements GenInstructionHandler {
 					if (m == 0b111 & r > 0b100) {
 						continue;
 					}
-					int opcode = base | (register << 9) | (m << 3) | r;
+					int opcode = base | ((register << 9) | (m << 3) | r);
 					cpu.addInstruction(opcode, ins);
 				}
 			}
@@ -141,52 +115,37 @@ public class DIVS implements GenInstructionHandler {
 		
 	}
 	
-	private void DIVSWord(int opcode) {
+	private void DIVUWord(int opcode) {
 		int dataRegister = (opcode >> 9) & 0x7;
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 		
 		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
-		int s = (int) o.getAddressingMode().getWord(o);
-		if ((s & 0x8000) > 0) {
-			s |= 0xFFFF_0000L;
+		long data = o.getAddressingMode().getWord(o);
+		
+		long div = cpu.getD(dataRegister);
+		if (div == 0) {
+			throw new RuntimeException("DIV by 0");
 		}
 		
-		int d = (int) cpu.getD(dataRegister);
-
-		if (s == 0) {
-			throw new RuntimeException("div por 0");
-		}
+		long tot = div / data;
+		long remainder = div % data;
 		
-		int quot = d / s;
-
-		if (quot > 32767 || quot < -32768) {
-			//Overflow
-			cpu.setV();
-		} else {
-			long remain = (d % s) & 0xFFFF;
-			long result = (quot & 0x0000_FFFF) | (remain << 16);
-			cpu.setDLong(register, result);
-
-			if ((quot & 0x8000) != 0) {
-				cpu.setN();
-				cpu.clearZ();
-			} else {
-				cpu.clearN();
-
-				if (quot == 0) {
-					cpu.setZ();
-				} else {
-					cpu.clearZ();
-				}
-			}
-
-			cpu.clearV();
-			cpu.clearC();
-		}
+		long assembled = (remainder << 16) | (tot & 0xFFFF);
+		
+		cpu.setDLong(dataRegister, assembled);
+		
+		calcFlags(tot);
 	}
 	
-	void calcFlags(long tot) {//	TODO pasar los calculos aca
+	void calcFlags(long tot) {	//TODO  overflow ?
+		if (tot == 0) {
+			cpu.setZ();
+		} else {
+			cpu.clearZ();
+		}
+		cpu.clearC();
+		cpu.clearN();  // confirmar si alguna vez puede ser set
 	}
 	
 }

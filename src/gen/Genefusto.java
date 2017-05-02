@@ -47,6 +47,7 @@ import gen.instruction.ANDI_CCR;
 import gen.instruction.ANDI_SR;
 import gen.instruction.ASR;
 import gen.instruction.BCC;
+import gen.instruction.BCHG;
 import gen.instruction.BCLR;
 import gen.instruction.BSET;
 import gen.instruction.BTST;
@@ -56,8 +57,10 @@ import gen.instruction.CMPA;
 import gen.instruction.CMPI;
 import gen.instruction.DBcc;
 import gen.instruction.DIVS;
+import gen.instruction.DIVU;
 import gen.instruction.EOR;
 import gen.instruction.EORI;
+import gen.instruction.EXG;
 import gen.instruction.EXT;
 import gen.instruction.JMP;
 import gen.instruction.JSR;
@@ -168,6 +171,7 @@ public class Genefusto {
         new ANDI_SR(cpu).generate();
         new ASR(cpu).generate();
         new BCC(cpu).generate();
+        new BCHG(cpu).generate();
         new BCLR(cpu).generate();
         new BSET(cpu).generate();
         new BTST(cpu).generate();
@@ -177,8 +181,10 @@ public class Genefusto {
         new CMPI(cpu).generate();
         new DBcc(cpu).generate();
         new DIVS(cpu).generate();
+        new DIVU(cpu).generate();
         new EOR(cpu).generate();
         new EORI(cpu).generate();
+        new EXG(cpu).generate();
         new EXT(cpu).generate();
         new JMP(cpu).generate();
         new JSR(cpu).generate();
@@ -428,8 +434,8 @@ public class Genefusto {
         }
     }
 
-    String basePath = "C:\\Users\\Zotac\\workspace\\raul\\src\\gen\\";
-//	String basePath = "C:\\dev\\workspace\\test\\src\\gen\\";
+//    String basePath = "C:\\Users\\Zotac\\workspace\\raul\\src\\gen\\";
+	String basePath = "C:\\dev\\workspace\\test\\src\\gen\\";
     
     class MyRunnable implements Runnable {
         File file;
