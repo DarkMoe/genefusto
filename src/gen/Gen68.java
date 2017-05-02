@@ -121,9 +121,9 @@ public class Gen68 {
 //			print = true;
 		}
 		
-		if (PC == 0x418) {
+		if (PC == 0xebd38) {
 			System.out.println();
-//			print = true;
+			print = true;
 		}
 		
  		GenInstruction instruction = getInstruction((int) opcode);
