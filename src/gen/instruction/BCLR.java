@@ -175,7 +175,7 @@ public class BCLR implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(Size.BYTE, destMode, destReg);
 		long data = o.getAddressingMode().getByte(o);
 		
-		long bitNumber = cpu.getD(dataRegister) & 0xFF;
+		long bitNumber = cpu.getD(dataRegister) & 0xFF;		// TODO no seria & 0x7 si son 8 bits ?
 		
 		calcFlags(data, (int) bitNumber);
 	

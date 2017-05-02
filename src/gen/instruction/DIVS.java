@@ -57,21 +57,6 @@ public class DIVS implements GenInstructionHandler {
 //
 //	"REGISTER" indicates the number of data register.
 //
-//	"Dq REGISTER" indicates the number of data register for destination
-//	operand. This register first contains 32 bits of low weight of
-//	dividend, and after the value of quotient on 32 bits.
-//
-//	"SIZE" specifies if dividend is on 32 or 64 bits:
-//	0-> 32 bits dividend placed in Dq.
-//	1-> 64 bits dividend placed in Dr:Dq.
-//
-//	"Dr REGISTER" indicates the number of data register for destination
-//	operand. This register first contains 32 bits of upper weight of
-//	dividend if "SIZE" = 1, and after the value of rest on 32 bits.
-//
-//	If Dr and Dq represents the same register, only quotient on 32 bits
-//	is put in Dq.
-//
 //	<ea> field specifies source operand, allowed addressing modes are:
 //
 //	--------------------------------- -------------------------------
@@ -166,7 +151,7 @@ public class DIVS implements GenInstructionHandler {
 		} else {
 			long remain = (d % s) & 0xFFFF;
 			long result = (quot & 0x0000_FFFF) | (remain << 16);
-			cpu.setDLong(register, result);
+			cpu.setDLong(dataRegister, result);
 
 			if ((quot & 0x8000) != 0) {
 				cpu.setN();

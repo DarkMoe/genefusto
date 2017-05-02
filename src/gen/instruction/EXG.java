@@ -115,7 +115,14 @@ public class EXG implements GenInstructionHandler {
 	}
 	
 	private void EXGDataAndAddressRegs(int opcode) {
-		throw new RuntimeException("N IMP");
+		int rxRegister = (opcode >> 9) & 0x7;
+		int ryRegister = opcode & 0x7;
+		
+		long rx = cpu.getD(rxRegister);
+		long ry = cpu.getA(ryRegister);
+
+		cpu.setDLong(rxRegister, ry);
+		cpu.setALong(ryRegister, rx);
 	}
 	
 }

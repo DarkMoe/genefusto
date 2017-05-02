@@ -121,15 +121,15 @@ public class DIVU implements GenInstructionHandler {
 		int register = (opcode & 0x7);
 		
 		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
-		long data = o.getAddressingMode().getWord(o);
+		long div = o.getAddressingMode().getWord(o);
 		
-		long div = cpu.getD(dataRegister);
+		long data = cpu.getD(dataRegister);
 		if (div == 0) {
 			throw new RuntimeException("DIV by 0");
 		}
 		
-		long tot = div / data;
-		long remainder = div % data;
+		long tot = data / div;
+		long remainder = data % div;
 		
 		long assembled = (remainder << 16) | (tot & 0xFFFF);
 		

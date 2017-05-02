@@ -209,7 +209,21 @@ public class BSET implements GenInstructionHandler {
 	}
 	
 	private void BSETRegisterByte(int opcode) {
-		throw new RuntimeException();
+		int dataRegister = (opcode >> 9) & 0x7;
+		int mode = (opcode >> 3) & 0x7;
+		int register = opcode & 0x7;
+		
+		int numberBit = (int) cpu.getD(dataRegister) & 0x7;
+		
+		Operation o = cpu.resolveAddressingMode(Size.BYTE, mode, register);
+		long data = o.getAddressingMode().getByte(o);
+		
+		calcFlags(data, (int) numberBit);
+	
+		data = cpu.bitSet((int) data, (int) numberBit);
+		o.setData(data);
+		
+		cpu.writeKnownAddressingMode(o, data, Size.BYTE);
 	}
 	
 	private void BSETRegisterLong(int opcode) {

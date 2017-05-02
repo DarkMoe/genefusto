@@ -116,17 +116,12 @@ public class Gen68 {
 			System.out.println();
 		}
 		
-		if (PC == 0x081C) {
+		if (PC == 0x53a) {
 			System.out.println();
 //			print = true;
 		}
 		
-		if (PC == 0x5b4e) {
-			System.out.println();
-//			print = true;
-		}
-		
-		if (PC == 0x428C) {
+		if (PC == 0x418) {
 			System.out.println();
 //			print = true;
 		}

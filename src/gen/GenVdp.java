@@ -231,13 +231,10 @@ public class GenVdp {
 				es = 	((data >> 0) & 1) == 1;
 				
 			} else if (reg == 0x01) {
-				if ((disp) && ((data & 0x40) == 0x40)) {	// el display estaba prendido pero se apago	COMENTADO PORQ PARECE Q APAGA Y PRENDE Y NO BLANQUEA PANTALLA
-//					for (int i = 0; i < 320; i++) {
-//						for (int j = 0; j < 256; j++) {
-//							screenData[i][j] = 0;
-//						}
-//					}
-//					bus.emu.renderScreen();
+				if ((disp) && ((data & 0x40) == 0)) {	// el display estaba prendido pero se apago
+					vb = 1;
+				} else if ((!disp) && ((data & 0x40) == 0x40)) {	// el display se prende
+					vb = 0;
 				}
 				
 				evram = ((data >> 7) & 1) == 1;
@@ -803,6 +800,7 @@ public class GenVdp {
 		if (totalCycles > 251503) {
 			totalCycles = 0;
 			vip = 1;
+			vb = 1;
 			
 			if ((registers[1] & 0x40) == 0x40) {
 				renderPlaneA();
@@ -813,6 +811,8 @@ public class GenVdp {
 				
 				bus.emu.renderScreen();
 			}
+		} else {
+			vb = 0;
 		}
 		
 	}

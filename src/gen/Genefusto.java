@@ -55,6 +55,7 @@ import gen.instruction.CLR;
 import gen.instruction.CMP;
 import gen.instruction.CMPA;
 import gen.instruction.CMPI;
+import gen.instruction.CMPM;
 import gen.instruction.DBcc;
 import gen.instruction.DIVS;
 import gen.instruction.DIVU;
@@ -179,6 +180,7 @@ public class Genefusto {
         new CMP(cpu).generate();
         new CMPA(cpu).generate();
         new CMPI(cpu).generate();
+        new CMPM(cpu).generate();
         new DBcc(cpu).generate();
         new DIVS(cpu).generate();
         new DIVU(cpu).generate();
