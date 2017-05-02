@@ -191,7 +191,7 @@ public class GenBus {
 			}
 			
 		} else {
-			throw new RuntimeException("WRITE NOT SUPPORTED ! " + Integer.toHexString((int) address));
+			throw new RuntimeException("WRITE NOT SUPPORTED ! " + Integer.toHexString((int) address) + " - PC: " + Integer.toHexString((int) cpu.PC));
 		}
 	}
 	

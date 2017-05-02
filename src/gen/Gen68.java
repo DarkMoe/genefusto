@@ -107,13 +107,32 @@ public class Gen68 {
 		
 //		print = true;
 		
-		if (PC == 0xddb6) {
+		if (PC == 0x3f44) {
 			System.out.println();
-//			print = true;
+//			print = false;
 		}
 
 		if (bus.vdp.vram[0xE000] == 0x80){
 			System.out.println();
+		}
+		
+		if (PC == 0x615a) {
+			System.out.println();
+			print = true;
+		}
+		if (PC == 0x53c0) {
+			System.out.println();
+			print = true;
+		}
+		
+		if (PC == 0x5b4e) {
+			System.out.println();
+			print = true;
+		}
+		
+		if (PC == 0x56da) {
+			System.out.println();
+			print = true;
 		}
 		
  		GenInstruction instruction = getInstruction((int) opcode);
@@ -835,6 +854,10 @@ public class Gen68 {
 	public boolean evaluateBranchCondition(int cc, Size size) {
 		boolean taken;
 		
+		if ( cc >=0b1100) {
+			System.out.println();
+		}
+		
 		switch (cc) {
 		case 0b0000:
 			taken = true;
@@ -864,11 +887,11 @@ public class Gen68 {
 			setALong(7, SSP);
 			
 			break;
-		case 0b0010:	//	C + Z = 0
+		case 0b0010:	//	C + Z = 0		the C and Z flags are both clear
 			taken = !isC() && !isZ();
 			break;
-		case 0b0011:	//	C + Z = 1
-			taken = isC() && isZ();
+		case 0b0011:	//	C + Z = 1		the C or Z flag is set
+			taken = isC() || isZ();
 			break;
 		case 0b0100:
 			taken = !isC();
@@ -894,17 +917,17 @@ public class Gen68 {
 		case 0b1011:
 			taken = isN();
 			break;
-		case 0b1100:
-			taken = !(isN() || isV());		// validar si el not va en cada argumento
+		case 0b1100:	//	BGE – Branch on Greater than or Equal	1) The N and V flags are both clear 2) The N and V flags are both set
+			taken = (!isN() && !isV()) || (isN() && isV());
 			break;
-		case 0b1101:	//	LT Less Than        N (+) V = 1
-			taken = isN() || isV();
+		case 0b1101:	//	BLT – Branch on Lower Than	N (+) V = 1		1) The N flag is clear, but the V flag is set 2) The N flag is set, but the V flag is clear
+			taken = (!isN() && isV()) || (isN() && !isV());
 			break;
-		case 0b1110:	//	GT Greater Than     Z + (N (+) V) = 0
-			taken = !isZ() && (!isN() || !isV());
+		case 0b1110:	//	BGT Greater Than     Z + (N (+) V) = 0		1) The Z, N and V flags are all clear 2) The Z flag is clear, but the N and V flags are both set
+			taken = (!isZ() && !isN() && !isV()) || (!isZ() && isN() && isV());
 			break;
-		case 0b1111:	//	LE Less or Equal    Z + (N (+) V) = 1
-			taken = isZ() && (isN() || isV());
+		case 0b1111:	//	BLE Less or Equal    Z + (N (+) V) = 1		1) The Z flag is clear 2) The N flag is clear, but the V flag is set 3) The N flag is set, but the V flag is clear
+			taken = !isZ() || (!isN() && isV()) || (isN() && !isV());
 			break;
 			default:
 				throw new RuntimeException("not impl " + cc);

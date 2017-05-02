@@ -155,13 +155,61 @@ public class AND implements GenInstructionHandler {
 					}
 					
 					for (int register = 0; register < 8; register++) {
-						int opcode = base + (register << 9) | (opMode << 6) | ((m << 3) | r);
+						int opcode = base | (register << 9) | (opMode << 6) | (m << 3) | r;
 						cpu.addInstruction(opcode, ins);
 					}
 				}
 			}
 		}
 		
+		
+		for (int opMode = 4; opMode < 7; opMode++) {
+			if (opMode == 0b100) {
+				ins = new GenInstruction() {
+					
+					@Override
+					public void run(int opcode) {
+						ANDDestEAByte(opcode);
+					}
+
+				};
+			} else if (opMode == 0b101) {
+				ins = new GenInstruction() {
+					
+					@Override
+					public void run(int opcode) {
+						ANDDestEAWord(opcode);
+					}
+
+				};
+			} else if (opMode == 0b110) {
+				ins = new GenInstruction() {
+					
+					@Override
+					public void run(int opcode) {
+						ANDDestEALong(opcode);
+					}
+
+				};
+			}
+		
+			for (int m = 0; m < 8; m++) {
+				if (m == 0 || m == 1) {
+					continue;
+				}
+				
+				for (int r = 0; r < 8; r++) {
+					if ((m == 7) && r > 0b001) {
+						continue;
+					}
+					
+					for (int register = 0; register < 8; register++) {
+						int opcode = base | (register << 9) | (opMode << 6) | (m << 3) | r;
+						cpu.addInstruction(opcode, ins);
+					}
+				}
+			}
+		}
 	}
 	
 	private void ANDSourceEAByte(int opcode) {
@@ -202,6 +250,57 @@ public class AND implements GenInstructionHandler {
 		
 		long res = cpu.getD(destRegister) & data;
 		cpu.setDLong(destRegister, res);
+		
+		calcFlags(res, Size.LONG.getMsb());
+	}
+	
+	private void ANDDestEAByte(int opcode) {
+		int register = (opcode & 0x7);
+		int mode = (opcode >> 3) & 0x7;
+		int sourceRegister = (opcode >> 9) & 0x7;
+		
+		long toAnd = cpu.getD(sourceRegister) & 0xFF;
+		
+		Operation o = cpu.resolveAddressingMode(Size.BYTE, mode, register);
+		long data = o.getAddressingMode().getByte(o);
+		
+		long res = toAnd & data;
+		
+		cpu.writeKnownAddressingMode(o, res, Size.BYTE);
+		
+		calcFlags(res, Size.BYTE.getMsb());
+	}
+	
+	private void ANDDestEAWord(int opcode) {
+		int register = (opcode & 0x7);
+		int mode = (opcode >> 3) & 0x7;
+		int sourceRegister = (opcode >> 9) & 0x7;
+		
+		long toAnd = cpu.getD(sourceRegister) & 0xFFFF;
+		
+		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
+		long data = o.getAddressingMode().getWord(o);
+		
+		long res = toAnd & data;
+		
+		cpu.writeKnownAddressingMode(o, res, Size.WORD);
+		
+		calcFlags(res, Size.WORD.getMsb());
+	}
+	
+	private void ANDDestEALong(int opcode) {
+		int register = (opcode & 0x7);
+		int mode = (opcode >> 3) & 0x7;
+		int sourceRegister = (opcode >> 9) & 0x7;
+		
+		long toAnd = cpu.getD(sourceRegister);
+		
+		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
+		long data = o.getAddressingMode().getLong(o);
+		
+		long res = toAnd & data;
+		
+		cpu.writeKnownAddressingMode(o, res, Size.LONG);
 		
 		calcFlags(res, Size.LONG.getMsb());
 	}

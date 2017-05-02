@@ -3,6 +3,8 @@ package gen.instruction;
 import gen.Gen68;
 import gen.GenInstruction;
 import gen.Size;
+import gen.addressing.AbsoluteLong;
+import gen.addressing.AbsoluteShort;
 import gen.addressing.AddressRegisterIndirectPostIncrement;
 import gen.addressing.AddressRegisterIndirectPreDecrement;
 
@@ -282,6 +284,9 @@ public class MOVEM implements GenInstructionHandler {
 				if (o.getAddressingMode() instanceof AddressRegisterIndirectPostIncrement) {
 					o.setAddress(o.getAddress() + 4);
 					cpu.setALong(register, o.getAddress());
+				} else if (o.getAddressingMode() instanceof AbsoluteShort
+						|| o.getAddressingMode() instanceof AbsoluteLong) {
+					o.setAddress(o.getAddress() + 4);
 				} else {
 					// ?
 				}
@@ -296,6 +301,9 @@ public class MOVEM implements GenInstructionHandler {
 				if (o.getAddressingMode() instanceof AddressRegisterIndirectPostIncrement) {
 					o.setAddress(o.getAddress() + 4);
 					cpu.setALong(register, o.getAddress());
+				} else if (o.getAddressingMode() instanceof AbsoluteShort
+						|| o.getAddressingMode() instanceof AbsoluteLong) {
+					o.setAddress(o.getAddress() + 4);
 				} else {
 					// ?
 				}
@@ -427,7 +435,7 @@ public class MOVEM implements GenInstructionHandler {
 				o.setAddress(o.getAddress() + 4);
 			}
 			
-			cpu.setALong(7, o.getAddress());
+			cpu.setALong(register, o.getAddress());
 			
 		} else {
 			registerListMaskD = msb;

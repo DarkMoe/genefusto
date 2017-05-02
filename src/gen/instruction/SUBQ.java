@@ -153,7 +153,8 @@ public class SUBQ implements GenInstructionHandler {
 		if (dataToSub == 0) {
 			dataToSub = 8;
 		}
-		
+
+//		OTROS MODOS DE REGISTERS TAMBIEN APLICAN ESTO Y LOS OtROS METODOS ACA DENTRO TAMBIEN FLATAN
 		if (mode == 1) {	//	address register, siempre guarda longword y no calcula flags
 			Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
 			long data = o.getAddressingMode().getLong(o);
