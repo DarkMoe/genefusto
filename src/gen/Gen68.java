@@ -105,23 +105,18 @@ public class Gen68 {
 		
 		cycles = 0;
 		
-//		print = true;
+		print = true;
 		
-		if (PC == 0x3f44) {
-			System.out.println();
-//			print = false;
-		}
-
 		if (bus.vdp.vram[0xE000] == 0x80){
 			System.out.println();
 		}
 		
-		if (PC == 0x53a) {
+		if (PC == 0xca800) {
 			System.out.println();
-//			print = true;
+			print = true;
 		}
 		
-		if (PC == 0xebd38) {
+		if (PC == 0xcaaa4) {
 			System.out.println();
 			print = true;
 		}
@@ -318,15 +313,15 @@ public class Gen68 {
 			
 		} else if (mode == 0b001) {		//	An		Address Register Direct Mode 
 			if (size == Size.BYTE) {		//	byte
-				data = A[register] & 0xFF;
+				data = getA(register) & 0xFF;
 			} else if (size == Size.WORD) {		//	word
-				data = A[register] & 0xFFFF;
+				data = getA(register) & 0xFFFF;
 			} else if (size == Size.LONG) {		//	long
-				data = A[register];
+				data = getA(register);
 			}
 			
 		} else if (mode == 0b010) {				//	(An)	Address Register Indirect Mode
-			addr = A[register];
+			addr = getA(register);
 			
 			oper.setAddress(addr);
 			

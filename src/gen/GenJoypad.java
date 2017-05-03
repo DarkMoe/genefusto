@@ -24,7 +24,8 @@ public class GenJoypad {
 		if (asserted) {
 			return 0x33;
 		} else {
-			return 0x7F;
+//			return 0x7F;
+			return 0x3F;	// simpsons devuelve 3F al ppio
 		}
 	}
 	

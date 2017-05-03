@@ -75,13 +75,10 @@ public class TST implements GenInstructionHandler {
 	@Override
 	public void generate() {
 		GenInstruction ins = null;
-		Size size = null;
-		int base = 0;
+		int base = 0x4A00;
 		
 		for (int s = 0; s < 3; s++) {
-			if (s == 0) {
-				base = 0x4A00;
-				size = Size.BYTE;
+			if (s == 0b00) {
 				ins = new GenInstruction() {
 					@Override
 					public void run(int opcode) {
@@ -90,8 +87,6 @@ public class TST implements GenInstructionHandler {
 				};
 				
 			} else if (s == 0b01) {
-				size = Size.WORD;
-				base = 0x4A40;
 				ins = new GenInstruction() {
 					@Override
 					public void run(int opcode) {
@@ -100,8 +95,6 @@ public class TST implements GenInstructionHandler {
 				};
 				
 			} else if (s == 0b10) {
-				size = Size.LONG;
-				base = 0x4A80;
 				ins = new GenInstruction() {
 					@Override
 					public void run(int opcode) {
@@ -112,16 +105,14 @@ public class TST implements GenInstructionHandler {
 			
 			for (int m = 0; m < 8; m++) {
 				for (int r = 0; r < 8; r++) {
-					if (size == Size.BYTE) {
-						if (m == 1) {
-							continue;
-						}
-						if (m == 0b111 && r > 0b011) {
-							continue;
-						}
+					if (s == 0b00 && m == 1) {		//	byte no tiene este modo
+						continue;
+					}
+					if (m == 0b111 && r > 0b011) {
+						continue;
 					}
 
-					int opcode = base + ((m << 3) | r);
+					int opcode = base | (s << 6) | (m << 3) | r;
 					cpu.addInstruction(opcode, ins);
 				}
 			}

@@ -334,7 +334,7 @@ public class GenVdp {
 					throw new RuntimeException("ADDR WRITE !");
 
 				} else if (addressMode == 0b0101) { // VSRAM Write
-					System.out.println("vsramRead");
+					System.out.println("vsramWrite");
 					
 					vramRead = false;
 					cramRead = false;

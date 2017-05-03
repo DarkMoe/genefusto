@@ -5,6 +5,7 @@ import gen.GenInstruction;
 import gen.Size;
 import gen.addressing.AbsoluteLong;
 import gen.addressing.AbsoluteShort;
+import gen.addressing.AddressRegisterIndirect;
 import gen.addressing.AddressRegisterIndirectPostIncrement;
 import gen.addressing.AddressRegisterIndirectPreDecrement;
 
@@ -206,7 +207,7 @@ public class MOVEM implements GenInstructionHandler {
 								continue;
 							}
 							
-							int opcode = base + (dr << 10) | (s << 6 | (m << 3) | r);
+							int opcode = base | (dr << 10) | (s << 6) | (m << 3) | r;
 							cpu.addInstruction(opcode, ins);
 						}
 					}
@@ -239,8 +240,11 @@ public class MOVEM implements GenInstructionHandler {
 				if (o.getAddressingMode() instanceof AddressRegisterIndirectPostIncrement) {
 					o.setAddress(o.getAddress() + 2);
 					cpu.setAWord(register, o.getAddress());
+				} else if (o.getAddressingMode() instanceof AbsoluteShort
+						|| o.getAddressingMode() instanceof AbsoluteLong) {
+					o.setAddress(o.getAddress() + 2);
 				} else {
-					// ?
+					throw new RuntimeException("C");
 				}
 			}
 		}
@@ -257,8 +261,11 @@ public class MOVEM implements GenInstructionHandler {
 				if (o.getAddressingMode() instanceof AddressRegisterIndirectPostIncrement) {
 					o.setAddress(o.getAddress() + 2);
 					cpu.setAWord(register, o.getAddress());
+				} else if (o.getAddressingMode() instanceof AbsoluteShort
+						|| o.getAddressingMode() instanceof AbsoluteLong) {
+					o.setAddress(o.getAddress() + 2);
 				} else {
-					// ?
+					throw new RuntimeException("D");
 				}
 			}
 		}
@@ -275,6 +282,15 @@ public class MOVEM implements GenInstructionHandler {
 		cpu.PC += 2;
 		
 		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
+		
+		if (o.getAddressingMode() instanceof AddressRegisterIndirectPreDecrement) {
+			System.out.println();
+		} else if (o.getAddressingMode() instanceof AddressRegisterIndirectPostIncrement) {
+			System.out.println();
+		} else {
+			System.out.println();
+		}
+		
 		for (int i = 0; i < 8; i++) {
 			if (((registerListMaskD) & (1 << i)) != 0) {
 				data = o.getAddressingMode().getLong(o);
@@ -285,10 +301,11 @@ public class MOVEM implements GenInstructionHandler {
 					o.setAddress(o.getAddress() + 4);
 					cpu.setALong(register, o.getAddress());
 				} else if (o.getAddressingMode() instanceof AbsoluteShort
-						|| o.getAddressingMode() instanceof AbsoluteLong) {
+						|| o.getAddressingMode() instanceof AbsoluteLong
+						|| o.getAddressingMode() instanceof AddressRegisterIndirect) {
 					o.setAddress(o.getAddress() + 4);
 				} else {
-					// ?
+					throw new RuntimeException("A");
 				}
 			}
 		}
@@ -302,10 +319,11 @@ public class MOVEM implements GenInstructionHandler {
 					o.setAddress(o.getAddress() + 4);
 					cpu.setALong(register, o.getAddress());
 				} else if (o.getAddressingMode() instanceof AbsoluteShort
-						|| o.getAddressingMode() instanceof AbsoluteLong) {
+						|| o.getAddressingMode() instanceof AbsoluteLong
+						|| o.getAddressingMode() instanceof AddressRegisterIndirect) {
 					o.setAddress(o.getAddress() + 4);
 				} else {
-					// ?
+					throw new RuntimeException("B");
 				}
 			}
 		}
@@ -343,7 +361,7 @@ public class MOVEM implements GenInstructionHandler {
 					
 					cpu.writeKnownAddressingMode(o, data, Size.WORD);
 					
-					o.setAddress(o.getAddress() - 4);
+					o.setAddress(o.getAddress() - 2);
 				}
 			}
 			for (int i = 7; i >= 0; i--) {
