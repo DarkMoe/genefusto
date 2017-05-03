@@ -72,8 +72,14 @@ public class MOVE_FROM_SR implements GenInstructionHandler {
 		};
 
 		for (int m = 0; m < 8; m++) {
+			if (m == 1) {
+				continue;
+			}
 			for (int r = 0; r < 8; r++) {
-				int opcode = base + (m << 3) | (r);
+				if (m == 0b111 && r > 1) {
+					continue;
+				}
+				int opcode = base | (m << 3) | r;
 				cpu.addInstruction(opcode, ins);
 			}
 		}
