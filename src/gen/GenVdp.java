@@ -881,7 +881,7 @@ public class GenVdp {
 					//	16 bytes por cell de 8x8
 					//	cada linea dentro de una cell de 8 pixeles, ocupa 4 bytes (o sea, la mitad del ancho en bytes)
 					int currentVerticalCell = spriteLine / 8;
-					int vertLining = (currentVerticalCell * 0x10) + (spriteLine * (2 * horSize));
+					int vertLining = (currentVerticalCell * 32) + ((spriteLine % 8) * (2 * horSize));
 					int horLining = vertLining + (cellHor * ((verSize + 1) * 32));
 					for (int i = 0; i < 4; i++) {
 						int grab = (pattern * 0x20) + (horLining) + i;
@@ -980,11 +980,13 @@ public class GenVdp {
 					pix = backColor;
 				}
 				
+				
 				screenData[i][j] = pix;
 				
 				int sprit = sprites[i][j];
 				if (sprit != 0) {
 					screenData[i][j] = sprit;
+					sprites[i][j] = 0;
 				}
 			}
 		}
