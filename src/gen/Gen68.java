@@ -105,10 +105,10 @@ public class Gen68 {
 		
 		cycles = 0;
 		
-		print = true;
+//		print = true;
 		
-		if (bus.vdp.vram[0xE000] == 0x80){
-			System.out.println();
+		if (bus.vdp.vram[0xA801] != 0){
+//			System.out.println();
 		}
 		
 		if (PC == 0xca800) {

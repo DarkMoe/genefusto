@@ -146,6 +146,8 @@ public class GenVdp {
 	
 	long all;
 	
+	int line;
+	
 	GenBus bus;
 	
 	public GenVdp(GenBus bus) {
@@ -795,10 +797,24 @@ public class GenVdp {
 	public int[][] planeIndexColorA = new int[320][256];
 	public int[][] planeIndexColorB = new int[320][256];
 	
+	public int[][] sprites = new int[320][256];
+	
 	public void run(int cycles) {
 		totalCycles += cycles;
-		if (totalCycles > 251503) {
+		if (totalCycles > 982) {
+			line++;
 			totalCycles = 0;
+			
+			if ((registers[1] & 0x40) == 0x40) {
+				if (line < 0xE0){
+					renderSprites();
+				}
+			}
+		}
+		if (line == 0xFF) {
+			line = 0;
+		}
+		if (line == 0xE0 && totalCycles == 0) {
 			vip = 1;
 			vb = 1;
 			
@@ -811,10 +827,113 @@ public class GenVdp {
 				
 				bus.emu.renderScreen();
 			}
-		} else {
+		} else if (line < 0xE0) {
 			vb = 0;
 		}
 		
+	}
+
+	private void renderSprites() {
+		int spriteTableLoc = registers[0x5] & 0x7F;	//	AT16 is only valid if 128 KB mode is enabled, and allows for rebasing the Sprite Attribute Table to the second 64 KB of VRAM.
+		int spriteTable = spriteTableLoc * 0x200;
+		
+		long linkData = 0xFF;
+		long verticalPos;
+		
+		int line = this.line;
+		
+		long baseAddress = spriteTable;
+		while (linkData != 0) {
+			int byte0 = vram[(int) (baseAddress)];
+			int byte1 = vram[(int) (baseAddress + 1)];
+			int byte2 = vram[(int) (baseAddress + 2)];
+			int byte3 = vram[(int) (baseAddress + 3)];
+			int byte4 = vram[(int) (baseAddress + 4)];
+			int byte5 = vram[(int) (baseAddress + 5)];
+			int byte6 = vram[(int) (baseAddress + 6)];
+			int byte7 = vram[(int) (baseAddress + 7)];
+			
+			linkData = byte3 & 0x7F;
+			verticalPos = ((byte0 & 0x3) << 8) | byte1;
+			
+			int horSize = (byte2 >> 2) & 0x3;
+			int verSize = byte2 & 0x3;
+			
+			int horSizePixels = (horSize + 1) * 8;
+			int verSizePixels = (verSize + 1) * 8;
+			
+			int nextSprite = (int) ((linkData * 8) + spriteTable);
+			baseAddress = nextSprite;
+	
+			int realY = (int) (verticalPos - 128);
+			
+			if (line >= realY && (line < (realY + verSizePixels))) {
+
+				int pattern = ((byte4 & 0x7) << 8) | byte5;
+				int palette = (byte4 >> 5) & 0x3;
+				
+				int horizontalPos = ((byte6 & 0x1) << 8) | byte7;
+				int horOffset = horizontalPos - 128;
+				int horOffset2 = horOffset++;
+				
+				int spriteLine = (int) ((line - realY) % verSizePixels);
+				for (int cellHor = 0; cellHor < (horSize + 1); cellHor++) {
+					//	16 bytes por cell de 8x8
+					//	cada linea dentro de una cell de 8 pixeles, ocupa 4 bytes (o sea, la mitad del ancho en bytes)
+					int currentVerticalCell = spriteLine / 8;
+					int vertLining = (currentVerticalCell * 0x10) + (spriteLine * (2 * horSize));
+					int horLining = vertLining + (cellHor * ((verSize + 1) * 32));
+					for (int i = 0; i < 4; i++) {
+						int grab = (pattern * 0x20) + (horLining) + i;
+						int data = vram[grab];
+						
+						int pixel1 = (data & 0xF0) >> 4;
+						int pixel2 = data & 0x0F;
+					
+						int paletteLine = palette * 32;
+						
+						int colorIndex1 = paletteLine + (pixel1 * 2);
+						int colorIndex2 = paletteLine + (pixel2 * 2);
+						
+						int color1;
+						if (colorIndex1 == 0) {
+							color1 = 0;
+						} else {
+							color1 = cram[colorIndex1] << 8 | cram[colorIndex1 + 1];
+						}
+						
+						int color2;
+						if (colorIndex2 == 0) {
+							color2 = 0;
+						} else {
+							color2 = cram[colorIndex2] << 8 | cram[colorIndex2 + 1];
+						}
+						
+						int r = (color1 >> 1) & 0x7;
+						int g = (color1 >> 5) & 0x7;
+						int b = (color1 >> 9) & 0x7;
+						
+						int r2 = (color2 >> 1) & 0x7;
+						int g2 = (color2 >> 5) & 0x7;
+						int b2 = (color2 >> 9) & 0x7;
+						
+						int theColor1 = getColour(r, g, b);
+						int theColor2 = getColour(r2, g2, b2);
+						
+						if (horOffset >= 0 && horOffset < 320) {
+							sprites[horOffset][line] = theColor1;
+						}
+						if (horOffset2 >= 0 && horOffset2 < 320) {
+							sprites[horOffset2][line] = theColor2;
+						}
+						
+						horOffset += 2;
+					}
+					
+				}
+			}
+			
+		}
 	}
 
 	//The VDP has a complex system of priorities that can be used to achieve several complex effects. The priority order goes like follows, with the least priority being the first item in the list:
@@ -862,6 +981,11 @@ public class GenVdp {
 				}
 				
 				screenData[i][j] = pix;
+				
+				int sprit = sprites[i][j];
+				if (sprit != 0) {
+					screenData[i][j] = sprit;
+				}
 			}
 		}
 	}
@@ -880,8 +1004,8 @@ public class GenVdp {
 			for (int horTile = 0; horTile < 40; horTile++) {//	40 words / tiles por scanline
 				int loc = tileLocator + (vertTile / (8 * 40));
 				
-				int nameTable = vram[loc] << 8;
-				nameTable |= vram[loc + 1];
+				int nameTable  = vram[loc] << 8;
+					nameTable |= vram[loc + 1];
 				
 				tileLocator += 2;
 			
