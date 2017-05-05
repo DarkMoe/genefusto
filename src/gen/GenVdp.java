@@ -874,14 +874,13 @@ public class GenVdp {
 				
 				int horizontalPos = ((byte6 & 0x1) << 8) | byte7;
 				int horOffset = horizontalPos - 128;
-				int horOffset2 = horOffset++;
 				
 				int spriteLine = (int) ((line - realY) % verSizePixels);
 				for (int cellHor = 0; cellHor < (horSize + 1); cellHor++) {
 					//	16 bytes por cell de 8x8
 					//	cada linea dentro de una cell de 8 pixeles, ocupa 4 bytes (o sea, la mitad del ancho en bytes)
 					int currentVerticalCell = spriteLine / 8;
-					int vertLining = (currentVerticalCell * 32) + ((spriteLine % 8) * (2 * horSize));
+					int vertLining = (currentVerticalCell * 32) + ((spriteLine % 8) * 4);
 					int horLining = vertLining + (cellHor * ((verSize + 1) * 32));
 					for (int i = 0; i < 4; i++) {
 						int grab = (pattern * 0x20) + (horLining) + i;
@@ -923,6 +922,7 @@ public class GenVdp {
 						if (horOffset >= 0 && horOffset < 320) {
 							sprites[horOffset][line] = theColor1;
 						}
+						int horOffset2 = horOffset + 1;
 						if (horOffset2 >= 0 && horOffset2 < 320) {
 							sprites[horOffset2][line] = theColor2;
 						}
