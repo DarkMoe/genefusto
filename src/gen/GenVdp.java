@@ -429,10 +429,6 @@ public class GenVdp {
 			int data1 = (dataPort >> 8) & 0xFF;
 			int data2 = dataPort & 0xFF;
 			
-			if (dataPort != 0) {
-				System.out.println();
-			}
-			
 //			int data1 = (int) bus.read(sourceTrue);
 //			int data2 = (int) bus.read(sourceTrue + 1);
 			
@@ -803,6 +799,7 @@ public class GenVdp {
 	public int[][] planeIndexColorB = new int[320][256];
 	
 	public int[][] sprites = new int[320][256];
+	public int[][] spritesIndex = new int[320][256];
 	
 	public void run(int cycles) {
 		totalCycles += cycles;
@@ -926,10 +923,12 @@ public class GenVdp {
 						
 						if (horOffset >= 0 && horOffset < 320) {
 							sprites[horOffset][line] = theColor1;
+							spritesIndex[horOffset][line] = pixel1;
 						}
 						int horOffset2 = horOffset + 1;
 						if (horOffset2 >= 0 && horOffset2 < 320) {
 							sprites[horOffset2][line] = theColor2;
+							spritesIndex[horOffset2][line] = pixel2;
 						}
 						
 						horOffset += 2;
@@ -985,13 +984,14 @@ public class GenVdp {
 					pix = backColor;
 				}
 				
-				
 				screenData[i][j] = pix;
 				
-				int sprit = sprites[i][j];
-				if (sprit != 0) {
+				int spriteIndex = spritesIndex[i][j];
+				if (spriteIndex != 0) {
+					int sprit = sprites[i][j];
 					screenData[i][j] = sprit;
 					sprites[i][j] = 0;
+					spritesIndex[i][j] = 0;
 				}
 			}
 		}

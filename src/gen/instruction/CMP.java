@@ -128,6 +128,22 @@ public class CMP implements GenInstructionHandler {
 		long toSub = (cpu.getD(dataRegister) & 0xFF);
 		long res = toSub - data;
 		
+		boolean Sm = (data & 0x8000_0000L) != 0;
+		boolean Dm = (toSub & 0x8000_0000L) != 0;
+		boolean Rm = (res & 0x8000_0000L) != 0;
+		
+		if ((!Sm && Dm && !Rm) || (Sm && !Dm && Rm)) {
+			cpu.setV();
+		} else {
+			cpu.clearV();
+		}
+
+		if ((Sm && !Dm) || (Rm && !Dm) || (Sm && Rm)) {
+			cpu.setC();
+		} else {
+			cpu.clearC();
+		}
+		
 		calcFlags(res, Size.BYTE.getMsb(), 0xFF);
 	}
 	
@@ -141,6 +157,22 @@ public class CMP implements GenInstructionHandler {
 		
 		long toSub = (cpu.getD(dataRegister) & 0xFFFF);
 		long res = toSub - data;
+		
+		boolean Sm = (data & 0x8000_0000L) != 0;
+		boolean Dm = (toSub & 0x8000_0000L) != 0;
+		boolean Rm = (res & 0x8000_0000L) != 0;
+		
+		if ((!Sm && Dm && !Rm) || (Sm && !Dm && Rm)) {
+			cpu.setV();
+		} else {
+			cpu.clearV();
+		}
+
+		if ((Sm && !Dm) || (Rm && !Dm) || (Sm && Rm)) {
+			cpu.setC();
+		} else {
+			cpu.clearC();
+		}
 		
 		calcFlags(res, Size.WORD.getMsb(), 0xFFFF);
 	}
@@ -156,10 +188,26 @@ public class CMP implements GenInstructionHandler {
 		long toSub = cpu.getD(dataRegister);
 		long res = toSub - data;
 		
+		boolean Sm = (data & 0x8000_0000L) != 0;
+		boolean Dm = (toSub & 0x8000_0000L) != 0;
+		boolean Rm = (res & 0x8000_0000L) != 0;
+		
+		if ((!Sm && Dm && !Rm) || (Sm && !Dm && Rm)) {
+			cpu.setV();
+		} else {
+			cpu.clearV();
+		}
+
+		if ((Sm && !Dm) || (Rm && !Dm) || (Sm && Rm)) {
+			cpu.setC();
+		} else {
+			cpu.clearC();
+		}
+		
 		calcFlags(res, Size.LONG.getMsb(), 0xFFFF_FFFFL);
 	}
 	
-	void calcFlags(long data, long msb, long maxSize) {	// TODO V
+	void calcFlags(long data, long msb, long maxSize) {	// TODO merge con los flags de arriba
 		if ((data & maxSize) == 0) {
 			cpu.setZ();
 		} else {
@@ -169,11 +217,6 @@ public class CMP implements GenInstructionHandler {
 			cpu.setN();
 		} else {
 			cpu.clearN();
-		}
-		if (data < 0) {	// validar esto
-			cpu.setC();
-		} else {
-			cpu.clearC();
 		}
 	}
 	

@@ -1,7 +1,6 @@
 package gen.addressing;
 
 import gen.Gen68;
-import gen.Size;
 import gen.instruction.Operation;
 
 public class PCWithDisplacement implements AddressingMode {
@@ -39,7 +38,12 @@ public class PCWithDisplacement implements AddressingMode {
 
 	@Override
 	public long getLong(Operation o) {
-		throw new RuntimeException();
+		long address = o.getAddress();
+		long data  = cpu.bus.read(address) << 24;
+			 data |= cpu.bus.read(address + 1) << 16;
+			 data |= cpu.bus.read(address + 2) << 8;
+			 data |= cpu.bus.read(address + 3);
+		return data;
 	}
 
 }

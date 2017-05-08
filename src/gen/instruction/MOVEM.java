@@ -226,7 +226,7 @@ public class MOVEM implements GenInstructionHandler {
 
 		cpu.PC += 2;
 		
-		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
+		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
 		for (int i = 0; i < 8; i++) {
 			if (((registerListMaskD) & (1 << i)) != 0) {
 				data = o.getAddressingMode().getWord(o);
@@ -244,7 +244,7 @@ public class MOVEM implements GenInstructionHandler {
 						|| o.getAddressingMode() instanceof AbsoluteLong) {
 					o.setAddress(o.getAddress() + 2);
 				} else {
-					throw new RuntimeException("C");
+					throw new RuntimeException(o.getAddressingMode().getClass().getSimpleName());
 				}
 			}
 		}
@@ -380,8 +380,8 @@ public class MOVEM implements GenInstructionHandler {
 			cpu.setAWord(register, o.getAddress() & 0xFFFF);
 			
 		} else {
-			registerListMaskD = msb;
-			registerListMaskA = lsb;
+			registerListMaskA = msb;
+			registerListMaskD = lsb;
 			
 			for (int i = 0; i < 8; i++) {
 				if (((registerListMaskD) & (1 << i)) != 0) {
@@ -456,8 +456,8 @@ public class MOVEM implements GenInstructionHandler {
 			cpu.setALong(register, o.getAddress());
 			
 		} else {
-			registerListMaskD = msb;
-			registerListMaskA = lsb;
+			registerListMaskA = msb;
+			registerListMaskD = lsb;
 			
 			for (int i = 0; i < 8; i++) {
 				if (((registerListMaskD) & (1 << i)) != 0) {

@@ -87,11 +87,33 @@ public class CMPM implements GenInstructionHandler {
 	}
 
 	private void CMPMByte(int opcode) {
-		throw new RuntimeException("NO");
+		int axRegister = (opcode >> 9) & 0x7;
+		int ayRegister = (opcode & 0x7);
+		
+		Operation ax = cpu.resolveAddressingMode(Size.BYTE, 0b011, axRegister);	// force post increment mode
+		long data = ax.getAddressingMode().getByte(ax);
+		
+		Operation ay = cpu.resolveAddressingMode(Size.BYTE, 0b011, ayRegister); // force post increment mode
+		long toSub = ay.getAddressingMode().getByte(ay);
+		
+		long res = data - toSub;
+		
+		calcFlags(res, Size.BYTE.getMsb(), Size.BYTE.getMax());
 	}
 	
 	private void CMPMWord(int opcode) {
-		throw new RuntimeException("NO");
+		int axRegister = (opcode >> 9) & 0x7;
+		int ayRegister = (opcode & 0x7);
+		
+		Operation ax = cpu.resolveAddressingMode(Size.WORD, 0b011, axRegister);	// force post increment mode
+		long data = ax.getAddressingMode().getWord(ax);
+		
+		Operation ay = cpu.resolveAddressingMode(Size.WORD, 0b011, ayRegister); // force post increment mode
+		long toSub = ay.getAddressingMode().getWord(ay);
+		
+		long res = data - toSub;
+		
+		calcFlags(res, Size.WORD.getMsb(), Size.WORD.getMax());
 	}
 	
 	private void CMPMLong(int opcode) {

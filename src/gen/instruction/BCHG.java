@@ -221,7 +221,27 @@ public class BCHG implements GenInstructionHandler {
 	}
 	
 	private void BCHGRegisterLong(int opcode) {
-		throw new RuntimeException();
+		int dataRegister = (opcode >> 9) & 0x7;
+		int mode = (opcode >> 3) & 0x7;
+		int register = opcode & 0x7;
+		
+		long numberBit = cpu.getD(dataRegister);
+		
+		cpu.PC += 2;
+		
+		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
+		long data = o.getAddressingMode().getLong(o);
+		
+		calcFlags(data, (int) numberBit);
+	
+		if (cpu.bitTest((int) data, (int) numberBit)) {
+			data = cpu.bitReset((int) data, (int) numberBit);
+		} else {
+			data = cpu.bitSet((int) data, (int) numberBit);
+		}
+		o.setData(data);
+		
+		cpu.writeKnownAddressingMode(o, data, Size.LONG);
 	}
 	
 	void calcFlags(long data, int bit) {

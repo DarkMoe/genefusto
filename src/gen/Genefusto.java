@@ -37,10 +37,12 @@ import gen.addressing.DataRegisterDirect;
 import gen.addressing.ImmediateData;
 import gen.addressing.PCWithDisplacement;
 import gen.addressing.PCWithIndex;
+import gen.instruction.ABCD;
 import gen.instruction.ADD;
 import gen.instruction.ADDA;
 import gen.instruction.ADDI;
 import gen.instruction.ADDQ;
+import gen.instruction.ADDX;
 import gen.instruction.AND;
 import gen.instruction.ANDI;
 import gen.instruction.ANDI_CCR;
@@ -68,6 +70,7 @@ import gen.instruction.JSR;
 import gen.instruction.LEA;
 import gen.instruction.LINK;
 import gen.instruction.LSL;
+import gen.instruction.LSR;
 import gen.instruction.MOVE;
 import gen.instruction.MOVEA;
 import gen.instruction.MOVEM;
@@ -92,6 +95,7 @@ import gen.instruction.ROXL;
 import gen.instruction.ROXR;
 import gen.instruction.RTE;
 import gen.instruction.RTS;
+import gen.instruction.SBCD;
 import gen.instruction.SUB;
 import gen.instruction.SUBA;
 import gen.instruction.SUBI;
@@ -162,10 +166,12 @@ public class Genefusto {
         bus.joypad = joypad;
         bus.cpu = cpu;
 
+        new ABCD(cpu).generate();
         new ADD(cpu).generate();
         new ADDA(cpu).generate();
         new ADDI(cpu).generate();
         new ADDQ(cpu).generate();
+        new ADDX(cpu).generate();
         new AND(cpu).generate();
         new ANDI(cpu).generate();
         new ANDI_CCR(cpu).generate();
@@ -193,6 +199,7 @@ public class Genefusto {
         new LEA(cpu).generate();
         new LINK(cpu).generate();
         new LSL(cpu).generate();
+        new LSR(cpu).generate();
         new MOVE(cpu).generate();
         new MOVEA(cpu).generate();
         new MOVE_FROM_SR(cpu).generate();
@@ -217,6 +224,7 @@ public class Genefusto {
         new ROXR(cpu).generate();
         new RTE(cpu).generate();
         new RTS(cpu).generate();
+        new SBCD(cpu).generate();
         new Scc(cpu).generate();
         new SUB(cpu).generate();
         new SUBA(cpu).generate();
@@ -436,8 +444,8 @@ public class Genefusto {
         }
     }
 
-    String basePath = "C:\\Users\\Zotac\\workspace\\raul\\src\\gen\\roms\\";
-//	String basePath = "C:\\dev\\workspace\\test\\src\\gen\\roms\\";
+//    String basePath = "C:\\Users\\Zotac\\workspace\\raul\\src\\gen\\roms\\";
+	String basePath = "C:\\dev\\workspace\\test\\src\\gen\\roms\\";
     
     class MyRunnable implements Runnable {
         File file;

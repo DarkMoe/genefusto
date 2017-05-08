@@ -4,11 +4,11 @@ import gen.Gen68;
 import gen.GenInstruction;
 import gen.Size;
 
-public class LSL implements GenInstructionHandler {
+public class LSR implements GenInstructionHandler {
 
 	final Gen68 cpu;
 	
-	public LSL(Gen68 cpu) {
+	public LSR(Gen68 cpu) {
 		this.cpu = cpu;
 	}
 	
@@ -131,28 +131,28 @@ public class LSL implements GenInstructionHandler {
 	}
 	
 	private void generateRegisterShift() {
-		int base = 0xE108;
+		int base = 0xE008;
 		GenInstruction ins = null;
 		for (int s = 0; s < 3; s++) {
 			if (s == 0b00) {
 				ins = new GenInstruction() {
 					@Override
 					public void run(int opcode) {
-						LSLRegisterByte(opcode);
+						LSRRegisterByte(opcode);
 					}
 				};
 			} else if (s == 0b01) {
 				ins = new GenInstruction() {
 					@Override
 					public void run(int opcode) {
-						LSLRegisterWord(opcode);
+						LSRRegisterWord(opcode);
 					}
 				};
 			} else if (s == 0b10) {
 				ins = new GenInstruction() {
 					@Override
 					public void run(int opcode) {
-						LSLRegisterLong(opcode);
+						LSRRegisterLong(opcode);
 					}
 				};
 			}
@@ -169,12 +169,13 @@ public class LSL implements GenInstructionHandler {
 	}
 	
 	private void generateMemoryShift() {
-		int base = 0xE3C0;
+		int base = 0xE2C0;
 		GenInstruction ins = null;
+		
 		ins = new GenInstruction() {
 			@Override
 			public void run(int opcode) {
-				LSLMemoryWord(opcode);
+				LSRMemoryWord(opcode);
 			}
 		};
 			
@@ -191,8 +192,8 @@ public class LSL implements GenInstructionHandler {
 			}
 		}
 	}
-		
-	private void LSLRegisterByte(int opcode) {
+
+	private void LSRRegisterByte(int opcode) {
 		int register = (opcode & 0x7);
 		boolean ir = cpu.bitTest(opcode, 5);
 		int numRegister = (opcode >> 9) & 0x7;
@@ -206,16 +207,22 @@ public class LSL implements GenInstructionHandler {
 		} else {
 			toShift = cpu.getD(numRegister);
 		}
+
+		long data = cpu.getD(register) & 0xFF;
+		long res = data >> toShift;
 		
-		long res = (cpu.getD(register) & 0xFF) << toShift;
+		boolean carry = false;
+		if (toShift != 0) {
+			if (((data >> toShift - 1) & 1) > 0) {
+				carry = true;
+			}
+		}
 		cpu.setDByte(register, res);
-		
-		boolean carry = cpu.bitTest(res, 8);
 		
 		calcFlags(res, Size.BYTE.getMsb(), 0xFF, carry);
 	}
 	
-	private void LSLRegisterWord(int opcode) {
+	private void LSRRegisterWord(int opcode) {
 		int register = (opcode & 0x7);
 		boolean ir = cpu.bitTest(opcode, 5);
 		int numRegister = (opcode >> 9) & 0x7;
@@ -229,16 +236,23 @@ public class LSL implements GenInstructionHandler {
 		} else {
 			toShift = cpu.getD(numRegister);
 		}
-		
-		long res = (cpu.getD(register) & 0xFFFF) << toShift;
+
+		long data = cpu.getD(register) & 0xFFFF;
+		long res = data >> toShift;
+						
+		boolean carry = false;
+		if (toShift != 0) {
+			if (((data >> toShift - 1) & 1) > 0) {
+				carry = true;
+			}
+		}
+						
 		cpu.setDWord(register, res);
-		
-		boolean carry = cpu.bitTest(res, 16);
 		
 		calcFlags(res, Size.WORD.getMsb(), 0xFFFF, carry);
 	}
-	
-	private void LSLRegisterLong(int opcode) {
+
+	private void LSRRegisterLong(int opcode) {
 		int register = (opcode & 0x7);
 		boolean ir = cpu.bitTest(opcode, 5);
 		int numRegister = (opcode >> 9) & 0x7;
@@ -252,21 +266,45 @@ public class LSL implements GenInstructionHandler {
 		} else {
 			toShift = cpu.getD(numRegister);
 		}
-		
+
 		long data = cpu.getD(register);
+		long res = data >> toShift;
 		
-		long res = data << toShift;
+		boolean carry = false;
+		if (toShift != 0) {
+			if (((data >> toShift - 1) & 1) > 0) {
+				carry = true;
+			}
+		}
+		
 		cpu.setDLong(register, res);
-		
-		boolean carry = ((res >> 32) & 1) == 1;
 		
 		calcFlags(res, Size.LONG.getMsb(), 0xFFFF_FFFFL, carry);
 	}
 	
-	private void LSLMemoryWord(int opcode) {
-		throw new RuntimeException("");
+	private void LSRMemoryWord(int opcode) {
+		int mode = (opcode >> 3) & 0x7;
+		int register = opcode & 0x7;
+		
+		long toShift = 1;
+
+		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
+		long data = o.getAddressingMode().getWord(o);
+		
+		long res = data >> toShift;
+						
+		boolean carry = false;
+		if (toShift != 0) {
+			if (((data >> toShift - 1) & 1) > 0) {
+				carry = true;
+			}
+		}
+			
+		cpu.writeKnownAddressingMode(o, res, Size.WORD);
+		
+		calcFlags(res, Size.WORD.getMsb(), 0xFFFF, carry);
 	}
-	
+
 	void calcFlags(long data, long msb, long maxSize, boolean carry) {
 		long wrapped = data & maxSize;
 		if (wrapped == 0) {
