@@ -8,8 +8,13 @@ public class GenVdp {
 	int[] vram  = new int[0x10000];
 	int[] cram  = new int[0x80];		//	The CRAM contains 128 bytes, addresses 0 to 7F
 	int[] vsram = new int[0x50];		//	The VSRAM contains 80 bytes, addresses 0 to 4F
-	
 
+	enum VramMode {
+		vramRead, cramRead, vsramRead , vramWrite, cramWrite, vsramWrite;
+	}
+
+	VramMode vramMode;
+	
 //	VSRAM
 //	 The VDP has 40x10 bits of on-chip vertical scroll RAM. It is accessed as
 //	 40 16-bit words through the data port. Each word has the following format:
@@ -364,6 +369,8 @@ public class GenVdp {
 							
 							if (m1) {
 								dmaMem2Vram(all);
+							} else {
+								System.out.println("OO !");
 							}
 						}
 						
@@ -378,7 +385,7 @@ public class GenVdp {
 	
 	boolean dmaRecien = false;
 	
-	public void dmaOperation() {
+	public void dmaFill() {
 		if (dma == 1) {
 			int dmaLength = (dmaLengthCounterHi << 8) | dmaLengthCounterLo;
 			
@@ -411,15 +418,20 @@ public class GenVdp {
 			int code = (int) ((first >> 14) | (((second >> 4) & 0xF) << 2));
 			int addr = (int) ((first & 0x3FFF) | ((second & 0x3) << 13));
 			
-			long sourceAddr = ((registers[0x17] & 0x7F) << 16) | (registers[0x16] << 8) | (registers[0x15]);
-			long sourceTrue = sourceAddr << 1;	// duplica, trabaja asi
 			int destAddr = (int) (((all & 0x3) << 14) | ((all & 0x3FFF_0000L) >> 16));
 			
-			sourceTrue += autoIncrementTotal;
+			if (destAddr % 2 == 1) {
+				System.out.println("IMPAR !");
+			}
+			
 			destAddr += autoIncrementTotal;
 			
 			int data1 = (dataPort >> 8) & 0xFF;
 			int data2 = dataPort & 0xFF;
+			
+			if (dataPort != 0) {
+				System.out.println();
+			}
 			
 //			int data1 = (int) bus.read(sourceTrue);
 //			int data2 = (int) bus.read(sourceTrue + 1);
@@ -489,17 +501,6 @@ public class GenVdp {
 				System.out.println("M1 should be 1 in the DMA transfer. otherwise we can't guarantee the operation.");
 			}
 			
-//		} else if (memToVram) {
-//			if (m1) {
-//				memToVram = false;
-//				
-//				dmaMem2Vram();
-//				
-//				return;
-//			} else {
-//				System.out.println("M1 should be 1 in the DMA transfer. otherwise we can't guarantee the operation.");
-//			}
-			
 		} else if (vramWrite) {
 			vramWrite(data);
 			
@@ -510,7 +511,7 @@ public class GenVdp {
 			vsramWrite(data);
 			
 		} else {
-			throw new RuntimeException("NOT IMPL DMA !");
+			throw new RuntimeException("NOT IMPL !");
 		}
 	}
 
@@ -568,6 +569,10 @@ public class GenVdp {
 			
 			int data1 = (int) bus.read(sourceTrue);
 			int data2 = (int) bus.read(sourceTrue + 1);
+			
+			if (destAddr % 2 == 1) {
+				System.out.println("IMPAR !");
+			}
 			
 			if (vramWrite) {
 				vram[destAddr] = data1;

@@ -17,9 +17,6 @@ public class DIVS implements GenInstructionHandler {
 //
 //SYNOPSIS
 //	DIVS.W	<ea>,Dn     32/16 -> 16r:16q
-//	DIVS.L	<ea>,Dq     32/32 -> 32q      (68020+)
-//	DIVS.L	<ea>,Dr:Dq  64/32 -> 32r:32q  (68020+)
-//	DIVSL.L	<ea>,Dr:Dq  32/32 -> 32r:32q  (68020+)
 //
 //	Size = (Word, Long)
 //
@@ -33,18 +30,6 @@ public class DIVS implements GenInstructionHandler {
 //	word of the destination and the resultant remainder is placed in the
 //	upper word of the destination. The sign of the remainder is the
 //	same as the sign of the dividend.
-//
-//	In the first long form, the destination and the source are both
-//	long words. The quotient is placed in the longword of the destination
-//	and the remainder is discarded.
-//
-//	The second long form has the destination as a quadword (eight bytes),
-//	specified by any two data registers, and the source is a long word.
-//	The resultant remainder and quotient are both long words and are
-//	placed in the destination registers.
-//
-//	The final long form has both the source and the destination as long
-//	words and the resultant quotient and remainder as long words.
 //
 //FORMAT
 //	In the case of DIVS.W:
@@ -137,7 +122,7 @@ public class DIVS implements GenInstructionHandler {
 			s |= 0xFFFF_0000L;
 		}
 		
-		int d = (int) cpu.getD(dataRegister);
+		int d = (int) cpu.getD(dataRegister) & 0xFFFF;	//	TODO validar este mask
 
 		if (s == 0) {
 			throw new RuntimeException("div por 0");

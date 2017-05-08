@@ -107,18 +107,21 @@ public class Gen68 {
 		
 //		print = true;
 		
-		if (bus.vdp.vram[0xA801] != 0){
-//			System.out.println();
+		if (bus.vdp.vram[0xA804] == 0x80){
+			System.out.println();
 		}
 		
-		if (PC == 0xca800) {
+		if (bus.memory.ram[0xcb04] == 0x80) {
+			System.out.println();
+		}
+		if (PC == 0xb612) {
 			System.out.println();
 			print = true;
 		}
 		
-		if (PC == 0xcaaa4) {
+		if (PC == 0xFFF406) {
 			System.out.println();
-			print = true;
+			
 		}
 		
  		GenInstruction instruction = getInstruction((int) opcode);
@@ -394,7 +397,7 @@ public class Gen68 {
 			oper.setAddress(addr);
 			
 		} else if (mode == 0b101) {	//	(d16,An)	Address with Displacement
-			long base = A[register];
+			long base = A[register] & 0xFFFF_FFFFL;
 			long displac = bus.read(PC + 2) << 8;
 			displac |= bus.read(PC + 3);
 			
@@ -822,7 +825,7 @@ public class Gen68 {
 	public void addInstruction(int opcode, GenInstruction ins) {
 		GenInstruction instr = instructions[opcode];
 		if (instr != null) {
-			throw new RuntimeException(pad4(opcode));
+			throw new RuntimeException(pad4(opcode) + " - " + instr.getClass().toGenericString());
 		}
 		totalInstructions++;
 		instructions[opcode] = ins;

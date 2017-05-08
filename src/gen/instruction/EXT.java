@@ -84,12 +84,10 @@ public class EXT implements GenInstructionHandler {
 	
 	private void EXT8To16Bits(int opcode) {
 		int register = (opcode & 0x7);
-		long data = cpu.getD(register);
+		long data = cpu.getD(register) & 0xFF;
 		
 		if ((data & 0x80) > 0) {
 			data |= 0xFF00;
-		} else {
-			data &= 0x00FF;
 		}
 
 		cpu.setDWord(register, data);
@@ -99,7 +97,7 @@ public class EXT implements GenInstructionHandler {
 	
 	private void EXT16To32Bits(int opcode) {
 		int register = (opcode & 0x7);
-		long data = cpu.getD(register);
+		long data = cpu.getD(register) & 0xFFFF;
 		
 		if ((data & 0x8000) > 0) {
 			data |= 0xFFFF_0000;

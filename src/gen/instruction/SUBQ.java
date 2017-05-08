@@ -138,9 +138,8 @@ public class SUBQ implements GenInstructionHandler {
 		long data = o.getAddressingMode().getByte(o);
 		
 		long tot = (data - dataToSub);
-		long total = (data & 0xFFFF_FF00L) | (tot & 0x0000_00FF) & 0xFFFF_FFFFL;
 		
-		cpu.writeKnownAddressingMode(o, total, Size.BYTE);
+		cpu.writeKnownAddressingMode(o, tot, Size.BYTE);
 		
 		calcFlags(tot, Size.BYTE.getMsb(), Size.BYTE.getMax());
 	}
@@ -155,7 +154,7 @@ public class SUBQ implements GenInstructionHandler {
 		}
 
 		if (mode == 1) {	//	address register, siempre guarda longword y no calcula flags
-			long data = cpu.getA(register);
+			long data = cpu.getA(register);		// usa word o long word FIXME ?
 			long tot = (data - dataToSub);
 			cpu.setALong(register, tot);
 			
@@ -164,9 +163,8 @@ public class SUBQ implements GenInstructionHandler {
 			long data = o.getAddressingMode().getWord(o);
 			
 			long tot = (data - dataToSub);
-			long total = (data & 0xFFFF_0000L) | (tot & 0x0000_FFFF) & 0xFFFF_FFFFL;
 			
-			cpu.writeKnownAddressingMode(o, total, Size.WORD);
+			cpu.writeKnownAddressingMode(o, tot, Size.WORD);
 			calcFlags(tot, Size.WORD.getMsb(), Size.WORD.getMax());
 		}
 	}
@@ -184,9 +182,8 @@ public class SUBQ implements GenInstructionHandler {
 		long data = o.getAddressingMode().getLong(o);
 		
 		long tot = (data - dataToSub);
-		long total = tot & 0xFFFF_FFFFL;
-		
-		cpu.writeKnownAddressingMode(o, total, Size.LONG);
+
+		cpu.writeKnownAddressingMode(o, tot, Size.LONG);
 		
 		// if destination is An no cambian los flags
 		if (mode != 1) {

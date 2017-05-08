@@ -223,29 +223,30 @@ public class BTST implements GenInstructionHandler {
 	private void BTSTImmediateByte(int opcode) {
 		int destReg = (opcode & 0x7);
 		int destMode = (opcode >> 3) & 0x7;
+		
 		long numberBit = (cpu.bus.read(cpu.PC + 2)) << 8;
 		numberBit |= cpu.bus.read(cpu.PC + 3);
 		numberBit = numberBit & 0xFF;
 		
 		cpu.PC += 2;
 		
-		Operation o = cpu.resolveAddressingMode(cpu.PC + 2, Size.BYTE, destMode, destReg);
+		Operation o = cpu.resolveAddressingMode(Size.BYTE, destMode, destReg);
 		long data = o.getAddressingMode().getByte(o);
 		
 		calcFlags(data, (int) numberBit);
 	}
 	
 	private void BTSTImmediateLong(int opcode) {
-		Size size = Size.LONG;
 		int destReg = (opcode & 0x7);
 		int destMode = (opcode >> 3) & 0x7;
+		
 		long numberBit = (cpu.bus.read(cpu.PC + 2)) << 8;
 		numberBit |= cpu.bus.read(cpu.PC + 3);
 		numberBit = numberBit & 0xFF;
 		
 		cpu.PC += 2;
 		
-		Operation o = cpu.resolveAddressingMode(cpu.PC + 2, size, destMode, destReg);
+		Operation o = cpu.resolveAddressingMode(Size.LONG, destMode, destReg);
 		long data = o.getAddressingMode().getLong(o);
 		
 		calcFlags(data, (int) numberBit);

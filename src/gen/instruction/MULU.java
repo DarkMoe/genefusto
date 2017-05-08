@@ -40,12 +40,6 @@ public class MULU implements GenInstructionHandler {
 //	a 32-bit result. The second will multiply two 32-bit
 //	integers and produce a 32-bit result.
 //
-//	The third form needs some special consideration. It
-//	will multiply two 32-bit integers, specified by <ea>
-//	and Dl, the result is (sign) extended to 64-bits with
-//	the low order 32 being placed in Dl and the high order
-//	32 being placed in Dh.
-//
 //FORMAT
 //	In the case of MULS.W:
 //	~~~~~~~~~~~~~~~~~~~~~                              <ea>

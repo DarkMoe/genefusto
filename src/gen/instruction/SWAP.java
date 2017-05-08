@@ -63,7 +63,7 @@ public class SWAP implements GenInstructionHandler {
 		int register = (opcode & 0x7);
 		long data = cpu.getD(register);
 		
-		data = ((data & 0xFFFF) << 16) | ((data & 0xFFFF_0000) >> 16);
+		data = ((data & 0xFFFF) << 16) | ((data & 0xFFFF_0000L) >> 16);
 				
 		cpu.setDLong(register, data);
 				

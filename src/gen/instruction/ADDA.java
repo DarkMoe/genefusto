@@ -99,7 +99,7 @@ public class ADDA implements GenInstructionHandler {
 						if (m == 0b111 & r > 0b100) {
 							continue;
 						}
-						int opcode = base + ((register << 9) | (opMode << 6) | (m << 3) | r);
+						int opcode = base | (register << 9) | (opMode << 6) | (m << 3) | r;
 						cpu.addInstruction(opcode, ins);
 					}
 				}

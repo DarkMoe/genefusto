@@ -206,9 +206,11 @@ public class OR implements GenInstructionHandler {
 		int destRegister = (opcode >> 9) & 0x7;
 		
 		Operation o = cpu.resolveAddressingMode(Size.BYTE, mode, register);
-		long data = o.getAddressingMode().getWord(o);
+		long data = o.getAddressingMode().getByte(o);
 		
-		long res = (cpu.getD(destRegister) & 0xFFFF) | data;
+		long toOr = cpu.getD(destRegister) & 0xFF;
+		
+		long res = toOr | data;
 		cpu.setDByte(destRegister, res);
 		
 		calcFlags(res, Size.BYTE.getMsb());

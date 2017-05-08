@@ -212,7 +212,7 @@ public class SUB implements GenInstructionHandler {
 		long tot = (cpu.getD(dataRegister) - data);
 		cpu.setDLong(dataRegister, tot);
 		
-		calcFlags(tot, Size.LONG.getMsb(), 0xFFFF_FFFFL);
+		calcFlags(tot, Size.LONG.getMsb(), Size.LONG.getMax());
 	}
 	
 	private void SUB_EADest_Byte(int opcode) {

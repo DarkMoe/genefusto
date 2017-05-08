@@ -142,7 +142,7 @@ public class SUBI implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(Size.BYTE, mode, register);
 		long toSub = o.getAddressingMode().getByte(o);
 		
-		long tot = (toSub & 0xFF) - data;
+		long tot = toSub - data;
 		cpu.writeKnownAddressingMode(o, tot, Size.BYTE);
 		
 		calcFlags(tot, Size.BYTE.getMsb(), Size.BYTE.getMax());
@@ -160,7 +160,7 @@ public class SUBI implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
 		long toSub = o.getAddressingMode().getWord(o);
 
-		long tot = (toSub & 0xFFFF) - data;
+		long tot = toSub - data;
 		cpu.writeKnownAddressingMode(o, tot, Size.WORD);
 		
 		calcFlags(tot, Size.WORD.getMsb(), Size.WORD.getMax());

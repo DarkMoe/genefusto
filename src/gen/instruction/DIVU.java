@@ -123,7 +123,7 @@ public class DIVU implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
 		long div = o.getAddressingMode().getWord(o);
 		
-		long data = cpu.getD(dataRegister);
+		long data = cpu.getD(dataRegister) & 0xFFFF;
 		if (div == 0) {
 			throw new RuntimeException("DIV by 0");
 		}

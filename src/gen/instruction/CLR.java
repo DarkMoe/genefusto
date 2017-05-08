@@ -127,8 +127,7 @@ public class CLR implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int register = opcode & 0x7;
 		
-//		cpu.writeAddressingMode(Size.BYTE, cpu.PC + 2, 0, mode, register);
-		
+		//	lectura dummy
 		Operation o = cpu.resolveAddressingMode(Size.BYTE, mode, register);
 		long data = o.getAddressingMode().getByte(o);
 		cpu.writeKnownAddressingMode(o, 0, Size.BYTE);

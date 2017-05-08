@@ -147,8 +147,8 @@ public class CMPI implements GenInstructionHandler {
 		
 		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
 		long toSub = o.getAddressingMode().getWord(o);
+
 		long res = toSub - data;
-		
 		
 		calcFlags(res, Size.WORD.getMsb(), 0xFFFF);
 	}
@@ -166,6 +166,7 @@ public class CMPI implements GenInstructionHandler {
 		
 		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
 		long toSub = o.getAddressingMode().getLong(o);
+		
 		long res = toSub - data;
 		
 		calcFlags(res, Size.LONG.getMsb(), 0xFFFF_FFFFL);
