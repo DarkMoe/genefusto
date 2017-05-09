@@ -176,9 +176,6 @@ public class GenBus {
 			
 		} else if (addressL >= 0xFF0000) {
 			long addr = (addressL & 0xFFFFFF) - 0xFF0000;
-			if (addr >= 0x10000 || addr < 0) {
-				System.out.println();
-			}
 			
 			if (size == Size.BYTE) {
 				memory.writeRam(addr, data);

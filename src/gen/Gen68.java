@@ -107,16 +107,19 @@ public class Gen68 {
 		
 //		print = true;
 		
-		if (bus.vdp.vram[0xA804] == 0x80){
-			System.out.println();
+		if (bus.vdp.vram[0xFEC8 + 3] == 0x99){
+//			System.out.println();
 		}
 		
 		if (bus.memory.ram[0xe402] == 0xc7) {
+//			System.out.println();
+		}
+	
+		if (D[0] == 0xE0000000L) {
 			System.out.println();
 		}
-		
-		if(PC ==0x1516) {
-//			print = true;
+		if(PC ==0x1ceb7c) {
+			print = true;
 		}
 		
  		GenInstruction instruction = getInstruction((int) opcode);
