@@ -12,3 +12,4 @@ Compability is terrible, status:
 -no scrolling
 -no sound
 -no hblank support
+-no accurate timings
