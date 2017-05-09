@@ -1,4 +1,14 @@
 # genefusto
 A Java Sega Genesis emulator made in ARGENTINA.
 
-This is my personal project for learning how to code emulators. Bear in mind that 99% of the games still don't boot and the rest just shows the intro and then probably crash the emulator.
+This is my personal project for learning how to code emulators.
+
+Compability is terrible, status:
+
+-boots some games
+-display plane A, B and sprites
+-sprite evaluation
+
+-no scrolling
+-no sound
+-no hblank support
