@@ -83,7 +83,7 @@ public class Gen68 {
 	
 	StringBuilder sb = new StringBuilder();
 	public boolean print;
-	int c = 1;
+
 	public int runInstruction() {
 		long opcode = (bus.read(PC) << 8);
 		opcode |= bus.read(PC + 1);
@@ -114,20 +114,9 @@ public class Gen68 {
 		if (bus.memory.ram[0xe402] == 0xc7) {
 			System.out.println();
 		}
-		if (PC == 0x537F6) {
-			c++;
-			if (c == 4) {
-				System.out.println();
-			}
+		
+		if(PC ==0x1516) {
 //			print = true;
-		}
-		
-		if (PC == 0x53a50) {
-			System.out.println();
-		}
-		
-		if (A[0] == 0xFFFF0E00L && A[4] == 0x0005EB2EL && D[7] == 0xFFFF0C76L) {
-			System.out.println();
 		}
 		
  		GenInstruction instruction = getInstruction((int) opcode);

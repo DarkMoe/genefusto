@@ -8,6 +8,7 @@ import gen.addressing.AbsoluteShort;
 import gen.addressing.AddressRegisterIndirect;
 import gen.addressing.AddressRegisterIndirectPostIncrement;
 import gen.addressing.AddressRegisterIndirectPreDecrement;
+import gen.addressing.AddressRegisterWithDisplacement;
 
 public class MOVEM implements GenInstructionHandler {
 
@@ -241,7 +242,8 @@ public class MOVEM implements GenInstructionHandler {
 					o.setAddress(o.getAddress() + 2);
 					cpu.setAWord(register, o.getAddress());
 				} else if (o.getAddressingMode() instanceof AbsoluteShort
-						|| o.getAddressingMode() instanceof AbsoluteLong) {
+						|| o.getAddressingMode() instanceof AbsoluteLong
+						|| o.getAddressingMode() instanceof AddressRegisterWithDisplacement) {
 					o.setAddress(o.getAddress() + 2);
 				} else {
 					throw new RuntimeException(o.getAddressingMode().getClass().getSimpleName());
@@ -262,7 +264,8 @@ public class MOVEM implements GenInstructionHandler {
 					o.setAddress(o.getAddress() + 2);
 					cpu.setAWord(register, o.getAddress());
 				} else if (o.getAddressingMode() instanceof AbsoluteShort
-						|| o.getAddressingMode() instanceof AbsoluteLong) {
+						|| o.getAddressingMode() instanceof AbsoluteLong
+						|| o.getAddressingMode() instanceof AddressRegisterWithDisplacement) {
 					o.setAddress(o.getAddress() + 2);
 				} else {
 					throw new RuntimeException("D");

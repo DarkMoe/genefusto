@@ -829,7 +829,7 @@ public class GenVdp {
 				
 				bus.emu.renderScreen();
 			}
-		} else if (line < 0xE0) {
+		} else if (line < 0xE0 && ((registers[1] & 0x40) == 0x40)) {	//	solo en 0 si el display esta prendido (apagado siempre esta en 1)
 			vb = 0;
 		}
 		

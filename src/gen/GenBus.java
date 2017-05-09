@@ -225,7 +225,7 @@ public class GenBus {
 		if (vdp.ie0) {				//	vint on
 			if (vdp.vip == 1) {		//	level 6 interrupt
 				int mask = cpu.getInterruptMask();
-				if (mask <= 0x6) {
+				if (mask < 0x6) {
 					long oldPC = cpu.PC;
 					int oldSR = cpu.SR;
 					int ssp = cpu.SSP;
