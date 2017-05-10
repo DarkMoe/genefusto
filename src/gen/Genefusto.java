@@ -47,6 +47,7 @@ import gen.instruction.AND;
 import gen.instruction.ANDI;
 import gen.instruction.ANDI_CCR;
 import gen.instruction.ANDI_SR;
+import gen.instruction.ASL;
 import gen.instruction.ASR;
 import gen.instruction.BCC;
 import gen.instruction.BCHG;
@@ -176,6 +177,7 @@ public class Genefusto {
         new ANDI(cpu).generate();
         new ANDI_CCR(cpu).generate();
         new ANDI_SR(cpu).generate();
+        new ASL(cpu).generate();
         new ASR(cpu).generate();
         new BCC(cpu).generate();
         new BCHG(cpu).generate();
@@ -444,8 +446,8 @@ public class Genefusto {
         }
     }
 
-    String basePath = "C:\\Users\\Zotac\\workspace\\raul\\src\\gen\\roms\\";
-//	String basePath = "C:\\dev\\workspace\\test\\src\\gen\\roms\\";
+//    String basePath = "C:\\Users\\Zotac\\workspace\\raul\\src\\gen\\roms\\";
+	String basePath = "C:\\dev\\workspace\\test\\src\\gen\\roms\\";
     
     class MyRunnable implements Runnable {
         File file;

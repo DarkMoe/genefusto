@@ -4,11 +4,11 @@ import gen.Gen68;
 import gen.GenInstruction;
 import gen.Size;
 
-public class ASR implements GenInstructionHandler {
+public class ASL implements GenInstructionHandler {
 
 	final Gen68 cpu;
 	
-	public ASR(Gen68 cpu) {
+	public ASL(Gen68 cpu) {
 		this.cpu = cpu;
 	}
 
@@ -126,7 +126,7 @@ public class ASR implements GenInstructionHandler {
 	}
 
 	private void generateImmediateRegister() {
-		int base = 0xE000;
+		int base = 0xE100;
 		GenInstruction ins = null;
 		
 		for (int s = 0; s < 3; s++) {
@@ -134,29 +134,29 @@ public class ASR implements GenInstructionHandler {
 				ins = new GenInstruction() {
 					@Override
 					public void run(int opcode) {
-						ASRByte(opcode);
+						ASLByte(opcode);
 					}
 				};
 			} else if (s == 0b01) {
 				ins = new GenInstruction() {
 					@Override
 					public void run(int opcode) {
-						ASRWord(opcode);
+						ASLWord(opcode);
 					}
 				};
 			} else if (s == 0b10) {
 				ins = new GenInstruction() {
 					@Override
 					public void run(int opcode) {
-						ASRLong(opcode);
+						ASLLong(opcode);
 					}
 				};
 			}
-				
+					
 			for (int ir = 0; ir < 2; ir++) {
 				for (int r = 0; r < 8; r++) {
 					for (int nReg = 0; nReg < 8; nReg++) {
-						int opcode = base | (nReg << 9) |(s << 6) | (ir << 5) | r;
+						int opcode = base | (nReg << 9) | (s << 6) | (ir << 5) | r;
 						cpu.addInstruction(opcode, ins);
 					}
 				}
@@ -165,17 +165,15 @@ public class ASR implements GenInstructionHandler {
 	}
 	
 	private void generateMemory() {
-		int base = 0xE0C0;
+		int base = 0xE1C0;
 		GenInstruction ins = null;
 		
 		ins = new GenInstruction() {
 			@Override
 			public void run(int opcode) {
-				ASRMemoryWord(opcode);
+				ASLMemoryWord(opcode);
 			}
-			
 		};
-				
 		for (int m = 0; m < 8; m++) {
 			if (m == 0 || m == 1) {
 				continue;
@@ -190,7 +188,7 @@ public class ASR implements GenInstructionHandler {
 		}
 	}
 	
-	private void ASRByte(int opcode) {
+	private void ASLByte(int opcode) {
 		int register = (opcode & 0x7);
 		boolean ir = cpu.bitTest(opcode, 5);
 		int numRegister = (opcode >> 9) & 0x7;
@@ -206,22 +204,14 @@ public class ASR implements GenInstructionHandler {
 			toShift = cpu.getD(numRegister);
 		}
 		
-		long data = cpu.getD(register) & 0xFF;
-		long res = data >> toShift;
-								
-		boolean carry = false;
-		if (toShift != 0) {
-			if (((data >> toShift - 1) & 1) > 0) {
-				carry = true;
-			}
-		}
-		
+		long shiftee = cpu.getD(register) & 0xFF;
+		long res = shiftee << toShift;
 		cpu.setDByte(register, res);
 					
-		calcFlags(res, data, Size.BYTE.getMsb(), carry, 0xFF);
+		calcFlags(res, shiftee, Size.BYTE.getMsb(), 0xFF);
 	}
 	
-	private void ASRWord(int opcode) {
+	private void ASLWord(int opcode) {
 		int register = (opcode & 0x7);
 		boolean ir = cpu.bitTest(opcode, 5);
 		int numRegister = (opcode >> 9) & 0x7;
@@ -237,22 +227,14 @@ public class ASR implements GenInstructionHandler {
 			toShift = cpu.getD(numRegister);
 		}
 		
-		long data = cpu.getD(register) & 0xFFFF;
-		long res = data >> toShift;
-								
-		boolean carry = false;
-		if (toShift != 0) {
-			if (((data >> toShift - 1) & 1) > 0) {
-				carry = true;
-			}
-		}
-								
+		long shiftee = cpu.getD(register) & 0xFFFF;
+		long res = shiftee << toShift;
 		cpu.setDWord(register, res);
 					
-		calcFlags(res, data, Size.WORD.getMsb(), carry, 0xFFFF);
+		calcFlags(res, shiftee, Size.WORD.getMsb(), 0xFFFF);
 	}
 	
-	private void ASRLong(int opcode) {
+	private void ASLLong(int opcode) {
 		int register = (opcode & 0x7);
 		boolean ir = cpu.bitTest(opcode, 5);
 		int numRegister = (opcode >> 9) & 0x7;
@@ -268,42 +250,18 @@ public class ASR implements GenInstructionHandler {
 			toShift = cpu.getD(numRegister);
 		}
 		
-		long data = cpu.getD(register);
-		long res = data >> toShift;
-		
-		boolean carry = false;
-		if (toShift != 0) {
-			if (((data >> toShift - 1) & 1) > 0) {
-				carry = true;
-			}
-		}
-		
+		long shiftee = cpu.getD(register);
+		long res = shiftee << toShift;
 		cpu.setDLong(register, res);
 					
-		calcFlags(res, data, Size.LONG.getMsb(), carry,  0xFFFF_FFFFL);
-	}
-
-	private void ASRMemoryWord(int opcode) {
-		int mode = (opcode >> 3) & 0x7;
-		int register = (opcode & 0x7);
-		
-		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
-		long data = o.getAddressingMode().getWord(o);
-		long toShift = 1;
-		
-		long res = data >> toShift;
-								
-		boolean carry = false;
-		if ((data & 1) > 0) {
-			carry = true;
-		}
-								
-		cpu.writeKnownAddressingMode(o, res, Size.WORD);
-					
-		calcFlags(res, data, Size.WORD.getMsb(), carry, 0xFFFF);		
+		calcFlags(res, shiftee, Size.LONG.getMsb(), 0xFFFF_FFFFL);
 	}
 	
-	private void calcFlags(long data, long old, long msb, boolean carry, long maxSize) {
+	private void ASLMemoryWord(int opcode) {
+		throw new RuntimeException("NOT IMPL");
+	}
+	
+	private void calcFlags(long data, long old, long msb, long maxSize) {
 		if ((data & maxSize) == 0) {
 			cpu.setZ();
 		} else {
@@ -321,7 +279,7 @@ public class ASR implements GenInstructionHandler {
 			cpu.clearV();
 		}
 		
-		if (carry) {
+		if (data > maxSize) {
 			cpu.setC();
 			cpu.setX();
 		} else {
