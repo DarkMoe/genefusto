@@ -843,6 +843,7 @@ public class GenVdp {
 	int spritesLine = 0;
 	
 	int[][] spritesPerLine = new int[256][80];
+	int[] lastIndexes = new int[256];
 	
 	private void evaluateSprites() {
 		int spriteTableLoc = registers[0x5] & 0x7F;	//	AT16 is only valid if 128 KB mode is enabled, and allows for rebasing the Sprite Attribute Table to the second 64 KB of VRAM.
@@ -850,13 +851,14 @@ public class GenVdp {
 		
 		int currSprite = 0;
 		for (int i = 0; i < 256; i++) {
+			lastIndexes[i] = 0;
 			for (int j = 0; j < 80; j++) {
 				spritesPerLine[i][j] = -1;
 			}
 		}
-		for (int line = 0; line < 256; line++) {
-			currSprite = 0;
+//		for (int line = 0; line < 256; line++) {
 			for (int i = 0; i < 64; i++) {	//	FIXME 80 en otro modo
+//				currSprite = 0;
 				long baseAddress = spriteTable + (i* 8);
 				
 				int byte0 = vram[(int) (baseAddress)];
@@ -869,17 +871,26 @@ public class GenVdp {
 				int byte7 = vram[(int) (baseAddress + 7)];
 				
 				int linkData = byte3 & 0x7F;
+				
 				int verticalPos = ((byte0 & 0x3) << 8) | byte1;
 				int verSize = byte2 & 0x3;
 				
 				int verSizePixels = (verSize + 1) * 8;
 				int realY = (int) (verticalPos - 128);
-				if (line >= realY && (line < (realY + verSizePixels))) {
-					spritesPerLine[line][currSprite] = i;
-					currSprite++;
+				for (int j = realY; j < realY + verSizePixels; j++) {
+					if (j < 0 || j > 255) {
+						continue;
+					}
+					int last = lastIndexes[j];
+					spritesPerLine[j][last] = i;
+					lastIndexes[j] = last + 1;
+				}
+				
+				if (linkData == 0) {
+					return;
 				}
 			}
-		}
+//		}
 	}
 	
 	private void renderSprites() {
@@ -910,9 +921,9 @@ public class GenVdp {
 			linkData = byte3 & 0x7F;
 			verticalPos = ((byte0 & 0x3) << 8) | byte1;
 			
-			if (linkData == 0) {
-				return;
-			}
+//			if (linkData == 0) {
+//				return;
+//			}
 			
 			int horSize = (byte2 >> 2) & 0x3;
 			int verSize = byte2 & 0x3;

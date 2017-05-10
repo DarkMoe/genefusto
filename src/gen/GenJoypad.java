@@ -8,6 +8,8 @@ public class GenJoypad {
 	long control2;
 	long control3;
 	
+	int status;
+	
 	boolean asserted;
 	
 	void writeDataRegister1(long data) {
@@ -21,12 +23,14 @@ public class GenJoypad {
 	}
 	
 	int readDataRegister1() {
-		if (asserted) {
-			return 0x33;
-		} else {
-//			return 0x7F;
-			return 0x3F;	// simpsons devuelve 3F al ppio
-		}
+		return status;
+		
+//		if (asserted) {
+//			return 0x33;
+//		} else {
+////			return 0x7F;
+//			return 0x3F;	// simpsons devuelve 3F al ppio
+//		}
 	}
 	
 	void writeDataRegister2(long data) {

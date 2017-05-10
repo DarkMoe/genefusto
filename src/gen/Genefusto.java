@@ -444,8 +444,8 @@ public class Genefusto {
         }
     }
 
-//    String basePath = "C:\\Users\\Zotac\\workspace\\raul\\src\\gen\\roms\\";
-	String basePath = "C:\\dev\\workspace\\test\\src\\gen\\roms\\";
+    String basePath = "C:\\Users\\Zotac\\workspace\\raul\\src\\gen\\roms\\";
+//	String basePath = "C:\\dev\\workspace\\test\\src\\gen\\roms\\";
     
     class MyRunnable implements Runnable {
         File file;
@@ -510,45 +510,55 @@ public class Genefusto {
 	    jframe.repaint();
 	}
 	
+//	PD5: Start or C
+//	PD4: A or B
+//	PD3: Right
+//	PD2: Left
+//	PD1: Down
+//	PD0: Up
     private void keyPressedHandler(KeyEvent e) {
         switch (e.getKeyCode()) {
             case KeyEvent.VK_UP:
-                break;
+            	cpu.bus.joypad.status = cpu.bus.joypad.status | 0x01;
+            	break;
             case KeyEvent.VK_LEFT:
-                break;
+            	cpu.bus.joypad.status = cpu.bus.joypad.status | 0x04;
+            	break;
             case KeyEvent.VK_RIGHT:
+            	cpu.bus.joypad.status = cpu.bus.joypad.status | 0x08;
                 break;
             case KeyEvent.VK_DOWN:
+            	cpu.bus.joypad.status = cpu.bus.joypad.status | 0x02;
                 break;
-            case KeyEvent.VK_A:
+            case KeyEvent.VK_E:
+            	cpu.bus.joypad.status = cpu.bus.joypad.status | 0x20;
                 break;
-            case KeyEvent.VK_S:
-                break;
-            case KeyEvent.VK_Z:
-                break;
-            case KeyEvent.VK_X:
+            case KeyEvent.VK_T:
+            	cpu.bus.joypad.status = cpu.bus.joypad.status | 0x10;
                 break;
         }
     }
 
     private void keyReleasedHandler(KeyEvent e) {
         switch (e.getKeyCode()) {
-            case KeyEvent.VK_UP:
-                break;
-            case KeyEvent.VK_LEFT:
-                break;
-            case KeyEvent.VK_RIGHT:
-                break;
-            case KeyEvent.VK_DOWN:
-                break;
-            case KeyEvent.VK_A:
-                break;
-            case KeyEvent.VK_S:
-                break;
-            case KeyEvent.VK_Z:
-                break;
-            case KeyEvent.VK_X:
-                break;
+	        case KeyEvent.VK_UP:
+	        	cpu.bus.joypad.status = cpu.bus.joypad.status & ~(0x01);
+	        	break;
+	        case KeyEvent.VK_LEFT:
+	        	cpu.bus.joypad.status = cpu.bus.joypad.status & ~(0x04);
+	        	break;
+	        case KeyEvent.VK_RIGHT:
+	        	cpu.bus.joypad.status = cpu.bus.joypad.status & ~(0x08);
+	            break;
+	        case KeyEvent.VK_DOWN:
+	        	cpu.bus.joypad.status = cpu.bus.joypad.status & ~(0x02);
+	            break;
+	        case KeyEvent.VK_E:
+	        	cpu.bus.joypad.status = cpu.bus.joypad.status & ~(0x20);
+	            break;
+	        case KeyEvent.VK_T:
+	        	cpu.bus.joypad.status = cpu.bus.joypad.status & ~(0x10);
+	            break;
         }
     }
 
