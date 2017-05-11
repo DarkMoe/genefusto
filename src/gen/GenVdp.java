@@ -640,6 +640,10 @@ public class GenVdp {
 		int data1 = (word >> 8) & 0xFF;
 		int data2 = (word >> 0) & 0xFF;
 		
+		if (offset == 0x73a3 || offset + 1 == 0x73a3) {
+			System.out.println();
+		}
+		
 		//	hack por si se pasa
 		if (offset > 0xFFFE) {
 			return;
@@ -956,70 +960,6 @@ public class GenVdp {
 				System.out.println();
 			}
 			
-//			if (horFlip) {
-//				for (int cellHor = horSize; cellHor >= 0; cellHor--) {
-//					//	16 bytes por cell de 8x8
-//					//	cada linea dentro de una cell de 8 pixeles, ocupa 4 bytes (o sea, la mitad del ancho en bytes)
-//					int currentVerticalCell = spriteLine / 8;
-//					int vertLining = (currentVerticalCell * 32) + ((spriteLine % 8) * 4);
-//					int horLining = vertLining + (cellHor * ((verSize + 1) * 32));
-//				
-//					for (int i = 3; i >= 0; i--) {
-//						int grab = (pattern * 0x20) + (horLining) + i;
-//						int data = vram[grab];
-//						
-//						int pixel1, pixel2;
-//						pixel1 = data & 0x0F;
-//						pixel2 = (data & 0xF0) >> 4;
-//					
-//						int paletteLine = palette * 32;
-//						
-//						int colorIndex1 = paletteLine + (pixel1 * 2);
-//						int colorIndex2 = paletteLine + (pixel2 * 2);
-//						
-//						int color1;
-//						if (colorIndex1 == 0) {
-//							color1 = 0;
-//						} else {
-//							color1 = cram[colorIndex1] << 8 | cram[colorIndex1 + 1];
-//						}
-//						
-//						int color2;
-//						if (colorIndex2 == 0) {
-//							color2 = 0;
-//						} else {
-//							color2 = cram[colorIndex2] << 8 | cram[colorIndex2 + 1];
-//						}
-//						
-//						int r = (color1 >> 1) & 0x7;
-//						int g = (color1 >> 5) & 0x7;
-//						int b = (color1 >> 9) & 0x7;
-//						
-//						int r2 = (color2 >> 1) & 0x7;
-//						int g2 = (color2 >> 5) & 0x7;
-//						int b2 = (color2 >> 9) & 0x7;
-//						
-//						int theColor1 = getColour(r, g, b);
-//						int theColor2 = getColour(r2, g2, b2);
-//						
-//						if (line == 8) {
-//							System.out.println("sprite " + Integer.toHexString(currSprite) + " " + horOffset);
-//						}
-//						
-//						if (horOffset >= 0 && horOffset < 320) {
-//							sprites[horOffset][line] = theColor1;
-//							spritesIndex[horOffset][line] = pixel1;
-//						}
-//						int horOffset2 = horOffset + 1;
-//						if (horOffset2 >= 0 && horOffset2 < 320) {
-//							sprites[horOffset2][line] = theColor2;
-//							spritesIndex[horOffset2][line] = pixel2;
-//						}
-//						
-//						horOffset += 2;
-//					}
-//				}
-//			} else {
 			for (int cellHor = 0; cellHor < (horSize + 1); cellHor++) {
 				//	16 bytes por cell de 8x8
 				//	cada linea dentro de una cell de 8 pixeles, ocupa 4 bytes (o sea, la mitad del ancho en bytes)
