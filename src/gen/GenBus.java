@@ -59,7 +59,8 @@ public class GenBus {
 			}
 			
 		} else if (address == 0xA11100 || address == 0xA11101) {	//	Z80 bus request	
-			return (emu.runZ80) ? 1 : 0;
+//			return (emu.runZ80) ? 1 : 0;
+			return 0;	//	FIXME hacer esto bien
 		
 		} else if (address == 0xC00000 || address == 0xC00002) {	// VDP Data
 			return (vdp.readDataPort(false) >> 8);

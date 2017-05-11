@@ -100,7 +100,9 @@ public class GenZ80 {
 		int tmp, addr, lo, hi;
 		int cycles = 0;
 		
-		System.out.println("Z80: " + Integer.toHexString(PC - 1));
+		if (PC - 1 != 0) {
+			System.out.println("Z80: " + Integer.toHexString(PC - 1));
+		}
 		
 		String fullOpcode = hex(opcode);
         if (toPrint) {
@@ -128,6 +130,10 @@ public class GenZ80 {
 //			lastInstr[9] = lastInstr[9] + " " + hex(readMemory(PC));
 //		}
 
+        if (PC - 1 == 0x342) {
+        	System.out.println();
+        }
+        
         switch (opcode) {
         case 0x00:	// NOP
         	cycles = 4;
@@ -5693,6 +5699,8 @@ public class GenZ80 {
 			romBank68k = data;
 		} else if (address == 0x7F11) {		//	SN76489 PSG
 			System.out.println("PSG write Z80");
+		} else if (address >= 0x8000 && address <= 0xFFFF) {
+			System.out.println("ESCRITURA 68k!!!!!!");
 		} else {
 			throw new RuntimeException("NOT " + Integer.toHexString(address));
 		}
@@ -5704,14 +5712,19 @@ public class GenZ80 {
 		} else if (address >= 0x2000 && address < 0x3FFF) {
 			return 0;
 		} else if (address == 0x4000) {		//	YM2612 A0
-			return 0;	// TODO implement
+			System.out.println("YM2612 A0");
+			return YMA0;	// TODO implement
 		} else if (address == 0x4001) {		//	YM2612 D0
-			throw new RuntimeException("NOT " + Integer.toHexString(address));
+			System.out.println("YM2612 D0");
+			return YMD0;
 		} else if (address == 0x4002) {		//	YM2612 A1
-			throw new RuntimeException("NOT " + Integer.toHexString(address));
+			System.out.println("YM2612 A1");
+			return YMA1;
 		} else if (address == 0x4003) {		//	YM2612 D1
-			throw new RuntimeException("NOT " + Integer.toHexString(address));
+			System.out.println("YM2612 D1");
+			return YMD1;
 		} else if (address >= 0x8000 && address <= 0xFFFF) {		//	8000h	FFFFh	M68k memory bank
+			System.out.println("LECTURA 68k !!!!!!");
 			return 0; //bus.read(address)	FIXME implementar lectura desde 68k
 		} else {
 			throw new RuntimeException("NOT " + Integer.toHexString(address));
