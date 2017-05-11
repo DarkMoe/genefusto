@@ -804,15 +804,14 @@ public class GenVdp {
 	public void run(int cycles) {
 		totalCycles += cycles;
 		if (totalCycles > 982) {
-			line++;
-			totalCycles = 0;
-			
 			if ((registers[1] & 0x40) == 0x40) {
 				if (line < 0xE0) {
 					spritesLine = 0;
 					renderSprites();
 				}
 			}
+			line++;
+			totalCycles = 0;
 		}
 		if (line == 0xFF) {
 			line = 0;
@@ -936,79 +935,163 @@ public class GenVdp {
 	
 			int realY = (int) (verticalPos - 128);
 			
-//			if (line >= realY && (line < (realY + verSizePixels))) {
-
-				spritesFrame++;
-				spritesLine++;
-				if (spritesLine >= 20) {
-					return;
+			spritesFrame++;
+			spritesLine++;
+			if (spritesLine >= 20) {
+				return;
+			}
+			
+			int pattern = ((byte4 & 0x7) << 8) | byte5;
+			int palette = (byte4 >> 5) & 0x3;
+			
+			boolean verFlip = ((byte4 >> 4) & 0x1) == 1 ? true : false;
+			boolean horFlip = ((byte4 >> 3) & 0x1) == 1 ? true : false;
+			
+			int horizontalPos = ((byte6 & 0x1) << 8) | byte7;
+			int horOffset = horizontalPos - 128;
+			
+			int spriteLine = (int) ((line - realY) % verSizePixels);
+			
+			if (line ==8) {
+				System.out.println();
+			}
+			
+//			if (horFlip) {
+//				for (int cellHor = horSize; cellHor >= 0; cellHor--) {
+//					//	16 bytes por cell de 8x8
+//					//	cada linea dentro de una cell de 8 pixeles, ocupa 4 bytes (o sea, la mitad del ancho en bytes)
+//					int currentVerticalCell = spriteLine / 8;
+//					int vertLining = (currentVerticalCell * 32) + ((spriteLine % 8) * 4);
+//					int horLining = vertLining + (cellHor * ((verSize + 1) * 32));
+//				
+//					for (int i = 3; i >= 0; i--) {
+//						int grab = (pattern * 0x20) + (horLining) + i;
+//						int data = vram[grab];
+//						
+//						int pixel1, pixel2;
+//						pixel1 = data & 0x0F;
+//						pixel2 = (data & 0xF0) >> 4;
+//					
+//						int paletteLine = palette * 32;
+//						
+//						int colorIndex1 = paletteLine + (pixel1 * 2);
+//						int colorIndex2 = paletteLine + (pixel2 * 2);
+//						
+//						int color1;
+//						if (colorIndex1 == 0) {
+//							color1 = 0;
+//						} else {
+//							color1 = cram[colorIndex1] << 8 | cram[colorIndex1 + 1];
+//						}
+//						
+//						int color2;
+//						if (colorIndex2 == 0) {
+//							color2 = 0;
+//						} else {
+//							color2 = cram[colorIndex2] << 8 | cram[colorIndex2 + 1];
+//						}
+//						
+//						int r = (color1 >> 1) & 0x7;
+//						int g = (color1 >> 5) & 0x7;
+//						int b = (color1 >> 9) & 0x7;
+//						
+//						int r2 = (color2 >> 1) & 0x7;
+//						int g2 = (color2 >> 5) & 0x7;
+//						int b2 = (color2 >> 9) & 0x7;
+//						
+//						int theColor1 = getColour(r, g, b);
+//						int theColor2 = getColour(r2, g2, b2);
+//						
+//						if (line == 8) {
+//							System.out.println("sprite " + Integer.toHexString(currSprite) + " " + horOffset);
+//						}
+//						
+//						if (horOffset >= 0 && horOffset < 320) {
+//							sprites[horOffset][line] = theColor1;
+//							spritesIndex[horOffset][line] = pixel1;
+//						}
+//						int horOffset2 = horOffset + 1;
+//						if (horOffset2 >= 0 && horOffset2 < 320) {
+//							sprites[horOffset2][line] = theColor2;
+//							spritesIndex[horOffset2][line] = pixel2;
+//						}
+//						
+//						horOffset += 2;
+//					}
+//				}
+//			} else {
+			for (int cellHor = 0; cellHor < (horSize + 1); cellHor++) {
+				//	16 bytes por cell de 8x8
+				//	cada linea dentro de una cell de 8 pixeles, ocupa 4 bytes (o sea, la mitad del ancho en bytes)
+				int currentVerticalCell = spriteLine / 8;
+				int vertLining = (currentVerticalCell * 32) + ((spriteLine % 8) * 4);
+				
+				int cellH = cellHor;
+				if (horFlip) {
+					cellH = (cellHor * -1) + horSize;
 				}
-				
-				int pattern = ((byte4 & 0x7) << 8) | byte5;
-				int palette = (byte4 >> 5) & 0x3;
-				
-				int horizontalPos = ((byte6 & 0x1) << 8) | byte7;
-				int horOffset = horizontalPos - 128;
-				
-				int spriteLine = (int) ((line - realY) % verSizePixels);
-				for (int cellHor = 0; cellHor < (horSize + 1); cellHor++) {
-					//	16 bytes por cell de 8x8
-					//	cada linea dentro de una cell de 8 pixeles, ocupa 4 bytes (o sea, la mitad del ancho en bytes)
-					int currentVerticalCell = spriteLine / 8;
-					int vertLining = (currentVerticalCell * 32) + ((spriteLine % 8) * 4);
-					int horLining = vertLining + (cellHor * ((verSize + 1) * 32));
-					for (int i = 0; i < 4; i++) {
-						int grab = (pattern * 0x20) + (horLining) + i;
-						int data = vram[grab];
-						
-						int pixel1 = (data & 0xF0) >> 4;
-						int pixel2 = data & 0x0F;
-					
-						int paletteLine = palette * 32;
-						
-						int colorIndex1 = paletteLine + (pixel1 * 2);
-						int colorIndex2 = paletteLine + (pixel2 * 2);
-						
-						int color1;
-						if (colorIndex1 == 0) {
-							color1 = 0;
-						} else {
-							color1 = cram[colorIndex1] << 8 | cram[colorIndex1 + 1];
-						}
-						
-						int color2;
-						if (colorIndex2 == 0) {
-							color2 = 0;
-						} else {
-							color2 = cram[colorIndex2] << 8 | cram[colorIndex2 + 1];
-						}
-						
-						int r = (color1 >> 1) & 0x7;
-						int g = (color1 >> 5) & 0x7;
-						int b = (color1 >> 9) & 0x7;
-						
-						int r2 = (color2 >> 1) & 0x7;
-						int g2 = (color2 >> 5) & 0x7;
-						int b2 = (color2 >> 9) & 0x7;
-						
-						int theColor1 = getColour(r, g, b);
-						int theColor2 = getColour(r2, g2, b2);
-						
-						if (horOffset >= 0 && horOffset < 320) {
-							sprites[horOffset][line] = theColor1;
-							spritesIndex[horOffset][line] = pixel1;
-						}
-						int horOffset2 = horOffset + 1;
-						if (horOffset2 >= 0 && horOffset2 < 320) {
-							sprites[horOffset2][line] = theColor2;
-							spritesIndex[horOffset2][line] = pixel2;
-						}
-						
-						horOffset += 2;
+				int horLining = vertLining + (cellH * ((verSize + 1) * 32));
+				for (int i = 0; i < 4; i++) {
+					int sliver = i;
+					if (horFlip) {
+						sliver = (i * -1) + 3;
 					}
 					
+					int grab = (pattern * 0x20) + (horLining) + sliver;
+					int data = vram[grab];
+					
+					int pixel1, pixel2;
+					if (horFlip) {
+						pixel1 = data & 0x0F;
+						pixel2 = (data & 0xF0) >> 4;
+					} else {
+						pixel1 = (data & 0xF0) >> 4;
+						pixel2 = data & 0x0F;
+					}
+				
+					int paletteLine = palette * 32;
+					
+					int colorIndex1 = paletteLine + (pixel1 * 2);
+					int colorIndex2 = paletteLine + (pixel2 * 2);
+					
+					int color1;
+					if (colorIndex1 == 0) {
+						color1 = 0;
+					} else {
+						color1 = cram[colorIndex1] << 8 | cram[colorIndex1 + 1];
+					}
+					
+					int color2;
+					if (colorIndex2 == 0) {
+						color2 = 0;
+					} else {
+						color2 = cram[colorIndex2] << 8 | cram[colorIndex2 + 1];
+					}
+					
+					int r = (color1 >> 1) & 0x7;
+					int g = (color1 >> 5) & 0x7;
+					int b = (color1 >> 9) & 0x7;
+					
+					int r2 = (color2 >> 1) & 0x7;
+					int g2 = (color2 >> 5) & 0x7;
+					int b2 = (color2 >> 9) & 0x7;
+					
+					int theColor1 = getColour(r, g, b);
+					int theColor2 = getColour(r2, g2, b2);
+					
+					if (horOffset >= 0 && horOffset < 320) {
+						sprites[horOffset][line] = theColor1;
+						spritesIndex[horOffset][line] = pixel1;
+					}
+					int horOffset2 = horOffset + 1;
+					if (horOffset2 >= 0 && horOffset2 < 320) {
+						sprites[horOffset2][line] = theColor2;
+						spritesIndex[horOffset2][line] = pixel2;
+					}
+					
+					horOffset += 2;
 				}
-//			}
+			}
 			
 			ind++;
 			currSprite = spritesInLine[ind];
@@ -1038,8 +1121,8 @@ public class GenVdp {
 		
 		backColor = getColour(r, g, b);
 		
-		for (int i = 0; i < 320; i++) {
-			for (int j = 0; j < 256; j++) {
+		for (int j = 0; j < 256; j++) {
+			for (int i = 0; i < 320; i++) {
 				boolean aPrio = planePrioA[i][j];
 				boolean bPrio = planePrioB[i][j];
 
@@ -1063,6 +1146,9 @@ public class GenVdp {
 				
 				int spriteIndex = spritesIndex[i][j];
 				if (spriteIndex != 0) {
+					if (j == 8) {
+						System.out.println();
+					}
 					int sprit = sprites[i][j];
 					screenData[i][j] = sprit;
 					sprites[i][j] = 0;

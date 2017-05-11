@@ -469,6 +469,7 @@ public class Genefusto {
             
             cpu.reset();
             cpu.initialize();
+            joypad.initialize();
             vdp.init();
             
             loop();
@@ -520,48 +521,60 @@ public class Genefusto {
 //	PD0: Up
     private void keyPressedHandler(KeyEvent e) {
         switch (e.getKeyCode()) {
-            case KeyEvent.VK_UP:
-            	cpu.bus.joypad.status = cpu.bus.joypad.status | 0x01;
+            case KeyEvent.VK_W:
+            	cpu.bus.joypad.U = 0;
             	break;
-            case KeyEvent.VK_LEFT:
-            	cpu.bus.joypad.status = cpu.bus.joypad.status | 0x04;
+            case KeyEvent.VK_A:
+            	cpu.bus.joypad.L = 0;
             	break;
-            case KeyEvent.VK_RIGHT:
-            	cpu.bus.joypad.status = cpu.bus.joypad.status | 0x08;
+            case KeyEvent.VK_D:
+            	cpu.bus.joypad.R = 0;
                 break;
-            case KeyEvent.VK_DOWN:
-            	cpu.bus.joypad.status = cpu.bus.joypad.status | 0x02;
+            case KeyEvent.VK_S:
+            	cpu.bus.joypad.D = 0;
                 break;
             case KeyEvent.VK_E:
-            	cpu.bus.joypad.status = cpu.bus.joypad.status | 0x20;
+            	cpu.bus.joypad.S = 0;
                 break;
             case KeyEvent.VK_T:
-            	cpu.bus.joypad.status = cpu.bus.joypad.status | 0x10;
+            	cpu.bus.joypad.A = 0;
+                break;
+            case KeyEvent.VK_Y:
+            	cpu.bus.joypad.B = 0;
+                break;
+            case KeyEvent.VK_U:
+            	cpu.bus.joypad.C = 0;
                 break;
         }
     }
 
     private void keyReleasedHandler(KeyEvent e) {
         switch (e.getKeyCode()) {
-	        case KeyEvent.VK_UP:
-	        	cpu.bus.joypad.status = cpu.bus.joypad.status & ~(0x01);
+	        case KeyEvent.VK_W:
+	        	cpu.bus.joypad.U = 1;
 	        	break;
-	        case KeyEvent.VK_LEFT:
-	        	cpu.bus.joypad.status = cpu.bus.joypad.status & ~(0x04);
+	        case KeyEvent.VK_A:
+	        	cpu.bus.joypad.L = 1;
 	        	break;
-	        case KeyEvent.VK_RIGHT:
-	        	cpu.bus.joypad.status = cpu.bus.joypad.status & ~(0x08);
+	        case KeyEvent.VK_D:
+	        	cpu.bus.joypad.R = 1;
 	            break;
-	        case KeyEvent.VK_DOWN:
-	        	cpu.bus.joypad.status = cpu.bus.joypad.status & ~(0x02);
+	        case KeyEvent.VK_S:
+	        	cpu.bus.joypad.D = 1;
 	            break;
 	        case KeyEvent.VK_E:
-	        	cpu.bus.joypad.status = cpu.bus.joypad.status & ~(0x20);
+	        	cpu.bus.joypad.S = 1;
 	            break;
 	        case KeyEvent.VK_T:
-	        	cpu.bus.joypad.status = cpu.bus.joypad.status & ~(0x10);
+	        	cpu.bus.joypad.A = 1;
 	            break;
-        }
+	        case KeyEvent.VK_Y:
+	        	cpu.bus.joypad.B = 1;
+	            break;
+	        case KeyEvent.VK_U:
+	        	cpu.bus.joypad.C = 1;
+	            break;
+	    }
     }
 
 }
