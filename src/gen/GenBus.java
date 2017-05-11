@@ -59,7 +59,7 @@ public class GenBus {
 			}
 			
 		} else if (address == 0xA11100 || address == 0xA11101) {	//	Z80 bus request	
-			return (z80.reset) ? 1 : 0;
+			return (emu.runZ80) ? 1 : 0;
 		
 		} else if (address == 0xC00000 || address == 0xC00002) {	// VDP Data
 			return (vdp.readDataPort(false) >> 8);
@@ -77,7 +77,7 @@ public class GenBus {
 			return memory.readRam(address);
 			
 		} else {
-			throw new RuntimeException("NOT MAPPED: " + pad4(address) + " - " + pad4(cpu.PC));
+			System.out.println("NOT MAPPED: " + pad4(address) + " - " + pad4(cpu.PC));
 		}
 		
 		return 0;
@@ -141,23 +141,26 @@ public class GenBus {
 				
 			//	 #$0000 needs to be written to $A11100 to return the bus back to the Z80
 			} else if (data == 0x0000) {
-				z80.devolverBus();
-				z80.reset = true;		// revisar esta logica TODO
-				emu.runZ80 = false;
+				z80.unrequestBus();
+				
 			}
 		} else if (addressL == 0xA11200 || addressL == 0xA11201) {	//	Z80 bus reset
 			//	if the Z80 is required to be reset (for example, to load a new program to it's memory)
 			//	this may be done by writing #$0000 to $A11200, but only when the Z80 bus is requested
-			if (data == 0x0000 && z80.isBusRequested()) {
-				z80.reset();
+			if (data == 0x0000) {
+				z80.disableReset();
 				
 			//	After returning the bus after loading the new program to it's memory,
 			//	the Z80 may be let go from reset by writing #$0100 to $A11200.
 			} else if (data == 0x0100) {
-				z80.reset = false;
-				if (!z80.busRequested) {
+				if (z80.busRequested) {
+					z80.reset();
+				
+					emu.runZ80 = false;
+				} else {
 					emu.runZ80 = true;
 				}
+				
 			} else {
 				System.out.println("Z80 OJO ! .. algo del bus del z80 no se hizo aca");
 			}

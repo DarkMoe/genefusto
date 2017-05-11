@@ -471,6 +471,7 @@ public class Genefusto {
             cpu.initialize();
             joypad.initialize();
             vdp.init();
+            z80.initialize();
             
             loop();
         }
@@ -480,9 +481,9 @@ public class Genefusto {
         try {
             for(;;) {
             	if (runZ80) {	//	TODO hacer que use la velocidad correcta y sea un thread distinto
-//            		int opcode = z80.readMemory(z80.PC);
-//    				z80.PC = (z80.PC + 1) & 0xFFFF;
-//            		z80.executeInstruction(opcode);
+            		int opcode = z80.readMemory(z80.PC);
+    				z80.PC = (z80.PC + 1) & 0xFFFF;
+            		z80.executeInstruction(opcode);
             	}
             	cpu.runInstruction();
             	bus.checkInterrupts();

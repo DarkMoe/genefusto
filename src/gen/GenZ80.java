@@ -94,6 +94,8 @@ public class GenZ80 {
 	boolean busRequested;
 	boolean reset;
 	
+	boolean stopZ80 = true;
+	
 	int executeInstruction(int opcode) {
 		int tmp, addr, lo, hi;
 		int cycles = 0;
@@ -5902,10 +5904,9 @@ public class GenZ80 {
 
 	public void requestBus() {
 		busRequested = true;
-		reset = false;
 	}
 
-	public void devolverBus() {
+	public void unrequestBus() {
 		busRequested = false;
 	}
 	
@@ -5916,6 +5917,10 @@ public class GenZ80 {
 	public void reset() {
 		reset = true;
 	}
+	
+	public void disableReset() {
+		reset = false;
+	}
 
 	public void writeByte(int addr, long data) {
 		writeMemory(addr, (int) data);
@@ -5925,4 +5930,21 @@ public class GenZ80 {
 		writeMemory(addr, (int) (data >> 8));
 		writeMemory(addr + 1, (int) (data & 0xFF));
 	}
+
+	public void initialize() {
+		PC = 0;
+		
+		AF(0xFFFF);
+		AF2(0xFFFF);
+		BC(0xFFFF);
+		BC2(0xFFFF);
+		DE(0xFFFF);
+		DE2(0xFFFF);
+		HL(0xFFFF);
+		HL2(0xFFFF);
+		
+		I = 0;
+		R = 0;
+	}
+
 }
