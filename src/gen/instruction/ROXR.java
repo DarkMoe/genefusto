@@ -151,7 +151,34 @@ public class ROXR implements GenInstructionHandler {
 	}
 	
 	private void ROXRRegisterByte(int opcode) {
-		throw new RuntimeException("AA");
+		int register = (opcode & 0x7);
+		boolean ir = cpu.bitTest(opcode, 5);
+		int numRegister = (opcode >> 9) & 0x7;
+		
+		long toShift;
+		if (!ir) {
+			if (numRegister == 0) {
+				numRegister = 8;
+			}
+			toShift = numRegister;
+		} else {
+			toShift = cpu.getD(numRegister);
+		}
+		
+		long data = cpu.getD(register) & 0xFF;
+		
+		int extended = cpu.isX() ? 0x80 : 0;
+		long res = (data >> toShift) | extended;
+		cpu.setDByte(register, res);
+		
+		boolean carry = false;
+		if (toShift != 0) {
+			if (((data >> toShift - 1) & 1) > 0) {
+				carry = true;
+			}
+		}
+		
+		calcFlags(res, Size.BYTE.getMsb(), 0xFF, carry);
 	}
 	
 	private void ROXRRegisterWord(int opcode) {

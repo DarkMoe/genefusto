@@ -135,7 +135,22 @@ public class MOVEP implements GenInstructionHandler {
 	}
 	
 	private void MOVEPRegToMemLong(int opcode) {
-		throw new RuntimeException();
+		int addrReg = opcode & 0x7;
+		int dataReg = (opcode >> 9) & 0x7;
+		
+		long offset  = cpu.bus.read(cpu.PC + 2) << 8;
+			 offset |= cpu.bus.read(cpu.PC + 3);
+		
+		cpu.PC += 2;
+
+		long data = cpu.getD(dataReg);
+		long addr = cpu.getA(addrReg);
+		addr += offset;
+		
+		cpu.bus.write(addr, (data >> 24), Size.BYTE);
+		cpu.bus.write(addr + 2, (data >> 16) & 0xFF, Size.BYTE);
+		cpu.bus.write(addr + 4, (data >> 8) & 0xFF, Size.BYTE);
+		cpu.bus.write(addr + 6, data & 0xFF, Size.BYTE);
 	}
 	
 }

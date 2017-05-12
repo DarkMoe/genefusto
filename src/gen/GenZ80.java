@@ -72,6 +72,9 @@ public class GenZ80 {
 		this.bus = bus;
 		
 		initCache();
+		
+		reset = true;
+		busRequested = false;
 	}
 	
 	void initCache() {
@@ -101,7 +104,7 @@ public class GenZ80 {
 		int cycles = 0;
 		
 		if (PC - 1 != 0) {
-//			System.out.println("Z80: " + Integer.toHexString(PC - 1));
+			System.out.println("Z80: " + Integer.toHexString(PC - 1));
 		}
 		
 		String fullOpcode = hex(opcode);
@@ -5706,6 +5709,7 @@ public class GenZ80 {
 		}
 	}
 
+//    A word-wide read from Z80 RAM has the LSB of the data duplicated in the MSB.	TODO
 	int readMemory(int address) {
 		if (address < 0x2000) {
 			return memory[address];
@@ -5943,9 +5947,11 @@ public class GenZ80 {
 		writeMemory(addr, (int) data);
 	}
 	
+	//	https://emu-docs.org/Genesis/gen-hw.txt
+//	When doing word-wide writes to Z80 RAM, only the MSB is written, and the LSB is ignored
 	public void writeWord(int addr, long data) {
 		writeMemory(addr, (int) (data >> 8));
-		writeMemory(addr + 1, (int) (data & 0xFF));
+//		writeMemory(addr + 1, (int) (data & 0xFF));
 	}
 
 	public void initialize() {
@@ -5962,6 +5968,8 @@ public class GenZ80 {
 		
 		I = 0;
 		R = 0;
+		
+		SP = 0xFFFF;
 	}
 
 }

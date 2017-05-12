@@ -181,10 +181,12 @@ public class SUB implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(Size.BYTE, mode, register);
 		long data = o.getAddressingMode().getByte(o);
 		
-		long tot = ((cpu.getD(dataRegister) & 0xFF) - data);
+		long toSub = (cpu.getD(dataRegister) & 0xFF);
+		
+		long tot = (toSub - data);
 		cpu.setDByte(dataRegister, tot);
 		
-		calcFlags(tot, Size.BYTE.getMsb(), Size.BYTE.getMax());
+		calcFlags(tot, data, toSub, Size.BYTE.getMsb(), Size.BYTE.getMax());
 	}
 	
 	private void SUB_EASource_Word(int opcode) {
@@ -195,10 +197,12 @@ public class SUB implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
 		long data = o.getAddressingMode().getWord(o);
 		
-		long tot = ((cpu.getD(dataRegister) & 0xFFFF) - data);
+		long toSub = (cpu.getD(dataRegister) & 0xFFFF);
+		
+		long tot = (toSub - data);
 		cpu.setDWord(dataRegister, tot);
 		
-		calcFlags(tot, Size.WORD.getMsb(), Size.WORD.getMax());
+		calcFlags(tot, data, toSub, Size.WORD.getMsb(), Size.WORD.getMax());
 	}
 	
 	private void SUB_EASource_Long(int opcode) {
@@ -209,10 +213,12 @@ public class SUB implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
 		long data = o.getAddressingMode().getLong(o);
 		
-		long tot = (cpu.getD(dataRegister) - data);
+		long toSub = cpu.getD(dataRegister);
+		
+		long tot = (toSub - data);
 		cpu.setDLong(dataRegister, tot);
 		
-		calcFlags(tot, Size.LONG.getMsb(), Size.LONG.getMax());
+		calcFlags(tot, data, toSub, Size.LONG.getMsb(), Size.LONG.getMax());
 	}
 	
 	private void SUB_EADest_Byte(int opcode) {
@@ -228,7 +234,7 @@ public class SUB implements GenInstructionHandler {
 	
 		cpu.writeKnownAddressingMode(o, tot, Size.BYTE);
 		
-		calcFlags(tot, Size.BYTE.getMsb(), Size.BYTE.getMax());
+		calcFlags(tot, data, toSub, Size.BYTE.getMsb(), Size.BYTE.getMax());
 	}
 	
 	private void SUB_EADest_Word(int opcode) {
@@ -244,7 +250,7 @@ public class SUB implements GenInstructionHandler {
 	
 		cpu.writeKnownAddressingMode(o, tot, Size.WORD);
 		
-		calcFlags(tot, Size.WORD.getMsb(), Size.WORD.getMax());
+		calcFlags(tot, data, toSub, Size.WORD.getMsb(), Size.WORD.getMax());
 	}
 	
 	private void SUB_EADest_Long(int opcode) {
@@ -260,10 +266,10 @@ public class SUB implements GenInstructionHandler {
 	
 		cpu.writeKnownAddressingMode(o, tot, Size.LONG);
 		
-		calcFlags(tot, Size.LONG.getMsb(), Size.LONG.getMax());
+		calcFlags(tot, data, toSub, Size.LONG.getMsb(), Size.LONG.getMax());
 	}
 	
-	void calcFlags(long tot, long msb, long maxSize) {//TODO  overflow
+	void calcFlags(long tot, long data, long toSub, long msb, long maxSize) {
 		if ((tot & maxSize) == 0) {
 			cpu.setZ();
 		} else {
@@ -274,6 +280,16 @@ public class SUB implements GenInstructionHandler {
 		} else {
 			cpu.clearN();
 		}
+		
+		boolean Dm = (data & msb) > 0;
+		boolean Sm = (toSub & msb) > 0;
+		boolean Rm = (tot & msb) > 0;
+		if ((!Sm && Dm && !Rm) || (Sm && !Dm && Rm)) {
+			cpu.setV();
+		} else {
+			cpu.clearV();
+		}
+		
 		if (tot < 0) {
 			cpu.setC();
 			cpu.setX();

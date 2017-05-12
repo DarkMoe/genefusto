@@ -1,5 +1,9 @@
 package gen;
 
+import java.util.Random;
+
+//info z80 bus
+//https://emu-docs.org/Genesis/gen-hw.txt
 public class GenBus {
 
 	Genefusto emu;
@@ -35,7 +39,7 @@ public class GenBus {
 			return joypad.readDataRegister1();
 			
 		} else if (address == 0xA10004 || address == 0xA10005) {	//	Controller 2 data
-			return joypad.readDataRegister1();
+			return joypad.readDataRegister2();
 		
 		} else if (address == 0xA1000C || address == 0xA1000D) {	//	Expansion Port Control
 			if (address == 0xA1000C) {
@@ -59,7 +63,8 @@ public class GenBus {
 			}
 			
 		} else if (address == 0xA11100 || address == 0xA11101) {	//	Z80 bus request	
-			return (z80.busRequested) ? 0 : 1;
+//			return (z80.busRequested && !z80.reset) ? 0 : 1;
+			return new Random().nextBoolean() ? 1: 0;
 //			return 0;	//	FIXME hacer esto bien
 		
 		} else if (address == 0xC00000 || address == 0xC00002) {	// VDP Data
@@ -137,8 +142,9 @@ public class GenBus {
 			
 		} else if (addressL == 0xA11100 || addressL == 0xA11101) {	//	Z80 bus request
 			//	To stop the Z80 and send a bus request, #$0100 must be written to $A11100.
-			if (data == 0x0100) {
+			if (data == 0x0100 || data == 0x1) {
 				z80.requestBus();
+				emu.runZ80 = false;
 				
 			//	 #$0000 needs to be written to $A11100 to return the bus back to the Z80
 			} else if (data == 0x0000) {
@@ -150,22 +156,23 @@ public class GenBus {
 			//	this may be done by writing #$0000 to $A11200, but only when the Z80 bus is requested
 			if (data == 0x0000) {
 				if (z80.busRequested) {
-					z80.disableReset();
+					z80.reset();
+				} else {
+					z80.initialize();
+					emu.runZ80 = false;
 				}
 				
 			//	After returning the bus after loading the new program to it's memory,
 			//	the Z80 may be let go from reset by writing #$0100 to $A11200.
-			} else if (data == 0x0100) {
+			} else if (data == 0x0100 || data == 0x1) {
 				if (z80.busRequested) {
-					z80.reset();
-				
-					emu.runZ80 = false;
+					z80.disableReset();
+
 				} else {
+					z80.disableReset();
+//					z80.initialize();
 					emu.runZ80 = true;
 				}
-				
-			} else {
-				System.out.println("Z80 OJO ! .. algo del bus del z80 no se hizo aca");
 			}
 			
 		} else if (addressL == 0xC00000 || addressL == 0xC00001

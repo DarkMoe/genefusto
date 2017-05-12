@@ -118,7 +118,7 @@ public class Gen68 {
 		if (D[0] == 0xE0000000L) {
 			System.out.println();
 		}
-		if(PC ==0x403C) {
+		if (PC ==0xD4332) {
 //			print = true;
 		}
 		

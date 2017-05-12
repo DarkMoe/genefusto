@@ -146,7 +146,7 @@ public class ADDI implements GenInstructionHandler {
 		long tot = toAdd + data;
 		cpu.writeKnownAddressingMode(o, tot, Size.BYTE);
 		
-		calcFlags(tot, Size.BYTE.getMsb(), Size.BYTE.getMax());
+		calcFlags(tot, data, toAdd, Size.BYTE.getMsb(), Size.BYTE.getMax());
 	}
 
 	private void ADDIWord(int opcode) {
@@ -164,7 +164,7 @@ public class ADDI implements GenInstructionHandler {
 		long tot = toAdd + data;
 		cpu.writeKnownAddressingMode(o, tot, Size.WORD);
 		
-		calcFlags(tot, Size.WORD.getMsb(), Size.WORD.getMax());
+		calcFlags(tot, data, toAdd, Size.WORD.getMsb(), Size.WORD.getMax());
 	}
 	
 	private void ADDILong(int opcode) {
@@ -184,10 +184,10 @@ public class ADDI implements GenInstructionHandler {
 		long tot = toAdd + data;
 		cpu.writeKnownAddressingMode(o, tot, Size.LONG);
 		
-		calcFlags(tot, Size.LONG.getMsb(), Size.LONG.getMax());
+		calcFlags(tot, data, toAdd, Size.LONG.getMsb(), Size.LONG.getMax());
 	}
 	
-	void calcFlags(long tot, long msb, long maxSize) {	//TODO  overflow
+	void calcFlags(long tot, long data, long toAdd, long msb, long maxSize) {
 		if ((tot & maxSize) == 0) {
 			cpu.setZ();
 		} else {
@@ -198,6 +198,16 @@ public class ADDI implements GenInstructionHandler {
 		} else {
 			cpu.clearN();
 		}
+		
+		boolean Dm = (data & msb) > 0;
+		boolean Sm = (toAdd & msb) > 0;
+		boolean Rm = (tot & msb) > 0;
+		if((Sm && Dm && !Rm) || (!Sm && !Dm && Rm)) {
+			cpu.setV();
+		} else {
+			cpu.clearV();
+		}
+		
 		if (tot > maxSize) {
 			cpu.setC();
 			cpu.setX();

@@ -295,6 +295,11 @@ public class GenVdp {
 				addressPort = addr;
 				autoIncrementTotal = 0;	// reset este acumulador
 				
+				//	reset de los flags	TODO confirmar que van aca
+				cramWrite2 = false;
+				vramWrite2 = false;
+				vsramWrite2 = false;
+				
 				int addressMode = code & 0xF;	// solo el primer byte, el bit 4 y 5 son para DMA
 												// que ya fue contemplado arriba
 				if (addressMode == 0b0000) { // VRAM Read
@@ -454,7 +459,7 @@ public class GenVdp {
 			registers[0x14] = dmaLength >> 8;
 			registers[0x13] = dmaLength & 0xFF;
 			
-			addressPort += 2;
+//			addressPort += 2;
 //			fifoAddress[index] = destAddr + 2;	//	FIXME, no es fijo, se actualiza en paralelo mientras se siguen ejecutando instrucciones, hay q contar ciclos de cpu
 //			
 //			if (dmaRecien) {
@@ -574,8 +579,9 @@ public class GenVdp {
 				vram[destAddr] = data1;
 				vram[destAddr + 1] = data2;
 			} else if (cramWrite) {
-				cram[destAddr] = data1;
-				cram[destAddr + 1] = data2;
+				writeCramByte(destAddr, data1);
+				writeCramByte(destAddr + 1, data2);
+				
 			} else if (vsramWrite) {
 				vsram[destAddr] = data1;
 				vsram[destAddr + 1] = data2;
@@ -619,6 +625,11 @@ public class GenVdp {
 //			nextFIFOReadEntry = index;
 //			nextFIFOWriteEntry = index;
 //		}
+	}
+
+	private void writeCramByte(int address, int data) {
+		cram[address] = data;
+//		System.out.println(Integer.toHexString(address) + ": " + Integer.toHexString(data));
 	}
 
 	int autoIncrementTotal;
@@ -686,6 +697,10 @@ public class GenVdp {
 			int index = nextFIFOReadEntry;
 			int address = addressPort;
 			
+			if (addressPort == 2) {
+				System.out.println();
+			}
+			
 			long first =  all >> 16;
 			long second = all & 0xFFFF;
 			
@@ -697,8 +712,9 @@ public class GenVdp {
 			int data1 = (word >> 24) & 0xFF;
 			int data2 = (word >> 16) & 0xFF;
 			
-			cram[offset] 	 = data1;
-			cram[offset + 1] = data2;
+			writeCramByte(offset, data1);
+			writeCramByte(offset + 1, data2);
+			
 			fifoAddress[index] = offset;
 			fifoCode[index] = code;
 			fifoData[index] = (data1 << 8) | data2;
@@ -706,9 +722,9 @@ public class GenVdp {
 			int data3 = (word >> 8) & 0xFF;
 			int data4 = (word >> 0) & 0xFF;
 			
-			cram[offset + 2] = data3;
-			cram[offset + 3] = data4;
-			
+			writeCramByte(offset + 2, data3);
+			writeCramByte(offset + 3, data4);
+
 			int incrementOffset = autoIncrementTotal + autoIncrementData;
 			
 			address = address + incrementOffset;	// FIXME wrap
@@ -1107,9 +1123,23 @@ public class GenVdp {
 		int nameTableLocation = registers[2] & 0x38;	// bit 6 para modo extendido de vram, no lo emulo
 		nameTableLocation *= 0x400;
 		
+		int reg10 = registers[0x10];
+		int horScrollSize = reg10 & 3;
+		int verScrollSize = (reg10 >> 4) & 3;
+		
 		int tileLocator = nameTableLocation;
+		
+		int limitHorTiles = 0;
+		if (horScrollSize == 0) {
+			limitHorTiles = 32;
+		} else if (horScrollSize == 1) {
+			limitHorTiles = 40;		//	40 words / tiles por scanline
+		} else {
+			throw new RuntimeException("NOT IMPL: " + horScrollSize);
+		}
+		
 		for (int vertTile = 0; vertTile < 32; vertTile++) {
-			for (int horTile = 0; horTile < 40; horTile++) {//	40 words / tiles por scanline
+			for (int horTile = 0; horTile < limitHorTiles; horTile++) {
 				int loc = tileLocator + (vertTile / (8 * 40));
 				
 				int nameTable  = vram[loc] << 8;
@@ -1189,7 +1219,13 @@ public class GenVdp {
 					}
 				}
 			}
-			tileLocator += 48;	// fuera del active view, 24 words o 48 bytes
+			if (horScrollSize == 0) {
+				tileLocator += 0;
+			} else if (horScrollSize == 1) {
+				tileLocator += 48;		// fuera del active view, 24 words o 48 bytes
+			} else {
+				throw new RuntimeException("NOT IMPL: " + horScrollSize);
+			}
 		}
 	}
 	
@@ -1203,9 +1239,23 @@ public class GenVdp {
 		int nameTableLocation = (registers[4] & 0x7) << 3;	// bit 3 para modo extendido de vram, no lo emulo
 		nameTableLocation *= 0x400;
 		
+		int reg10 = registers[0x10];
+		int horScrollSize = reg10 & 3;
+		int verScrollSize = (reg10 >> 4) & 3;
+		
 		int tileLocator = nameTableLocation;
+		
+		int limitHorTiles = 0;
+		if (horScrollSize == 0) {
+			limitHorTiles = 32;
+		} else if (horScrollSize == 1) {
+			limitHorTiles = 40;		//	40 words / tiles por scanline
+		} else {
+			throw new RuntimeException("NOT IMPL: " + horScrollSize);
+		}
+		
 		for (int vertTile = 0; vertTile < 32; vertTile++) {
-			for (int horTile = 0; horTile < 40; horTile++) {//	40 words / tiles por scanline
+			for (int horTile = 0; horTile < limitHorTiles; horTile++) {
 				int loc = tileLocator + (vertTile / (8 * 40));
 				
 				int nameTable = vram[loc] << 8;
@@ -1285,7 +1335,13 @@ public class GenVdp {
 					}
 				}
 			}
-			tileLocator += 48;	// fuera del active view, 24 words o 48 bytes
+			if (horScrollSize == 0) {
+				tileLocator += 0;
+			} else if (horScrollSize == 1) {
+				tileLocator += 48;		// fuera del active view, 24 words o 48 bytes
+			} else {
+				throw new RuntimeException("NOT IMPL: " + horScrollSize);
+			}
 		}
 	}
 	
@@ -1322,8 +1378,9 @@ public class GenVdp {
     }
 	
     private void printCRAM() {
-    	for (int i = 0; i < cram.length; i++) {
-			System.out.println(Integer.toHexString(i) + ": " + Integer.toHexString(cram[i]));
+    	for (int i = 0; i < cram.length / 2; i++) {
+			System.out.println(Integer.toHexString(i) + Integer.toHexString(i + 1) + ": "
+					+ Integer.toHexString(cram[i]) + Integer.toHexString(cram[i + 1]));
 		}
     }
 

@@ -141,7 +141,7 @@ public class SUBQ implements GenInstructionHandler {
 		
 		cpu.writeKnownAddressingMode(o, tot, Size.BYTE);
 		
-		calcFlags(tot, Size.BYTE.getMsb(), Size.BYTE.getMax());
+		calcFlags(tot, data, dataToSub, Size.BYTE.getMsb(), Size.BYTE.getMax());
 	}
 	
 	private void SUBQWord(int opcode) {
@@ -165,7 +165,7 @@ public class SUBQ implements GenInstructionHandler {
 			long tot = (data - dataToSub);
 			
 			cpu.writeKnownAddressingMode(o, tot, Size.WORD);
-			calcFlags(tot, Size.WORD.getMsb(), Size.WORD.getMax());
+			calcFlags(tot, data, dataToSub, Size.WORD.getMsb(), Size.WORD.getMax());
 		}
 	}
 	
@@ -187,11 +187,11 @@ public class SUBQ implements GenInstructionHandler {
 		
 		// if destination is An no cambian los flags
 		if (mode != 1) {
-			calcFlags(tot, Size.LONG.getMsb(), Size.LONG.getMax());
+			calcFlags(tot, data, dataToSub, Size.LONG.getMsb(), Size.LONG.getMax());
 		}
 	}
 	
-	void calcFlags(long tot, long msb, long maxSize) {	//	TODO  overflow
+	void calcFlags(long tot, long data, long toSub, long msb, long maxSize) {
 		if ((tot & maxSize) == 0) {
 			cpu.setZ();
 		} else {
@@ -202,6 +202,16 @@ public class SUBQ implements GenInstructionHandler {
 		} else {
 			cpu.clearN();
 		}
+
+		boolean Dm = (data & msb) > 0;
+		boolean Sm = (toSub & msb) > 0;
+		boolean Rm = (tot & msb) > 0;
+		if ((!Sm && Dm && !Rm) || (Sm && !Dm && Rm)) {
+			cpu.setV();
+		} else {
+			cpu.clearV();
+		}
+		
 		if (tot < 0) {
 			cpu.setC();
 			cpu.setX();

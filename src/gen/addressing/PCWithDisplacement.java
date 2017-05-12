@@ -28,12 +28,17 @@ public class PCWithDisplacement implements AddressingMode {
 
 	@Override
 	public long getByte(Operation o) {
-		throw new RuntimeException();
+		long address = o.getAddress();
+		long data = cpu.bus.read(address);
+		return data;
 	}
 
 	@Override
 	public long getWord(Operation o) {
-		throw new RuntimeException();
+		long address = o.getAddress();
+		long data  = cpu.bus.read(address) << 8;
+			 data |= cpu.bus.read(address + 1);
+		return data;
 	}
 
 	@Override

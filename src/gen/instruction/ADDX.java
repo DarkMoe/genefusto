@@ -148,7 +148,6 @@ public class ADDX implements GenInstructionHandler {
 		}
 	}
 
-
 	private void ADDXDataByte(int opcode) {
 		int rx = (opcode >> 9) & 0x7;
 		int ry = (opcode & 0x7);
@@ -161,7 +160,7 @@ public class ADDX implements GenInstructionHandler {
 		long tot = data + toAdd + extended;
 		cpu.setDByte(rx, tot);
 		
-		calcFlags(tot, Size.BYTE.getMsb(), Size.BYTE.getMax());
+		calcFlags(tot, data, toAdd, Size.BYTE.getMsb(), Size.BYTE.getMax());
 	}
 	
 	private void ADDXDataWord(int opcode) {
@@ -176,7 +175,7 @@ public class ADDX implements GenInstructionHandler {
 		long tot = data + toAdd + extended;
 		cpu.setDWord(ry, tot);
 		
-		calcFlags(tot, Size.WORD.getMsb(), Size.WORD.getMax());
+		calcFlags(tot, data, toAdd, Size.WORD.getMsb(), Size.WORD.getMax());
 	}
 	
 	private void ADDXDataLong(int opcode) {
@@ -191,40 +190,22 @@ public class ADDX implements GenInstructionHandler {
 		long tot = data + toAdd + extended;
 		cpu.setDLong(ry, tot);
 		
-		calcFlags(tot, Size.LONG.getMsb(), Size.LONG.getMax());
+		calcFlags(tot, data, toAdd, Size.LONG.getMsb(), Size.LONG.getMax());
 	}
 	
 	private void ADDXAddressByte(int opcode) {
-		int rx = (opcode >> 9) & 0x7;
-		int ry = (opcode & 0x7);
-		
-		long tot = 0;
-		
-		calcFlags(tot, Size.BYTE.getMsb(), 0xFF);
 		throw new RuntimeException("NOT IM");
 	}
 	
 	private void ADDXAddressWord(int opcode) {
-		int rx = (opcode >> 9) & 0x7;
-		int ry = (opcode & 0x7);
-		
-		long tot = 0;
-		
-		calcFlags(tot, Size.WORD.getMsb(), 0xFFFF);
 		throw new RuntimeException("NOT IM");
 	}
 	
 	private void ADDXAddressLong(int opcode) {
-		int rx = (opcode >> 9) & 0x7;
-		int ry = (opcode & 0x7);
-		
-		long tot = 0;
-		
-		calcFlags(tot, Size.LONG.getMsb(), 0xFFFF_FFFFL);
 		throw new RuntimeException("NOT IM");
 	}
 	
-	void calcFlags(long tot, long msb, long maxSize) {	//TODO  overflow
+	void calcFlags(long tot, long data, long toAdd, long msb, long maxSize) {
 		if ((tot & maxSize) == 0) {
 			cpu.setZ();
 		} else {
@@ -235,6 +216,16 @@ public class ADDX implements GenInstructionHandler {
 		} else {
 			cpu.clearN();
 		}
+		
+		boolean Dm = (data & msb) > 0;
+		boolean Sm = (toAdd & msb) > 0;
+		boolean Rm = (tot & msb) > 0;
+		if ((Sm && Dm && !Rm) || (!Sm && !Dm && Rm)) {
+			cpu.setV();
+		} else {
+			cpu.clearV();
+		}
+		
 		if (tot > maxSize) {
 			cpu.setC();
 			cpu.setX();
