@@ -1135,7 +1135,7 @@ public class GenVdp {
 		} else if (horScrollSize == 1) {
 			limitHorTiles = 40;		//	40 words / tiles por scanline
 		} else {
-			throw new RuntimeException("NOT IMPL: " + horScrollSize);
+			limitHorTiles = 40;
 		}
 		
 		for (int vertTile = 0; vertTile < 32; vertTile++) {
@@ -1224,7 +1224,7 @@ public class GenVdp {
 			} else if (horScrollSize == 1) {
 				tileLocator += 48;		// fuera del active view, 24 words o 48 bytes
 			} else {
-				throw new RuntimeException("NOT IMPL: " + horScrollSize);
+				tileLocator += 176;
 			}
 		}
 	}
@@ -1251,7 +1251,7 @@ public class GenVdp {
 		} else if (horScrollSize == 1) {
 			limitHorTiles = 40;		//	40 words / tiles por scanline
 		} else {
-			throw new RuntimeException("NOT IMPL: " + horScrollSize);
+			limitHorTiles = 40;
 		}
 		
 		for (int vertTile = 0; vertTile < 32; vertTile++) {
@@ -1340,7 +1340,7 @@ public class GenVdp {
 			} else if (horScrollSize == 1) {
 				tileLocator += 48;		// fuera del active view, 24 words o 48 bytes
 			} else {
-				throw new RuntimeException("NOT IMPL: " + horScrollSize);
+				tileLocator += 176;
 			}
 		}
 	}

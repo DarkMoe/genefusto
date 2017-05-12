@@ -121,7 +121,12 @@ public class Gen68 {
 		if (PC ==0xD4332) {
 //			print = true;
 		}
-		
+		if (print) {
+			System.out.println();
+		}
+		if (D[0] > 0xFFFF) {
+			System.out.println();
+		}
  		GenInstruction instruction = getInstruction((int) opcode);
  		instruction.run((int) opcode);
 		
