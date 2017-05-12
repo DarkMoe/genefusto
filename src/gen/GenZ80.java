@@ -101,7 +101,7 @@ public class GenZ80 {
 		int cycles = 0;
 		
 		if (PC - 1 != 0) {
-			System.out.println("Z80: " + Integer.toHexString(PC - 1));
+//			System.out.println("Z80: " + Integer.toHexString(PC - 1));
 		}
 		
 		String fullOpcode = hex(opcode);
@@ -5712,17 +5712,21 @@ public class GenZ80 {
 		} else if (address >= 0x2000 && address < 0x3FFF) {
 			return 0;
 		} else if (address == 0x4000) {		//	YM2612 A0
-			System.out.println("YM2612 A0");
-			return YMA0;	// TODO implement
+//			System.out.println("YM2612 A0");
+//			return YMA0;	// TODO implement
+			return 0;
 		} else if (address == 0x4001) {		//	YM2612 D0
-			System.out.println("YM2612 D0");
-			return YMD0;
+//			System.out.println("YM2612 D0");
+//			return YMD0;
+			return 0;
 		} else if (address == 0x4002) {		//	YM2612 A1
-			System.out.println("YM2612 A1");
-			return YMA1;
+//			System.out.println("YM2612 A1");
+//			return YMA1;
+			return 0;
 		} else if (address == 0x4003) {		//	YM2612 D1
-			System.out.println("YM2612 D1");
-			return YMD1;
+//			System.out.println("YM2612 D1");
+//			return YMD1;
+			return 0;
 		} else if (address >= 0x8000 && address <= 0xFFFF) {		//	8000h	FFFFh	M68k memory bank
 			System.out.println("LECTURA 68k !!!!!!");
 			return 0; //bus.read(address)	FIXME implementar lectura desde 68k

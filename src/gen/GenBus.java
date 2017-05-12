@@ -59,8 +59,8 @@ public class GenBus {
 			}
 			
 		} else if (address == 0xA11100 || address == 0xA11101) {	//	Z80 bus request	
-//			return (emu.runZ80) ? 1 : 0;
-			return 0;	//	FIXME hacer esto bien
+			return (z80.busRequested) ? 0 : 1;
+//			return 0;	//	FIXME hacer esto bien
 		
 		} else if (address == 0xC00000 || address == 0xC00002) {	// VDP Data
 			return (vdp.readDataPort(false) >> 8);
@@ -149,7 +149,9 @@ public class GenBus {
 			//	if the Z80 is required to be reset (for example, to load a new program to it's memory)
 			//	this may be done by writing #$0000 to $A11200, but only when the Z80 bus is requested
 			if (data == 0x0000) {
-				z80.disableReset();
+				if (z80.busRequested) {
+					z80.disableReset();
+				}
 				
 			//	After returning the bus after loading the new program to it's memory,
 			//	the Z80 may be let go from reset by writing #$0100 to $A11200.
