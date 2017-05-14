@@ -98,16 +98,29 @@ public class JSR implements GenInstructionHandler {
 		
 		long oldPC = cpu.PC + 2;
 		
-		cpu.SSP--;
-		cpu.bus.write(cpu.SSP, oldPC & 0xFF, Size.BYTE);
-		cpu.SSP--;
-		cpu.bus.write(cpu.SSP, (oldPC >> 8) & 0xFF, Size.BYTE);
-		cpu.SSP--;
-		cpu.bus.write(cpu.SSP, (oldPC >> 16) & 0xFF, Size.BYTE);
-		cpu.SSP--;
-		cpu.bus.write(cpu.SSP, (oldPC >> 24), Size.BYTE);
-		
-		cpu.setALong(7, cpu.SSP);
+		if ((cpu.SR & 0x2000) == 0x2000) {
+			cpu.SSP--;
+			cpu.bus.write(cpu.SSP, oldPC & 0xFF, Size.BYTE);
+			cpu.SSP--;
+			cpu.bus.write(cpu.SSP, (oldPC >> 8) & 0xFF, Size.BYTE);
+			cpu.SSP--;
+			cpu.bus.write(cpu.SSP, (oldPC >> 16) & 0xFF, Size.BYTE);
+			cpu.SSP--;
+			cpu.bus.write(cpu.SSP, (oldPC >> 24), Size.BYTE);
+			
+			cpu.setALong(7, cpu.SSP);
+		} else {
+			cpu.USP--;
+			cpu.bus.write(cpu.USP, oldPC & 0xFF, Size.BYTE);
+			cpu.USP--;
+			cpu.bus.write(cpu.USP, (oldPC >> 8) & 0xFF, Size.BYTE);
+			cpu.USP--;
+			cpu.bus.write(cpu.USP, (oldPC >> 16) & 0xFF, Size.BYTE);
+			cpu.USP--;
+			cpu.bus.write(cpu.USP, (oldPC >> 24), Size.BYTE);
+			
+			cpu.setALong(7, cpu.USP);
+		}
 		
 		cpu.PC = newPC - 2;
 	}

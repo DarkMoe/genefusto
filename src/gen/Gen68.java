@@ -88,7 +88,7 @@ public class Gen68 {
 		long opcode = (bus.read(PC) << 8);
 		opcode |= bus.read(PC + 1);
 		
-		sb.append(pad4((int) PC) + " - Opcode: " + pad4((int) opcode) + " - SR: " + pad4(SR) + "\r\n");
+		sb.append(pad4((int) PC) + " - Opcode: " + pad4((int) opcode) + " - SR: " + pad4(SR) + " - USP: " + pad4((int) USP) + "\r\n");
 		for (int j = 0; j < 8; j++) {
 			sb.append(" D" + j + ":" + Integer.toHexString((int) D[j]));
 		}
@@ -115,18 +115,19 @@ public class Gen68 {
 //			System.out.println();
 		}
 	
-		if (D[0] == 0xE0000000L) {
-			System.out.println();
+		if ((A[7] & 0xFFFF_FFFFL) < 0xFFFF_001AL) {
+//			print = true;
 		}
-		if (PC ==0xD4332) {
+		if (PC ==0x04ec) {
 //			print = true;
 		}
 		if (print) {
 			System.out.println();
 		}
-		if (D[0] > 0xFFFF) {
-			System.out.println();
-		}
+		if (PC ==0x0f44cc) {
+//		print = true;
+	}
+		
  		GenInstruction instruction = getInstruction((int) opcode);
  		instruction.run((int) opcode);
 		
@@ -148,7 +149,11 @@ public class Gen68 {
 		A[register] = ((reg & 0xFFFF_FF00) | (data & 0xFF));
 		
 		if (register == 7) {
-			SSP = (int) A[register];
+			if ((SR & 0x2000) == 0x2000) {
+				SSP = (int) A[register];
+			} else {
+				USP = (int) A[register];
+			}
 		}
 	}
 	
@@ -157,7 +162,11 @@ public class Gen68 {
 		A[register] = ((reg & 0xFFFF_0000) | (data & 0xFFFF));
 		
 		if (register == 7) {
-			SSP = (int) A[register];
+			if ((SR & 0x2000) == 0x2000) {
+				SSP = (int) A[register];
+			} else {
+				USP = (int) A[register];
+			}
 		}
 	}
 	
@@ -165,7 +174,11 @@ public class Gen68 {
 		A[register] = data & 0xFFFF_FFFFL;
 		
 		if (register == 7) {
-			SSP = (int) A[register];
+			if ((SR & 0x2000) == 0x2000) {
+				SSP = (int) A[register];
+			} else {
+				USP = (int) A[register];
+			}
 		}
 	}
 	
@@ -863,16 +876,29 @@ public class Gen68 {
 			
 			taken = true;
 			
-			SSP--;
-			bus.write(SSP, oldPC & 0xFF, Size.BYTE);
-			SSP--;
-			bus.write(SSP, (oldPC >> 8) & 0xFF, Size.BYTE);
-			SSP--;
-			bus.write(SSP, (oldPC >> 16) & 0xFF, Size.BYTE);
-			SSP--;
-			bus.write(SSP, (oldPC >> 24), Size.BYTE);
-			
-			setALong(7, SSP);
+			if ((SR & 0x2000) == 0x2000) {
+				SSP--;
+				bus.write(SSP, oldPC & 0xFF, Size.BYTE);
+				SSP--;
+				bus.write(SSP, (oldPC >> 8) & 0xFF, Size.BYTE);
+				SSP--;
+				bus.write(SSP, (oldPC >> 16) & 0xFF, Size.BYTE);
+				SSP--;
+				bus.write(SSP, (oldPC >> 24), Size.BYTE);
+				
+				setALong(7, SSP);
+			} else {
+				USP--;
+				bus.write(USP, oldPC & 0xFF, Size.BYTE);
+				USP--;
+				bus.write(USP, (oldPC >> 8) & 0xFF, Size.BYTE);
+				USP--;
+				bus.write(USP, (oldPC >> 16) & 0xFF, Size.BYTE);
+				USP--;
+				bus.write(USP, (oldPC >> 24), Size.BYTE);
+				
+				setALong(7, USP);
+			}
 			
 			break;
 		case 0b0010:	//	C + Z = 0		the C and Z flags are both clear

@@ -651,10 +651,6 @@ public class GenVdp {
 		int data1 = (word >> 8) & 0xFF;
 		int data2 = (word >> 0) & 0xFF;
 		
-		if (offset == 0x73a3 || offset + 1 == 0x73a3) {
-			System.out.println();
-		}
-		
 		//	hack por si se pasa
 		if (offset > 0xFFFE) {
 			return;
@@ -696,10 +692,6 @@ public class GenVdp {
 			
 			int index = nextFIFOReadEntry;
 			int address = addressPort;
-			
-			if (addressPort == 2) {
-				System.out.println();
-			}
 			
 			long first =  all >> 16;
 			long second = all & 0xFFFF;
@@ -972,10 +964,6 @@ public class GenVdp {
 			
 			int spriteLine = (int) ((line - realY) % verSizePixels);
 			
-			if (line ==8) {
-				System.out.println();
-			}
-			
 			for (int cellHor = 0; cellHor < (horSize + 1); cellHor++) {
 				//	16 bytes por cell de 8x8
 				//	cada linea dentro de una cell de 8 pixeles, ocupa 4 bytes (o sea, la mitad del ancho en bytes)
@@ -1102,9 +1090,6 @@ public class GenVdp {
 				
 				int spriteIndex = spritesIndex[i][j];
 				if (spriteIndex != 0) {
-					if (j == 8) {
-						System.out.println();
-					}
 					int sprit = sprites[i][j];
 					screenData[i][j] = sprit;
 					sprites[i][j] = 0;

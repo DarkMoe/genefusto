@@ -48,18 +48,35 @@ public class RTS implements GenInstructionHandler {
 	
 	private void RSTpc(int opcode) {
 		long newPC;
-		newPC = cpu.bus.read(cpu.SSP) << 24;
-		cpu.SSP++;
-		newPC |= cpu.bus.read(cpu.SSP) << 16;
-		cpu.SSP++;
-		newPC |= cpu.bus.read(cpu.SSP) << 8;
-		cpu.SSP++;
-		newPC |= cpu.bus.read(cpu.SSP);
-		cpu.SSP++;
 		
-		cpu.PC = newPC - 2;
+		if ((cpu.SR & 0x2000) == 0x2000) {
+			newPC = cpu.bus.read(cpu.SSP) << 24;
+			cpu.SSP++;
+			newPC |= cpu.bus.read(cpu.SSP) << 16;
+			cpu.SSP++;
+			newPC |= cpu.bus.read(cpu.SSP) << 8;
+			cpu.SSP++;
+			newPC |= cpu.bus.read(cpu.SSP);
+			cpu.SSP++;
+			
+			cpu.setALong(7, cpu.SSP);
+			
+			cpu.PC = newPC - 2;
+		} else {
+			newPC = cpu.bus.read(cpu.USP) << 24;
+			cpu.USP++;
+			newPC |= cpu.bus.read(cpu.USP) << 16;
+			cpu.USP++;
+			newPC |= cpu.bus.read(cpu.USP) << 8;
+			cpu.USP++;
+			newPC |= cpu.bus.read(cpu.USP);
+			cpu.USP++;
+			
+			cpu.setALong(7, cpu.USP);
+			
+			cpu.PC = newPC - 2;
+		}
 		
-		cpu.setALong(7, cpu.SSP);
 	}
 
 }

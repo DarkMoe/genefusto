@@ -236,6 +236,7 @@ public class GenBus {
 			if (vdp.vip == 1) {		//	level 6 interrupt
 				int mask = cpu.getInterruptMask();
 				if (mask < 0x6) {
+					
 					long oldPC = cpu.PC;
 					int oldSR = cpu.SR;
 					int ssp = cpu.SSP;
@@ -254,11 +255,13 @@ public class GenBus {
 					ssp--;
 					write(ssp, (oldSR >> 8) & 0xFF, Size.BYTE);
 					
-					cpu.setALong(7, ssp);
-					
 					long address = readInterruptVector(0x78);
 					cpu.PC = address;
 					cpu.SR = (cpu.SR & 0xF8FF) | 0x0600;
+
+					cpu.SR |= 0x2000;	// force supervisor mode
+					
+					cpu.setALong(7, ssp);
 					
 					vdp.vip = 0;
 				}

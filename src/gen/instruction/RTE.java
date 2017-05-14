@@ -39,14 +39,14 @@ public class RTE implements GenInstructionHandler {
 			
 			@Override
 			public void run(int opcode) {
-				RSEpc(opcode);
+				RTEpc(opcode);
 			}
 		};
 		
 		cpu.addInstruction(base, ins);
 	}
 	
-	private void RSEpc(int opcode) {
+	private void RTEpc(int opcode) {
 		long SR = cpu.bus.read(cpu.SSP) << 8;
 		cpu.SSP++;
 		SR |= cpu.bus.read(cpu.SSP);
@@ -66,7 +66,12 @@ public class RTE implements GenInstructionHandler {
 		
 		cpu.PC = newPC - 2;
 		
-		cpu.setALong(7, cpu.SSP);
+		if ((cpu.SR & 0x2000) == 0x2000) {
+			cpu.setALong(7, cpu.SSP);
+		} else {
+			cpu.setALong(7, cpu.USP);
+		}
+		
 	}
 
 }

@@ -244,6 +244,7 @@ public class MOVEM implements GenInstructionHandler {
 					cpu.setAWord(register, o.getAddress());
 				} else if (o.getAddressingMode() instanceof AbsoluteShort
 						|| o.getAddressingMode() instanceof AbsoluteLong
+						|| o.getAddressingMode() instanceof AddressRegisterIndirect
 						|| o.getAddressingMode() instanceof AddressRegisterWithDisplacement
 						|| o.getAddressingMode() instanceof AddressRegisterWithIndex) {
 					o.setAddress(o.getAddress() + 2);
@@ -267,6 +268,7 @@ public class MOVEM implements GenInstructionHandler {
 					cpu.setAWord(register, o.getAddress());
 				} else if (o.getAddressingMode() instanceof AbsoluteShort
 						|| o.getAddressingMode() instanceof AbsoluteLong
+						|| o.getAddressingMode() instanceof AddressRegisterIndirect
 						|| o.getAddressingMode() instanceof AddressRegisterWithDisplacement
 						|| o.getAddressingMode() instanceof AddressRegisterWithIndex) {
 					o.setAddress(o.getAddress() + 2);
