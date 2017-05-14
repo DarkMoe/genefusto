@@ -239,7 +239,7 @@ public class GenBus {
 					
 					long oldPC = cpu.PC;
 					int oldSR = cpu.SR;
-					int ssp = cpu.SSP;
+					long ssp = cpu.SSP;
 					
 					ssp--;
 					write(ssp, oldPC & 0xFF, Size.BYTE);

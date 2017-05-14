@@ -105,29 +105,57 @@ public class LINK implements GenInstructionHandler {
 			 
 		long data = cpu.getA(register);
 
-		cpu.SSP--;
-		cpu.bus.write(cpu.SSP, data & 0xFF, Size.BYTE);
-		cpu.SSP--;
-		cpu.bus.write(cpu.SSP, (data >> 8) & 0xFF, Size.BYTE);
-		cpu.SSP--;
-		cpu.bus.write(cpu.SSP, (data >> 16) & 0xFF, Size.BYTE);
-		cpu.SSP--;
-		cpu.bus.write(cpu.SSP, (data >> 24), Size.BYTE);
-		
-		long oldSSP = cpu.SSP & 0xFFFF_FFFFL;
-		
-		cpu.setALong(register, oldSSP);
-		
-		long newSSP;
-		if ((offset & 0x8000) > 0) {
-			offset = -offset;
-			offset &= 0xFFFF;
-			newSSP = (oldSSP - offset) & 0xFFFF_FFFFL;
+		if ((cpu.SR & 0x2000) == 0x2000) {
+			cpu.SSP--;
+			cpu.bus.write(cpu.SSP, data & 0xFF, Size.BYTE);
+			cpu.SSP--;
+			cpu.bus.write(cpu.SSP, (data >> 8) & 0xFF, Size.BYTE);
+			cpu.SSP--;
+			cpu.bus.write(cpu.SSP, (data >> 16) & 0xFF, Size.BYTE);
+			cpu.SSP--;
+			cpu.bus.write(cpu.SSP, (data >> 24), Size.BYTE);
+			
+			long oldSSP = cpu.SSP & 0xFFFF_FFFFL;
+			
+			cpu.setALong(register, oldSSP);
+			
+			long newSSP;
+			if ((offset & 0x8000) > 0) {
+				offset = -offset;
+				offset &= 0xFFFF;
+				newSSP = (oldSSP - offset) & 0xFFFF_FFFFL;
+			} else {
+				newSSP = (oldSSP + offset) & 0xFFFF_FFFFL;
+			}
+			
+			cpu.setALong(7, newSSP);
 		} else {
-			newSSP = (oldSSP + offset) & 0xFFFF_FFFFL;
+			cpu.USP--;
+			cpu.bus.write(cpu.USP, data & 0xFF, Size.BYTE);
+			cpu.USP--;
+			cpu.bus.write(cpu.USP, (data >> 8) & 0xFF, Size.BYTE);
+			cpu.USP--;
+			cpu.bus.write(cpu.USP, (data >> 16) & 0xFF, Size.BYTE);
+			cpu.USP--;
+			cpu.bus.write(cpu.USP, (data >> 24), Size.BYTE);
+			
+			long oldUSP = cpu.USP & 0xFFFF_FFFFL;
+			
+			cpu.setALong(register, oldUSP);
+			
+			long newUSP;
+			if ((offset & 0x8000) > 0) {
+				offset = -offset;
+				offset &= 0xFFFF;
+				newUSP = (oldUSP - offset) & 0xFFFF_FFFFL;
+			} else {
+				newUSP = (oldUSP + offset) & 0xFFFF_FFFFL;
+			}
+			
+			cpu.setALong(7, newUSP);
+
 		}
 		
-		cpu.setALong(7, newSSP);
 	}
 
 }

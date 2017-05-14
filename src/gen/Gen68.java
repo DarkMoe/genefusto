@@ -13,7 +13,7 @@ public class Gen68 {
 	public long PC;
 
 	//	Supervisor SP
-	public int SSP;
+	public long SSP;
 	//	User SP
 	public long USP;
 	
@@ -83,12 +83,13 @@ public class Gen68 {
 	
 	StringBuilder sb = new StringBuilder();
 	public boolean print;
+	private int z;
 
 	public int runInstruction() {
 		long opcode = (bus.read(PC) << 8);
 		opcode |= bus.read(PC + 1);
 		
-		sb.append(pad4((int) PC) + " - Opcode: " + pad4((int) opcode) + " - SR: " + pad4(SR) + " - USP: " + pad4((int) USP) + "\r\n");
+		sb.append(pad4((int) PC) + " - Opcode: " + pad4((int) opcode) + " - SR: " + pad4(SR) + " - SSP: " + pad4((int) SSP) + " - USP: " + pad4((int) USP) + "\r\n");
 		for (int j = 0; j < 8; j++) {
 			sb.append(" D" + j + ":" + Integer.toHexString((int) D[j]));
 		}
@@ -122,13 +123,18 @@ public class Gen68 {
 //			print = true;
 		}
 		if (print) {
-			System.out.println();
+//			System.out.println();
 		}
-		if (PC ==0x0f44cc) {
-//		print = true;
-	}
 		
- 		GenInstruction instruction = getInstruction((int) opcode);
+		if (PC == 0xfdea) {
+//			print = true;
+		}
+		
+		if (USP < 0xFFFF0100L) {
+//			System.out.println();
+		}
+		
+		GenInstruction instruction = getInstruction((int) opcode);
  		instruction.run((int) opcode);
 		
 		PC += 2;
@@ -175,9 +181,9 @@ public class Gen68 {
 		
 		if (register == 7) {
 			if ((SR & 0x2000) == 0x2000) {
-				SSP = (int) A[register];
+				SSP = getA(register);
 			} else {
-				USP = (int) A[register];
+				USP = getA(register);
 			}
 		}
 	}
@@ -360,25 +366,22 @@ public class Gen68 {
 			} else if (size == Size.WORD) {	//	word
 //				data  = (bus.read(addr)     << 8);
 //				data |= (bus.read(addr + 1) << 0);
-				A[register] += 2;
-				if (register == 7) {
-					SSP = (int) A[register];
-				}
+
+				addr += 2;
+				setALong(register, addr);
 				
 			} else if (size == Size.LONG) {	//	long
 //				data  = (bus.read(addr)     << 24);
 //				data |= (bus.read(addr + 1) << 16);
 //				data |= (bus.read(addr + 2) << 8);
 //				data |= (bus.read(addr + 3) << 0);
-				A[register] += 4;
-				if (register == 7) {
-					SSP = (int) A[register];
-				}
+				addr += 4;
+				setALong(register, addr);
 				
 			}
 				
 		} else if (mode == 0b100) {		//	-(An)	 Address Register Indirect with Predecrement Mode 
-			addr = A[register];
+			addr = getA(register);
 			
 			if (size == Size.BYTE) {	//	byte
 				if (register == 7) {	// stack pointer siempre alineado de a 2
@@ -390,19 +393,15 @@ public class Gen68 {
 				
 			} else if (size == Size.WORD) {	//	word
 				addr -= 2;
-				A[register] = addr;
-				if (register == 7) {
-					SSP = (int) addr;
-				}
+				setALong(register, addr);
+				
 //				data  = (bus.read(addr)     << 8);
 //				data |= (bus.read(addr + 1) << 0);
 				
 			} else if (size == Size.LONG) {	//	long
 				addr -= 4;
-				A[register] = addr;
-				if (register == 7) {
-					SSP = (int) addr;
-				}
+				setALong(register, addr);
+				
 //				data  = (bus.read(addr)     << 24);
 //				data |= (bus.read(addr + 1) << 16);
 //				data |= (bus.read(addr + 2) << 8);

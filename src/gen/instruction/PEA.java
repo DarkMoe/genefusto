@@ -97,16 +97,30 @@ public class PEA implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
 		long addr = o.getAddress();
 		
-		cpu.SSP--;
-		cpu.bus.write(cpu.SSP, addr & 0xFF, Size.BYTE);
-		cpu.SSP--;
-		cpu.bus.write(cpu.SSP, (addr >> 8) & 0xFF, Size.BYTE);
-		cpu.SSP--;
-		cpu.bus.write(cpu.SSP, (addr >> 16) & 0xFF, Size.BYTE);
-		cpu.SSP--;
-		cpu.bus.write(cpu.SSP, (addr >> 24), Size.BYTE);
+		if ((cpu.SR & 0x2000) == 0x2000) {
+			cpu.SSP--;
+			cpu.bus.write(cpu.SSP, addr & 0xFF, Size.BYTE);
+			cpu.SSP--;
+			cpu.bus.write(cpu.SSP, (addr >> 8) & 0xFF, Size.BYTE);
+			cpu.SSP--;
+			cpu.bus.write(cpu.SSP, (addr >> 16) & 0xFF, Size.BYTE);
+			cpu.SSP--;
+			cpu.bus.write(cpu.SSP, (addr >> 24), Size.BYTE);
+			
+			cpu.setALong(7, cpu.SSP);
+		} else {
+			cpu.USP--;
+			cpu.bus.write(cpu.USP, addr & 0xFF, Size.BYTE);
+			cpu.USP--;
+			cpu.bus.write(cpu.USP, (addr >> 8) & 0xFF, Size.BYTE);
+			cpu.USP--;
+			cpu.bus.write(cpu.USP, (addr >> 16) & 0xFF, Size.BYTE);
+			cpu.USP--;
+			cpu.bus.write(cpu.USP, (addr >> 24), Size.BYTE);
+			
+			cpu.setALong(7, cpu.USP);
+		}
 		
-		cpu.setALong(7, cpu.SSP);
 	}
 
 }

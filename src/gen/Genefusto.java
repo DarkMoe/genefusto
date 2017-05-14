@@ -95,6 +95,7 @@ import gen.instruction.ROR;
 import gen.instruction.ROXL;
 import gen.instruction.ROXR;
 import gen.instruction.RTE;
+import gen.instruction.RTR;
 import gen.instruction.RTS;
 import gen.instruction.SBCD;
 import gen.instruction.SUB;
@@ -225,6 +226,7 @@ public class Genefusto {
         new ROXL(cpu).generate();
         new ROXR(cpu).generate();
         new RTE(cpu).generate();
+        new RTR(cpu).generate();
         new RTS(cpu).generate();
         new SBCD(cpu).generate();
         new Scc(cpu).generate();

@@ -438,8 +438,8 @@ public class GenVdp {
 //			int data2 = (int) bus.read(sourceTrue + 1);
 			
 			if (vramWrite) {
-				vram[destAddr] = data1;
-				vram[destAddr + 1] = data2;
+				writeVramByte(destAddr, data1);
+				writeVramByte(destAddr + 1, data2);
 			} else {
 				throw new RuntimeException("SOLO ESCRIBE EN VRAM !! pasa este caso ?");
 			}
@@ -576,8 +576,8 @@ public class GenVdp {
 			}
 			
 			if (vramWrite) {
-				vram[destAddr] = data1;
-				vram[destAddr + 1] = data2;
+				writeVramByte(destAddr, data1);
+				writeVramByte(destAddr + 1, data2);
 			} else if (cramWrite) {
 				writeCramByte(destAddr, data1);
 				writeCramByte(destAddr + 1, data2);
@@ -632,6 +632,13 @@ public class GenVdp {
 //		System.out.println(Integer.toHexString(address) + ": " + Integer.toHexString(data));
 	}
 
+	private void writeVramByte(int address, int data) {
+		if (address == 0x17c0) {
+			System.out.println();
+		}
+		vram[address] = data;
+	}
+	
 	int autoIncrementTotal;
 	
 	private void vramWrite(int data) {
@@ -656,8 +663,8 @@ public class GenVdp {
 			return;
 		}
 		
-		vram[offset] 	 = data1;
-		vram[offset + 1] = data2;
+		writeVramByte(offset, data1);
+		writeVramByte(offset + 1, data2);
 		
 //		System.out.println("addr: " + Integer.toHexString(offset) + " - data: " + Integer.toHexString(data1));
 //		System.out.println("addr: " + Integer.toHexString(offset + 1) + " - data: " + Integer.toHexString(data2));
@@ -892,6 +899,10 @@ public class GenVdp {
 					if (j < 0 || j > 255) {
 						continue;
 					}
+					
+					if (i == 1) {
+						System.out.println();
+					}
 					int last = lastIndexes[j];
 					spritesPerLine[j][last] = i;
 					lastIndexes[j] = last + 1;
@@ -982,6 +993,9 @@ public class GenVdp {
 					}
 					
 					int grab = (pattern * 0x20) + (horLining) + sliver;
+					if (grab < 0) {
+						continue;	//	FIXME guardar en cache de sprites yPos y otros atrib
+					}
 					int data = vram[grab];
 					
 					int pixel1, pixel2;
@@ -1143,7 +1157,7 @@ public class GenVdp {
 				boolean priority = bitTest(nameTable, 15);
 				
 				int paletteLine = paletteLineIndex * 32;	//	16 colores por linea, 2 bytes por color
-				
+
 				tileIndex *= 0x20;
 				
 				for (int filas = 0; filas < 8; filas++) {
@@ -1243,8 +1257,8 @@ public class GenVdp {
 			for (int horTile = 0; horTile < limitHorTiles; horTile++) {
 				int loc = tileLocator + (vertTile / (8 * 40));
 				
-				int nameTable = vram[loc] << 8;
-				nameTable |= vram[loc + 1];
+				int nameTable  = vram[loc] << 8;
+					nameTable |= vram[loc + 1];
 				
 				tileLocator += 2;
 			
