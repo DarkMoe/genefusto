@@ -1097,8 +1097,8 @@ public class GenVdp {
 				boolean bDraw = (bColor != 0);
 				boolean sDraw = (spriteIndex != 0);
 				
-				boolean S = (sDraw && ((sPrio) || (!sPrio && !aPrio && bPrio)));
-				boolean A = (aDraw && ((!sDraw) || (sDraw && !sPrio) || (!aPrio && !bDraw) || (!aPrio && !bPrio && bDraw)));
+				boolean S = (sDraw && ((sPrio) || (!sPrio && !aPrio && !bPrio)));
+				boolean A = (aDraw && ((!sDraw && !bPrio) || (sDraw && !sPrio) || (!aPrio && !bDraw) || (!aPrio && !bPrio && bDraw)));
 //				boolean B = (bDraw && ((!sDraw && !aDraw) || ()));
 				
 				int pix = 0;
