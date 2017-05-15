@@ -1097,9 +1097,8 @@ public class GenVdp {
 				boolean bDraw = (bColor != 0);
 				boolean sDraw = (spriteIndex != 0);
 				
-				boolean S = (sDraw && ((sPrio) || (!sPrio && !aPrio && !bPrio)));
-				boolean A = (aDraw && ((!sDraw && !bPrio) || (sDraw && !sPrio) || (!aPrio && !bDraw) || (!aPrio && !bPrio && bDraw)));
-//				boolean B = (bDraw && ((!sDraw && !aDraw) || ()));
+				boolean S = (sDraw && ((sPrio) || (!sPrio && !aPrio && !bPrio) || (!sPrio && aPrio && !aDraw) || (!bDraw && bPrio && !sPrio && !aPrio)));
+				boolean A = (aDraw && ((!S && !bPrio) || (!S && !bDraw)));
 				
 				int pix = 0;
 				if (S) {
@@ -1113,7 +1112,6 @@ public class GenVdp {
 				} else {
 					pix = backColor;
 				}
-				
 				screenData[i][j] = pix;
 			}
 		}
@@ -1148,7 +1146,7 @@ public class GenVdp {
 		int vertTile = (line / 8);
 		
 		if (horScrollSize == 0) {
-			tileLocator += 0;
+			tileLocator += (64 * vertTile);
 		} else if (horScrollSize == 1) {
 			tileLocator += (128 * vertTile);		// fuera del active view, 24 words o 48 bytes
 		} else {
@@ -1267,7 +1265,7 @@ public class GenVdp {
 		int vertTile = (line / 8);
 		
 		if (horScrollSize == 0) {
-			tileLocator += 0;
+			tileLocator += (64 * vertTile);
 		} else if (horScrollSize == 1) {
 			tileLocator += (128 * vertTile);		// fuera del active view, 24 words o 48 bytes
 		} else {
