@@ -633,9 +633,6 @@ public class GenVdp {
 	}
 
 	private void writeVramByte(int address, int data) {
-		if (address == 0x17c0) {
-			System.out.println();
-		}
 		vram[address] = data;
 	}
 	
@@ -900,9 +897,6 @@ public class GenVdp {
 						continue;
 					}
 					
-					if (i == 1) {
-						System.out.println();
-					}
 					int last = lastIndexes[j];
 					spritesPerLine[j][last] = i;
 					lastIndexes[j] = last + 1;

@@ -29,6 +29,10 @@ public class ASR implements GenInstructionHandler {
 //        If you shift address contents, you only can do ONE shift, and
 //        your operand is ONE word exclusively.
 //
+//	ASR:
+//	Bits shifted out of the low-order bit go to both the carry and the 
+//	extend bits; the sign bit (MSB) is shifted into the high-order bit.
+	
 //	ASL:              <--  
 //	      C <------ OPERAND <--- 0
 //	            |
@@ -208,7 +212,14 @@ public class ASR implements GenInstructionHandler {
 		
 		long data = cpu.getD(register) & 0xFF;
 		long res = data >> toShift;
-								
+		if ((data & 0x8000_0000L) > 0) {
+			long pad = 0;
+			for (int i = 0; i < toShift; i++) {
+				pad = (pad << 1) | 1;
+			} 
+			res = (pad << (8 - toShift)) | res;	//	the sign bit (MSB) is shifted into the high-order bit
+		}
+		
 		boolean carry = false;
 		if (toShift != 0) {
 			if (((data >> toShift - 1) & 1) > 0) {
@@ -239,7 +250,14 @@ public class ASR implements GenInstructionHandler {
 		
 		long data = cpu.getD(register) & 0xFFFF;
 		long res = data >> toShift;
-								
+		if ((data & 0x8000_0000L) > 0) {
+			long pad = 0;
+			for (int i = 0; i < toShift; i++) {
+				pad = (pad << 1) | 1;
+			} 
+			res = (pad << (16 - toShift)) | res;	//	the sign bit (MSB) is shifted into the high-order bit
+		}
+					
 		boolean carry = false;
 		if (toShift != 0) {
 			if (((data >> toShift - 1) & 1) > 0) {
@@ -270,6 +288,13 @@ public class ASR implements GenInstructionHandler {
 		
 		long data = cpu.getD(register);
 		long res = data >> toShift;
+		if ((data & 0x8000_0000L) > 0) {
+			long pad = 0;
+			for (int i = 0; i < toShift; i++) {
+				pad = (pad << 1) | 1;
+			} 
+			res = (pad << (32 - toShift)) | res;	//	the sign bit (MSB) is shifted into the high-order bit
+		}
 		
 		boolean carry = false;
 		if (toShift != 0) {
