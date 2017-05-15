@@ -133,10 +133,6 @@ public class GenZ80 {
 //			lastInstr[9] = lastInstr[9] + " " + hex(readMemory(PC));
 //		}
 
-        if (PC - 1 == 0x342) {
-        	System.out.println();
-        }
-        
         switch (opcode) {
         case 0x00:	// NOP
         	cycles = 4;

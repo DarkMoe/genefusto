@@ -112,6 +112,11 @@ public class ROXR implements GenInstructionHandler {
 	
 	@Override
 	public void generate() {
+		generateRegister();
+		generateMemory();
+	}
+
+	private void generateRegister() {
 		int base = 0xE010;
 		GenInstruction ins = null;
 		
@@ -146,6 +151,31 @@ public class ROXR implements GenInstructionHandler {
 						cpu.addInstruction(opcode, ins);
 					}
 				}
+			}
+		}
+	}
+	
+	private void generateMemory() {
+		int base = 0xE4C0;
+		GenInstruction ins = null;
+		
+		ins = new GenInstruction() {
+			@Override
+			public void run(int opcode) {
+				ROXRMemoryWord(opcode);
+			}
+		};
+			
+		for (int mode = 0; mode < 8; mode++) {
+			if (mode == 0 || mode == 1) {
+				continue;
+			}
+			for (int r = 0; r < 8; r++) {
+				if (mode == 0b111 && r > 0b001) {
+					continue;
+				}
+				int opcode = base | (mode << 3) | r;
+				cpu.addInstruction(opcode, ins);
 			}
 		}
 	}
@@ -208,6 +238,26 @@ public class ROXR implements GenInstructionHandler {
 				carry = true;
 			}
 		}
+		
+		calcFlags(res, Size.WORD.getMsb(), 0xFFFF, carry);
+	}
+	
+	private void ROXRMemoryWord(int opcode) {
+		int register = (opcode & 0x7);
+		int mode = (opcode >> 3) & 0x7;
+		
+		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
+		long data = o.getData();
+		
+		int extended = cpu.isX() ? 0x8000 : 0;
+		long res = (data >> 1) | extended;
+		
+		boolean carry = false;
+		if ((data & 1) == 1) {
+			carry = true;
+		}
+		
+		cpu.writeKnownAddressingMode(o, res, Size.WORD);
 		
 		calcFlags(res, Size.WORD.getMsb(), 0xFFFF, carry);
 	}

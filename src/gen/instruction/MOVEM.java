@@ -294,14 +294,6 @@ public class MOVEM implements GenInstructionHandler {
 		
 		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
 		
-		if (o.getAddressingMode() instanceof AddressRegisterIndirectPreDecrement) {
-			System.out.println();
-		} else if (o.getAddressingMode() instanceof AddressRegisterIndirectPostIncrement) {
-			System.out.println();
-		} else {
-			System.out.println();
-		}
-		
 		for (int i = 0; i < 8; i++) {
 			if (((registerListMaskD) & (1 << i)) != 0) {
 				data = o.getAddressingMode().getLong(o);

@@ -35,9 +35,6 @@ public class GenJoypad {
 	}
 	
 	void writeDataRegister1(long data) {
-		if (data != 0 && data != 0x40) {
-			System.out.println();
-		}
 		if (data == 0) {
 			System.out.println("Deassert TH " + Long.toHexString(data));
 			asserted1 = true;

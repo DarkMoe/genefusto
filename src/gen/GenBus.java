@@ -79,6 +79,11 @@ public class GenBus {
 		} else if (address == 0xC00005 || address == 0xC00007) {
 			return (vdp.readControl() & 0xFF);
 			
+		} else if (address == 0xC00008 || address == 0xC00009) {
+			int v = vdp.line;
+			int h = new Random().nextInt(256);
+			return (v << 8) | h;	//	VDP HV counter
+			
 		} else if (address >= 0xFF0000) {
 			return memory.readRam(address);
 			

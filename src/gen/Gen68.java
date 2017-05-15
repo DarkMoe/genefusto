@@ -61,15 +61,6 @@ public class Gen68 {
 //level 7 |  1    1    1 |  ---------> highest priority
 	public int SR;
 	
-	//	8 Floating-Point Data Registers (FP7 – FP0) 
-	float[] FP = new float[8];
-	//	16-Bit Floating-Point Control Register (FPCR) 
-	float FPCR;
-	//	32-Bit Floating-Point Status Register (FPSR) 
-	float FPSR;
-	//	32-Bit Floating-Point Instruction Address Register (FPIAR) 
-	float FPIAR;
-	
 	public GenBus bus;
 	
 	Gen68(GenBus bus) {
@@ -83,13 +74,13 @@ public class Gen68 {
 	
 	StringBuilder sb = new StringBuilder();
 	public boolean print;
-	private int z;
 
 	public int runInstruction() {
-		long opcode = (bus.read(PC) << 8);
-		opcode |= bus.read(PC + 1);
+		long opcode  = bus.read(PC) << 8;
+			 opcode |= bus.read(PC + 1);
 		
-		sb.append(pad4((int) PC) + " - Opcode: " + pad4((int) opcode) + " - SR: " + pad4(SR) + " - SSP: " + pad4((int) SSP) + " - USP: " + pad4((int) USP) + "\r\n");
+		sb.append(pad4((int) PC) + " - Opcode: " + pad4((int) opcode) + " - SR: " + pad4(SR) + " - SSP: "
+				+ pad4((int) SSP) + " - USP: " + pad4((int) USP) + "\r\n");
 		for (int j = 0; j < 8; j++) {
 			sb.append(" D" + j + ":" + Integer.toHexString((int) D[j]));
 		}
@@ -108,17 +99,6 @@ public class Gen68 {
 		
 //		print = true;
 		
-		
-		if ((A[7] & 0xFFFF_FFFFL) < 0xFFFF_001AL) {
-//			print = true;
-		}
-		if (PC ==0x04ec) {
-//			print = true;
-		}
-		if (print) {
-//			System.out.println();
-		}
-		
 		if (bus.vdp.vram[0x4278] == 0x88){
 //			System.out.println();
 		}
@@ -127,8 +107,8 @@ public class Gen68 {
 //			System.out.println();
 		}
 		
-		if (PC == 0x5a9e) {
-//			print = true;
+		if (PC == 0xfdab2) {
+			print = true;
 		}
 		
 		GenInstruction instruction = getInstruction((int) opcode);

@@ -153,10 +153,14 @@ public class GenVdp {
 	
 	int line;
 	
+	int[][][] colorsCache = new int[8][8][8];
+	
 	GenBus bus;
 	
 	public GenVdp(GenBus bus) {
 		this.bus = bus;
+		
+		initColorsCache();
 	}
 	
 	int readControl() {
@@ -816,6 +820,7 @@ public class GenVdp {
 	
 	public int[][] sprites = new int[320][256];
 	public int[][] spritesIndex = new int[320][256];
+	public boolean[][] spritesPrio = new boolean[320][256];
 	
 	public void run(int cycles) {
 		totalCycles += cycles;
@@ -823,9 +828,14 @@ public class GenVdp {
 			if ((registers[1] & 0x40) == 0x40) {
 				if (line < 0xE0) {
 					spritesLine = 0;
+					
+					renderPlaneA();
+					renderPlaneB();
+					renderWindow();
 					renderSprites();
 				}
 			}
+			
 			line++;
 			totalCycles = 0;
 		}
@@ -840,10 +850,6 @@ public class GenVdp {
 			spritesFrame = 0;
 			
 			if ((registers[1] & 0x40) == 0x40) {
-				renderPlaneA();
-				renderPlaneB();
-				renderWindow();
-				
 				compaginateImage();
 				
 				bus.emu.renderScreen();
@@ -961,6 +967,7 @@ public class GenVdp {
 			int pattern = ((byte4 & 0x7) << 8) | byte5;
 			int palette = (byte4 >> 5) & 0x3;
 			
+			boolean priority = ((byte4 >> 7) & 0x1) == 1 ? true : false;
 			boolean verFlip = ((byte4 >> 4) & 0x1) == 1 ? true : false;
 			boolean horFlip = ((byte4 >> 3) & 0x1) == 1 ? true : false;
 			
@@ -1034,11 +1041,13 @@ public class GenVdp {
 					if (horOffset >= 0 && horOffset < 320) {
 						sprites[horOffset][line] = theColor1;
 						spritesIndex[horOffset][line] = pixel1;
+						spritesPrio[horOffset][line] = priority;
 					}
 					int horOffset2 = horOffset + 1;
 					if (horOffset2 >= 0 && horOffset2 < 320) {
 						sprites[horOffset2][line] = theColor2;
 						spritesIndex[horOffset2][line] = pixel2;
+						spritesPrio[horOffset2][line] = priority;
 					}
 					
 					horOffset += 2;
@@ -1077,32 +1086,35 @@ public class GenVdp {
 			for (int i = 0; i < 320; i++) {
 				boolean aPrio = planePrioA[i][j];
 				boolean bPrio = planePrioB[i][j];
+				boolean sPrio = spritesPrio[i][j];
 
 				int aColor = planeIndexColorA[i][j];
 				int bColor = planeIndexColorB[i][j];
 				
+				int spriteIndex = spritesIndex[i][j];
+
+				boolean aDraw = (aColor != 0);
+				boolean bDraw = (bColor != 0);
+				boolean sDraw = (spriteIndex != 0);
+				
+				boolean S = (sDraw && ((sPrio) || (!sPrio && !aPrio && bPrio)));
+				boolean A = (aDraw && ((!sDraw) || (sDraw && !sPrio) || (!aPrio && !bDraw) || (!aPrio && !bPrio && bDraw)));
+//				boolean B = (bDraw && ((!sDraw && !aDraw) || ()));
+				
 				int pix = 0;
-				if (aColor != 0) {
-					if (aPrio || !bPrio) {
-						pix = planeA[i][j];
-					} else {
-						pix = planeB[i][j];
-					}
-				} else if (bColor != 0) {
+				if (S) {
+					pix = sprites[i][j];
+					sprites[i][j] = 0;
+					spritesIndex[i][j] = 0;
+				} else if (A) {
+					pix = planeA[i][j];
+				} else if (bDraw) {
 					pix = planeB[i][j];
 				} else {
 					pix = backColor;
 				}
 				
 				screenData[i][j] = pix;
-				
-				int spriteIndex = spritesIndex[i][j];
-				if (spriteIndex != 0) {
-					int sprit = sprites[i][j];
-					screenData[i][j] = sprit;
-					sprites[i][j] = 0;
-					spritesIndex[i][j] = 0;
-				}
 			}
 		}
 	}
@@ -1131,93 +1143,96 @@ public class GenVdp {
 			limitHorTiles = 40;
 		}
 		
-		for (int vertTile = 0; vertTile < 32; vertTile++) {
-			for (int horTile = 0; horTile < limitHorTiles; horTile++) {
-				int loc = tileLocator + (vertTile / (8 * 40));
-				
-				int nameTable  = vram[loc] << 8;
-					nameTable |= vram[loc + 1];
-				
-				tileLocator += 2;
+		int line = this.line;
+		
+		int vertTile = (line / 8);
+		
+		if (horScrollSize == 0) {
+			tileLocator += 0;
+		} else if (horScrollSize == 1) {
+			tileLocator += (128 * vertTile);		// fuera del active view, 24 words o 48 bytes
+		} else {
+			tileLocator += (256 * vertTile);	//	256 bytes por tile vertical en modo ancho
+		}
+		
+		for (int horTile = 0; horTile < limitHorTiles; horTile++) {
+			int loc = tileLocator;
 			
+			int nameTable  = vram[loc] << 8;
+				nameTable |= vram[loc + 1];
+			
+			tileLocator += 2;
+		
 //				An entry in a name table is 16 bits, and works as follows:
 //				15			14 13	12				11		   			10 9 8 7 6 5 4 3 2 1 0
 //				Priority	Palette	Vertical Flip	Horizontal Flip		Tile Index
-				int tileIndex = (nameTable & 0x07FF);	// cada tile ocupa 32 bytes
-				
-				boolean horFlip = bitTest(nameTable, 11);
-				boolean vertFlip = bitTest(nameTable, 12);
-				int paletteLineIndex = (nameTable >> 13) & 0x3;
-				boolean priority = bitTest(nameTable, 15);
-				
-				int paletteLine = paletteLineIndex * 32;	//	16 colores por linea, 2 bytes por color
+			int tileIndex = (nameTable & 0x07FF);	// cada tile ocupa 32 bytes
+			
+			boolean horFlip = bitTest(nameTable, 11);
+			boolean vertFlip = bitTest(nameTable, 12);
+			int paletteLineIndex = (nameTable >> 13) & 0x3;
+			boolean priority = bitTest(nameTable, 15);
+			
+			int paletteLine = paletteLineIndex * 32;	//	16 colores por linea, 2 bytes por color
 
-				tileIndex *= 0x20;
-				
-				for (int filas = 0; filas < 8; filas++) {
-					int pointVert;
-					if (vertFlip) {
-						pointVert = (filas - 7) * -1;
-					} else {
-						pointVert = filas;
-					}
-					for (int k = 0; k < 4; k++) {
-						int point;
-						if (horFlip) {
-							point = (k - 3) * -1;
-						} else {
-							point = k;
-						}
-						
-						int grab = (tileIndex + point) + (pointVert * 4);
-						int data = vram[grab];
-						
-						int pixel1, pixel2;
-						if (horFlip) {
-							pixel1 = data & 0x0F;
-							pixel2 = (data & 0xF0) >> 4;
-						} else {
-							pixel1 = (data & 0xF0) >> 4;
-							pixel2 = data & 0x0F;
-						}
-						
-						int colorIndex1 = paletteLine + (pixel1 * 2);
-						int colorIndex2 = paletteLine + (pixel2 * 2);
-						
-						int color1 = cram[colorIndex1] << 8 | cram[colorIndex1 + 1];
-						int color2 = cram[colorIndex2] << 8 | cram[colorIndex2 + 1];
-						
-						int r = (color1 >> 1) & 0x7;
-						int g = (color1 >> 5) & 0x7;
-						int b = (color1 >> 9) & 0x7;
-						
-						int r2 = (color2 >> 1) & 0x7;
-						int g2 = (color2 >> 5) & 0x7;
-						int b2 = (color2 >> 9) & 0x7;
-						
-						int po = horTile * 8 + (k * 2);
-						int pu = vertTile * 8 + (filas);
-						
-						int theColor1 = getColour(r, g, b);
-						int theColor2 = getColour(r2, g2, b2);
-						
-						planeA[po][pu] = theColor1;
-						planeA[po + 1][pu] = theColor2;
-						
-						planePrioA[po][pu] = priority;
-						planePrioA[po + 1][pu] = priority;
-						
-						planeIndexColorA[po][pu] = pixel1;
-						planeIndexColorA[po + 1][pu] = pixel2;
-					}
-				}
-			}
-			if (horScrollSize == 0) {
-				tileLocator += 0;
-			} else if (horScrollSize == 1) {
-				tileLocator += 48;		// fuera del active view, 24 words o 48 bytes
+			tileIndex *= 0x20;
+			
+			int filas = (line % 8);
+			
+			int pointVert;
+			if (vertFlip) {
+				pointVert = (filas - 7) * -1;
 			} else {
-				tileLocator += 176;
+				pointVert = filas;
+			}
+			for (int k = 0; k < 4; k++) {
+				int point;
+				if (horFlip) {
+					point = (k - 3) * -1;
+				} else {
+					point = k;
+				}
+				
+				int grab = (tileIndex + point) + (pointVert * 4);
+				int data = vram[grab];
+				
+				int pixel1, pixel2;
+				if (horFlip) {
+					pixel1 = data & 0x0F;
+					pixel2 = (data & 0xF0) >> 4;
+				} else {
+					pixel1 = (data & 0xF0) >> 4;
+					pixel2 = data & 0x0F;
+				}
+				
+				int colorIndex1 = paletteLine + (pixel1 * 2);
+				int colorIndex2 = paletteLine + (pixel2 * 2);
+				
+				int color1 = cram[colorIndex1] << 8 | cram[colorIndex1 + 1];
+				int color2 = cram[colorIndex2] << 8 | cram[colorIndex2 + 1];
+				
+				int r = (color1 >> 1) & 0x7;
+				int g = (color1 >> 5) & 0x7;
+				int b = (color1 >> 9) & 0x7;
+				
+				int r2 = (color2 >> 1) & 0x7;
+				int g2 = (color2 >> 5) & 0x7;
+				int b2 = (color2 >> 9) & 0x7;
+				
+				int po = horTile * 8 + (k * 2);
+				int pu = vertTile * 8 + (filas);
+				
+				int theColor1 = getColour(r, g, b);
+				int theColor2 = getColour(r2, g2, b2);
+				
+				planeA[po][line] = theColor1;
+				planeA[po + 1][line] = theColor2;
+				
+				planePrioA[po][line] = priority;
+				planePrioA[po + 1][line] = priority;
+				
+				planeIndexColorA[po][line] = pixel1;
+				planeIndexColorA[po + 1][line] = pixel2;
 			}
 		}
 	}
@@ -1247,93 +1262,96 @@ public class GenVdp {
 			limitHorTiles = 40;
 		}
 		
-		for (int vertTile = 0; vertTile < 32; vertTile++) {
-			for (int horTile = 0; horTile < limitHorTiles; horTile++) {
-				int loc = tileLocator + (vertTile / (8 * 40));
-				
-				int nameTable  = vram[loc] << 8;
-					nameTable |= vram[loc + 1];
-				
-				tileLocator += 2;
+		int line = this.line;
+		
+		int vertTile = (line / 8);
+		
+		if (horScrollSize == 0) {
+			tileLocator += 0;
+		} else if (horScrollSize == 1) {
+			tileLocator += (128 * vertTile);		// fuera del active view, 24 words o 48 bytes
+		} else {
+			tileLocator += (256 * vertTile);	//	256 bytes por tile vertical en modo ancho
+		}
+		
+		for (int horTile = 0; horTile < limitHorTiles; horTile++) {
+			int loc = tileLocator;
 			
+			int nameTable  = vram[loc] << 8;
+				nameTable |= vram[loc + 1];
+			
+			tileLocator += 2;
+		
 //				An entry in a name table is 16 bits, and works as follows:
 //				15			14 13	12				11		   			10 9 8 7 6 5 4 3 2 1 0
 //				Priority	Palette	Vertical Flip	Horizontal Flip		Tile Index
-				int tileIndex = (nameTable & 0x07FF);	// cada tile ocupa 32 bytes
-				
-				boolean horFlip = bitTest(nameTable, 11);
-				boolean vertFlip = bitTest(nameTable, 12);
-				int paletteLineIndex = (nameTable >> 13) & 0x3;
-				boolean priority = bitTest(nameTable, 15);
-				
-				int paletteLine = paletteLineIndex * 32;	//	16 colores por linea, 2 bytes por color
-				
-				tileIndex *= 0x20;
-				
-				for (int filas = 0; filas < 8; filas++) {
-					int pointVert;
-					if (vertFlip) {
-						pointVert = (filas - 7) * -1;
-					} else {
-						pointVert = filas;
-					}
-					for (int k = 0; k < 4; k++) {
-						int point;
-						if (horFlip) {
-							point = (k - 3) * -1;
-						} else {
-							point = k;
-						}
-						
-						int grab = (tileIndex + point) + (pointVert * 4);
-						int data = vram[grab];
-						
-						int pixel1, pixel2;
-						if (horFlip) {
-							pixel1 = data & 0x0F;
-							pixel2 = (data & 0xF0) >> 4;
-						} else {
-							pixel1 = (data & 0xF0) >> 4;
-							pixel2 = data & 0x0F;
-						}
-						
-						int colorIndex1 = paletteLine + (pixel1 * 2);
-						int colorIndex2 = paletteLine + (pixel2 * 2);
-						
-						int color1 = cram[colorIndex1] << 8 | cram[colorIndex1 + 1];
-						int color2 = cram[colorIndex2] << 8 | cram[colorIndex2 + 1];
-						
-						int r = (color1 >> 1) & 0x7;
-						int g = (color1 >> 5) & 0x7;
-						int b = (color1 >> 9) & 0x7;
-						
-						int r2 = (color2 >> 1) & 0x7;
-						int g2 = (color2 >> 5) & 0x7;
-						int b2 = (color2 >> 9) & 0x7;
-						
-						int po = horTile * 8 + (k * 2);
-						int pu = vertTile * 8 + (filas);
-						
-						int theColor1 = getColour(r, g, b);
-						int theColor2 = getColour(r2, g2, b2);
-						
-						planeB[po][pu] = theColor1;
-						planeB[po + 1][pu] = theColor2;
-						
-						planePrioB[po][pu] = priority;
-						planePrioB[po + 1][pu] = priority;
-						
-						planeIndexColorB[po][pu] = pixel1;
-						planeIndexColorB[po + 1][pu] = pixel2;
-					}
-				}
-			}
-			if (horScrollSize == 0) {
-				tileLocator += 0;
-			} else if (horScrollSize == 1) {
-				tileLocator += 48;		// fuera del active view, 24 words o 48 bytes
+			int tileIndex = (nameTable & 0x07FF);	// cada tile ocupa 32 bytes
+			
+			boolean horFlip = bitTest(nameTable, 11);
+			boolean vertFlip = bitTest(nameTable, 12);
+			int paletteLineIndex = (nameTable >> 13) & 0x3;
+			boolean priority = bitTest(nameTable, 15);
+			
+			int paletteLine = paletteLineIndex * 32;	//	16 colores por linea, 2 bytes por color
+			
+			tileIndex *= 0x20;
+			
+			int filas = (line % 8);
+			
+			int pointVert;
+			if (vertFlip) {
+				pointVert = (filas - 7) * -1;
 			} else {
-				tileLocator += 176;
+				pointVert = filas;
+			}
+			for (int k = 0; k < 4; k++) {
+				int point;
+				if (horFlip) {
+					point = (k - 3) * -1;
+				} else {
+					point = k;
+				}
+				
+				int grab = (tileIndex + point) + (pointVert * 4);
+				int data = vram[grab];
+				
+				int pixel1, pixel2;
+				if (horFlip) {
+					pixel1 = data & 0x0F;
+					pixel2 = (data & 0xF0) >> 4;
+				} else {
+					pixel1 = (data & 0xF0) >> 4;
+					pixel2 = data & 0x0F;
+				}
+				
+				int colorIndex1 = paletteLine + (pixel1 * 2);
+				int colorIndex2 = paletteLine + (pixel2 * 2);
+				
+				int color1 = cram[colorIndex1] << 8 | cram[colorIndex1 + 1];
+				int color2 = cram[colorIndex2] << 8 | cram[colorIndex2 + 1];
+				
+				int r = (color1 >> 1) & 0x7;
+				int g = (color1 >> 5) & 0x7;
+				int b = (color1 >> 9) & 0x7;
+				
+				int r2 = (color2 >> 1) & 0x7;
+				int g2 = (color2 >> 5) & 0x7;
+				int b2 = (color2 >> 9) & 0x7;
+				
+				int po = horTile * 8 + (k * 2);
+				int pu = vertTile * 8 + (filas);
+				
+				int theColor1 = getColour(r, g, b);
+				int theColor2 = getColour(r2, g2, b2);
+				
+				planeB[po][line] = theColor1;
+				planeB[po + 1][line] = theColor2;
+				
+				planePrioB[po][line] = priority;
+				planePrioB[po + 1][line] = priority;
+				
+				planeIndexColorB[po][line] = pixel1;
+				planeIndexColorB[po + 1][line] = pixel2;
 			}
 		}
 	}
@@ -1342,20 +1360,37 @@ public class GenVdp {
 		
 	}
 	
+	public void initColorsCache() {
+		for (int r = 0; r < 8; r++) {
+			for (int g = 0; g < 8; g++) {
+				for (int b = 0; b < 8; b++) {
+					int red = r;
+					if (r != 0) {
+						red = ((r + 1) * 32) - 1;
+			        }
+					
+					int green = g;
+			        if (g != 0) {
+			        	green = ((g + 1) * 32) - 1;
+			        }
+			        
+			        int blue = b;
+			        if (b != 0) {
+			        	blue = ((b + 1) * 32) - 1;
+			        }
+			        
+			        int color = red << 16 | green << 8 | blue;
+			        
+					colorsCache[r][g][b] = color;
+				}
+			}
+		}
+	}
+	
 	private int getColour(int red, int green, int blue) {
-        if (red != 0) {
-        	red = ((red + 1) * 32) - 1;
-        }
-        if (green != 0) {
-        	green = ((green + 1) * 32) - 1;
-        }
-        if (blue != 0) {
-        	blue = ((blue + 1) * 32) - 1;
-        }
-        
-        int elco = red << 16 | green << 8 | blue;
-        
-        return elco;
+		int c = colorsCache[red][green][blue];
+		
+        return c;
 	}
 	
 	public boolean bitTest(long address, int position) {
@@ -1409,8 +1444,8 @@ public class GenVdp {
 		
 		long data = ((data1 << 8) | (data2));
 		
-		System.out.println("addr: " + Integer.toHexString(offset) + "-" + Integer.toHexString(offset + 1) + ": " + Integer.toHexString((int) data));
-		
+		System.out.println("addr: " + Integer.toHexString(offset) + "-" + Integer.toHexString(offset + 1) + ": "
+				+ Integer.toHexString((int) data));
 		
 //		fifoAddress[index] = offset;
 //		fifoCode[index] = code;
@@ -1448,8 +1483,8 @@ public class GenVdp {
 		
 		long data = ((data1 << 8) | (data2));
 		
-		System.out.println("addr: " + Integer.toHexString(offset) + "-" + Integer.toHexString(offset + 1) + ": " + Integer.toHexString((int) data));
-		
+		System.out.println("addr: " + Integer.toHexString(offset) + "-" + Integer.toHexString(offset + 1) + ": "
+				+ Integer.toHexString((int) data));
 		
 //		fifoAddress[index] = offset;
 //		fifoCode[index] = code;
