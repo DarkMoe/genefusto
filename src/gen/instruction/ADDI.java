@@ -134,8 +134,7 @@ public class ADDI implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 	
-		long data  = cpu.bus.read(cpu.PC + 2) << 8;
-			 data |= cpu.bus.read(cpu.PC + 3);
+		long data = cpu.bus.read(cpu.PC + 2, Size.WORD);
 		data = data & 0xFF;
 			 
 		cpu.PC += 2;
@@ -152,9 +151,8 @@ public class ADDI implements GenInstructionHandler {
 	private void ADDIWord(int opcode) {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
-
-		long data  = cpu.bus.read(cpu.PC + 2) << 8;
-		 	 data |= cpu.bus.read(cpu.PC + 3);
+		
+		long data = cpu.bus.read(cpu.PC + 2, Size.WORD);
 		
 	 	cpu.PC += 2;
 		
@@ -171,10 +169,7 @@ public class ADDI implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 
-		long data  = cpu.bus.read(cpu.PC + 2) << 24;
-		 	 data |= cpu.bus.read(cpu.PC + 3) << 16;
-		  	 data |= cpu.bus.read(cpu.PC + 4) << 8;
-		 	 data |= cpu.bus.read(cpu.PC + 5);
+		long data = cpu.bus.read(cpu.PC + 2, Size.LONG);
 		
 	 	cpu.PC += 4;
 		

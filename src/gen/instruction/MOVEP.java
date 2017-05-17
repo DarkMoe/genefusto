@@ -121,8 +121,7 @@ public class MOVEP implements GenInstructionHandler {
 		int addrReg = opcode & 0x7;
 		int dataReg = (opcode >> 9) & 0x7;
 		
-		long offset  = cpu.bus.read(cpu.PC + 2) << 8;
-			 offset |= cpu.bus.read(cpu.PC + 3);
+		long offset = cpu.bus.read(cpu.PC + 2, Size.WORD);
 		
 		cpu.PC += 2;
 
@@ -138,8 +137,7 @@ public class MOVEP implements GenInstructionHandler {
 		int addrReg = opcode & 0x7;
 		int dataReg = (opcode >> 9) & 0x7;
 		
-		long offset  = cpu.bus.read(cpu.PC + 2) << 8;
-			 offset |= cpu.bus.read(cpu.PC + 3);
+		long offset = cpu.bus.read(cpu.PC + 2, Size.WORD);
 		
 		cpu.PC += 2;
 

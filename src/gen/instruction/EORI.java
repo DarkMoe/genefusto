@@ -129,9 +129,8 @@ public class EORI implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 	
-		long toEor  = cpu.bus.read(cpu.PC + 2) << 8;
-			 toEor |= cpu.bus.read(cpu.PC + 3);
-		toEor = toEor & 0xFF;
+		long toEor = cpu.bus.read(cpu.PC + 2, Size.WORD);
+		toEor = toEor & 0xFF;	//	last byte
 		
 		cpu.PC += 2;
 		
@@ -150,8 +149,7 @@ public class EORI implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 	
-		long toEor  = cpu.bus.read(cpu.PC + 2) << 8;
-			 toEor |= cpu.bus.read(cpu.PC + 3);
+		long toEor = cpu.bus.read(cpu.PC + 2, Size.WORD);
 		
 		cpu.PC += 2;
 		
@@ -170,10 +168,7 @@ public class EORI implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 		
-		long toEor  = (cpu.bus.read(cpu.PC + 2)) << 24;
-			 toEor |= (cpu.bus.read(cpu.PC + 3)) << 16;
-			 toEor |= (cpu.bus.read(cpu.PC + 4)) << 8;
-			 toEor |= (cpu.bus.read(cpu.PC + 5));
+		long toEor = cpu.bus.read(cpu.PC + 2, Size.LONG);
 		
 		cpu.PC += 4;
 	 	 	

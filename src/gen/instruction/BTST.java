@@ -224,8 +224,7 @@ public class BTST implements GenInstructionHandler {
 		int destReg = (opcode & 0x7);
 		int destMode = (opcode >> 3) & 0x7;
 		
-		long numberBit = (cpu.bus.read(cpu.PC + 2)) << 8;
-		numberBit |= cpu.bus.read(cpu.PC + 3);
+		long numberBit = cpu.bus.read(cpu.PC + 2, Size.WORD);
 		numberBit = numberBit & 0xFF;
 		
 		cpu.PC += 2;
@@ -240,8 +239,7 @@ public class BTST implements GenInstructionHandler {
 		int destReg = (opcode & 0x7);
 		int destMode = (opcode >> 3) & 0x7;
 		
-		long numberBit = (cpu.bus.read(cpu.PC + 2)) << 8;
-		numberBit |= cpu.bus.read(cpu.PC + 3);
+		long numberBit = cpu.bus.read(cpu.PC + 2, Size.WORD);
 		numberBit = numberBit & 0xFF;
 		
 		cpu.PC += 2;

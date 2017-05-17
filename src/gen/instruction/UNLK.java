@@ -64,11 +64,7 @@ public class UNLK implements GenInstructionHandler {
 		
 		long addr = cpu.getA(register);
 
-		long fromSP = 0;
-		fromSP |= (cpu.bus.read(addr) << 24);
-		fromSP |= (cpu.bus.read(addr + 1) << 16);
-		fromSP |= (cpu.bus.read(addr + 2) << 8);
-		fromSP |= (cpu.bus.read(addr + 3));
+		long fromSP = cpu.bus.read(addr, Size.LONG);
 		
 		cpu.setALong(register, fromSP);
 		

@@ -572,13 +572,19 @@ public class GenVdp {
 
 			//TODO el pipe
 			
-			int data1 = (int) bus.read(sourceTrue);
-			int data2 = (int) bus.read(sourceTrue + 1);
+//			int data1 = (int) bus.read(sourceTrue);
+//			int data2 = (int) bus.read(sourceTrue + 1);
+			
+			int dataWord = (int) bus.read(sourceTrue, Size.WORD);
+			int data1 = dataWord >> 8;
+			int data2 = dataWord & 0xFF;
 			
 			if (destAddr % 2 == 1) {
 				System.out.println("IMPAR !");
 			}
-			
+			if (destAddr > 0xFFFF) {
+				return;
+			}
 			if (vramWrite) {
 				writeVramByte(destAddr, data1);
 				writeVramByte(destAddr + 1, data2);
@@ -1249,46 +1255,57 @@ public class GenVdp {
 					point = k;
 				}
 				
-				int grab = (tileIndex + point) + (pointVert * 4);
-				int data = vram[grab];
-				
-				int pixel1, pixel2;
-				if (horFlip) {
-					pixel1 = data & 0x0F;
-					pixel2 = (data & 0xF0) >> 4;
-				} else {
-					pixel1 = (data & 0xF0) >> 4;
-					pixel2 = data & 0x0F;
-				}
-				
-				int colorIndex1 = paletteLine + (pixel1 * 2);
-				int colorIndex2 = paletteLine + (pixel2 * 2);
-				
-				int color1 = cram[colorIndex1] << 8 | cram[colorIndex1 + 1];
-				int color2 = cram[colorIndex2] << 8 | cram[colorIndex2 + 1];
-				
-				int r = (color1 >> 1) & 0x7;
-				int g = (color1 >> 5) & 0x7;
-				int b = (color1 >> 9) & 0x7;
-				
-				int r2 = (color2 >> 1) & 0x7;
-				int g2 = (color2 >> 5) & 0x7;
-				int b2 = (color2 >> 9) & 0x7;
-				
 				int po = horTile * 8 + (k * 2);
 				int pu = vertTile * 8 + (filas);
 				
-				int theColor1 = getColour(r, g, b);
-				int theColor2 = getColour(r2, g2, b2);
-				
-				planeA[po][line] = theColor1;
-				planeA[po + 1][line] = theColor2;
-				
-				planePrioA[po][line] = priority;
-				planePrioA[po + 1][line] = priority;
-				
-				planeIndexColorA[po][line] = pixel1;
-				planeIndexColorA[po + 1][line] = pixel2;
+				if (!disp) {
+					planeA[po][line] = 0;
+					planeA[po + 1][line] = 0;
+					
+					planePrioA[po][line] = false;
+					planePrioA[po + 1][line] = false;
+					
+					planeIndexColorA[po][line] = 0;
+					planeIndexColorA[po + 1][line] = 0;
+				} else {
+					int grab = (tileIndex + point) + (pointVert * 4);
+					int data = vram[grab];
+					
+					int pixel1, pixel2;
+					if (horFlip) {
+						pixel1 = data & 0x0F;
+						pixel2 = (data & 0xF0) >> 4;
+					} else {
+						pixel1 = (data & 0xF0) >> 4;
+						pixel2 = data & 0x0F;
+					}
+					
+					int colorIndex1 = paletteLine + (pixel1 * 2);
+					int colorIndex2 = paletteLine + (pixel2 * 2);
+					
+					int color1 = cram[colorIndex1] << 8 | cram[colorIndex1 + 1];
+					int color2 = cram[colorIndex2] << 8 | cram[colorIndex2 + 1];
+					
+					int r = (color1 >> 1) & 0x7;
+					int g = (color1 >> 5) & 0x7;
+					int b = (color1 >> 9) & 0x7;
+					
+					int r2 = (color2 >> 1) & 0x7;
+					int g2 = (color2 >> 5) & 0x7;
+					int b2 = (color2 >> 9) & 0x7;
+					
+					int theColor1 = getColour(r, g, b);
+					int theColor2 = getColour(r2, g2, b2);
+					
+					planeA[po][line] = theColor1;
+					planeA[po + 1][line] = theColor2;
+					
+					planePrioA[po][line] = priority;
+					planePrioA[po + 1][line] = priority;
+					
+					planeIndexColorA[po][line] = pixel1;
+					planeIndexColorA[po + 1][line] = pixel2;
+				}
 			}
 		}
 	}
@@ -1368,46 +1385,57 @@ public class GenVdp {
 					point = k;
 				}
 				
-				int grab = (tileIndex + point) + (pointVert * 4);
-				int data = vram[grab];
-				
-				int pixel1, pixel2;
-				if (horFlip) {
-					pixel1 = data & 0x0F;
-					pixel2 = (data & 0xF0) >> 4;
-				} else {
-					pixel1 = (data & 0xF0) >> 4;
-					pixel2 = data & 0x0F;
-				}
-				
-				int colorIndex1 = paletteLine + (pixel1 * 2);
-				int colorIndex2 = paletteLine + (pixel2 * 2);
-				
-				int color1 = cram[colorIndex1] << 8 | cram[colorIndex1 + 1];
-				int color2 = cram[colorIndex2] << 8 | cram[colorIndex2 + 1];
-				
-				int r = (color1 >> 1) & 0x7;
-				int g = (color1 >> 5) & 0x7;
-				int b = (color1 >> 9) & 0x7;
-				
-				int r2 = (color2 >> 1) & 0x7;
-				int g2 = (color2 >> 5) & 0x7;
-				int b2 = (color2 >> 9) & 0x7;
-				
 				int po = horTile * 8 + (k * 2);
 				int pu = vertTile * 8 + (filas);
 				
-				int theColor1 = getColour(r, g, b);
-				int theColor2 = getColour(r2, g2, b2);
-				
-				planeB[po][line] = theColor1;
-				planeB[po + 1][line] = theColor2;
-				
-				planePrioB[po][line] = priority;
-				planePrioB[po + 1][line] = priority;
-				
-				planeIndexColorB[po][line] = pixel1;
-				planeIndexColorB[po + 1][line] = pixel2;
+				if (!disp) {
+					planeB[po][line] = 0;
+					planeB[po + 1][line] = 0;
+					
+					planePrioB[po][line] = false;
+					planePrioB[po + 1][line] = false;
+					
+					planeIndexColorB[po][line] = 0;
+					planeIndexColorB[po + 1][line] = 0;
+				} else {
+					int grab = (tileIndex + point) + (pointVert * 4);
+					int data = vram[grab];
+					
+					int pixel1, pixel2;
+					if (horFlip) {
+						pixel1 = data & 0x0F;
+						pixel2 = (data & 0xF0) >> 4;
+					} else {
+						pixel1 = (data & 0xF0) >> 4;
+						pixel2 = data & 0x0F;
+					}
+					
+					int colorIndex1 = paletteLine + (pixel1 * 2);
+					int colorIndex2 = paletteLine + (pixel2 * 2);
+					
+					int color1 = cram[colorIndex1] << 8 | cram[colorIndex1 + 1];
+					int color2 = cram[colorIndex2] << 8 | cram[colorIndex2 + 1];
+					
+					int r = (color1 >> 1) & 0x7;
+					int g = (color1 >> 5) & 0x7;
+					int b = (color1 >> 9) & 0x7;
+					
+					int r2 = (color2 >> 1) & 0x7;
+					int g2 = (color2 >> 5) & 0x7;
+					int b2 = (color2 >> 9) & 0x7;
+					
+					int theColor1 = getColour(r, g, b);
+					int theColor2 = getColour(r2, g2, b2);
+					
+					planeB[po][line] = theColor1;
+					planeB[po + 1][line] = theColor2;
+					
+					planePrioB[po][line] = priority;
+					planePrioB[po + 1][line] = priority;
+					
+					planeIndexColorB[po][line] = pixel1;
+					planeIndexColorB[po + 1][line] = pixel2;
+				}
 			}
 		}
 	}
@@ -1494,46 +1522,57 @@ public class GenVdp {
 							point = k;
 						}
 						
-						int grab = (tileIndex + point) + (pointVert * 4);
-						int data = vram[grab];
-						
-						int pixel1, pixel2;
-						if (horFlip) {
-							pixel1 = data & 0x0F;
-							pixel2 = (data & 0xF0) >> 4;
-						} else {
-							pixel1 = (data & 0xF0) >> 4;
-							pixel2 = data & 0x0F;
-						}
-						
-						int colorIndex1 = paletteLine + (pixel1 * 2);
-						int colorIndex2 = paletteLine + (pixel2 * 2);
-						
-						int color1 = cram[colorIndex1] << 8 | cram[colorIndex1 + 1];
-						int color2 = cram[colorIndex2] << 8 | cram[colorIndex2 + 1];
-						
-						int r = (color1 >> 1) & 0x7;
-						int g = (color1 >> 5) & 0x7;
-						int b = (color1 >> 9) & 0x7;
-						
-						int r2 = (color2 >> 1) & 0x7;
-						int g2 = (color2 >> 5) & 0x7;
-						int b2 = (color2 >> 9) & 0x7;
-						
 						int po = horTile * 8 + (k * 2);
 						int pu = vertTile * 8 + (filas);
 						
-						int theColor1 = getColour(r, g, b);
-						int theColor2 = getColour(r2, g2, b2);
-						
-						window[po][line] = theColor1;
-						window[po + 1][line] = theColor2;
-						
-						windowPrio[po][line] = priority;
-						windowPrio[po + 1][line] = priority;
-						
-						windowIndex[po][line] = pixel1;
-						windowIndex[po + 1][line] = pixel2;
+						if (!disp) {
+							window[po][line] = 0;
+							window[po + 1][line] = 0;
+							
+							windowPrio[po][line] = false;
+							windowPrio[po + 1][line] = false;
+							
+							windowIndex[po][line] = 0;
+							windowIndex[po + 1][line] = 0;
+						} else {
+							int grab = (tileIndex + point) + (pointVert * 4);
+							int data = vram[grab];
+							
+							int pixel1, pixel2;
+							if (horFlip) {
+								pixel1 = data & 0x0F;
+								pixel2 = (data & 0xF0) >> 4;
+							} else {
+								pixel1 = (data & 0xF0) >> 4;
+								pixel2 = data & 0x0F;
+							}
+							
+							int colorIndex1 = paletteLine + (pixel1 * 2);
+							int colorIndex2 = paletteLine + (pixel2 * 2);
+							
+							int color1 = cram[colorIndex1] << 8 | cram[colorIndex1 + 1];
+							int color2 = cram[colorIndex2] << 8 | cram[colorIndex2 + 1];
+							
+							int r = (color1 >> 1) & 0x7;
+							int g = (color1 >> 5) & 0x7;
+							int b = (color1 >> 9) & 0x7;
+							
+							int r2 = (color2 >> 1) & 0x7;
+							int g2 = (color2 >> 5) & 0x7;
+							int b2 = (color2 >> 9) & 0x7;
+							
+							int theColor1 = getColour(r, g, b);
+							int theColor2 = getColour(r2, g2, b2);
+							
+							window[po][line] = theColor1;
+							window[po + 1][line] = theColor2;
+							
+							windowPrio[po][line] = priority;
+							windowPrio[po + 1][line] = priority;
+							
+							windowIndex[po][line] = pixel1;
+							windowIndex[po + 1][line] = pixel2;
+						}
 					}
 				}
 			}
@@ -1592,14 +1631,13 @@ public class GenVdp {
 		}
     }
 
-    // FIXME tiene q llegarle el tama;o aca !!!!
-	public long readDataPort(boolean incrementAddr) {
+	public long readDataPort(Size size) {
 		if (vramRead) {
-			long data = readVram(incrementAddr);
+			long data = readVram(size);
 			return data;
 			
 		} else if (cramRead) {
-			long data = readCram(incrementAddr);
+			long data = readCram(size);
 			return data;
 			
 		} else {
@@ -1607,7 +1645,7 @@ public class GenVdp {
 		}
 	}
 
-	private long readVram(boolean incrementAddr) {
+	private long readVram(Size size) {
 		int index = nextFIFOReadEntry;
 		int address = addressPort;
 		
@@ -1631,10 +1669,10 @@ public class GenVdp {
 //		fifoCode[index] = code;
 //		fifoData[index] = word;
 		
-		if (incrementAddr) {
+//		if (incrementAddr) {
 			int incrementOffset = autoIncrementTotal + autoIncrementData;
 			autoIncrementTotal = incrementOffset;
-		}
+//		}
 
 		return data;
 		
@@ -1646,7 +1684,7 @@ public class GenVdp {
 //		nextFIFOWriteEntry = index;
 	}
 	
-	private long readCram(boolean incrementAddr) {
+	private long readCram(Size size) {
 		int index = nextFIFOReadEntry;
 		int address = addressPort;
 		
@@ -1670,10 +1708,10 @@ public class GenVdp {
 //		fifoCode[index] = code;
 //		fifoData[index] = word;
 		
-		if (incrementAddr) {
+//		if (incrementAddr) {
 			int incrementOffset = autoIncrementTotal + autoIncrementData;
 			autoIncrementTotal = incrementOffset;
-		}
+//		}
 
 		return data;
 		

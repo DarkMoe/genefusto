@@ -2,6 +2,7 @@ package gen.instruction;
 
 import gen.Gen68;
 import gen.GenInstruction;
+import gen.Size;
 
 public class ORI_SR implements GenInstructionHandler {
 
@@ -56,8 +57,7 @@ public class ORI_SR implements GenInstructionHandler {
 	}
 	
 	private void ORISR(int opcode) {
-		long toOr  = (cpu.bus.read(cpu.PC + 2)) << 8;
-		 	 toOr |= (cpu.bus.read(cpu.PC + 3));
+		long toOr = cpu.bus.read(cpu.PC + 2, Size.WORD);
 		
 	 	cpu.PC += 2;
 		 	 

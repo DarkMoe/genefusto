@@ -98,8 +98,7 @@ public class LINK implements GenInstructionHandler {
 	private void LINKWord(int opcode) {
 		int register = opcode & 0x7;
 		
-		long offset  = cpu.bus.read(cpu.PC + 2) << 8;
-			 offset |= cpu.bus.read(cpu.PC + 3);
+		long offset = cpu.bus.read(cpu.PC + 2, Size.WORD);
 		
 		cpu.PC += 2;
 			 
@@ -155,7 +154,6 @@ public class LINK implements GenInstructionHandler {
 			cpu.setALong(7, newUSP);
 
 		}
-		
 	}
 
 }

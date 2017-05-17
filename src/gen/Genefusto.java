@@ -98,6 +98,7 @@ import gen.instruction.RTE;
 import gen.instruction.RTR;
 import gen.instruction.RTS;
 import gen.instruction.SBCD;
+import gen.instruction.STOP;
 import gen.instruction.SUB;
 import gen.instruction.SUBA;
 import gen.instruction.SUBI;
@@ -230,6 +231,7 @@ public class Genefusto {
         new RTS(cpu).generate();
         new SBCD(cpu).generate();
         new Scc(cpu).generate();
+        new STOP(cpu).generate();
         new SUB(cpu).generate();
         new SUBA(cpu).generate();
         new SUBI(cpu).generate();
@@ -421,12 +423,12 @@ public class Genefusto {
         fileChooser.setFileFilter(new FileFilter() {
             @Override
             public String getDescription() {
-                return "md files";
+                return "md and bin files";
             }
             @Override
             public boolean accept(File f) {
                 String name = f.getName().toLowerCase();
-                return f.isDirectory() || name.endsWith(".md");
+                return f.isDirectory() || name.endsWith(".md") || name.endsWith(".bin");
             }
         });
         fileChooser.setCurrentDirectory(new File(basePath));
@@ -462,7 +464,8 @@ public class Genefusto {
         public void run() {
             if (file.getName().toLowerCase().endsWith(".zip")) {
 //                memory.cartridgeMemory = GBFileLoader.readZipFile(file);
-            } else if (file.getName().toLowerCase().endsWith(".md")) {
+            } else if (file.getName().toLowerCase().endsWith(".md")
+            		|| file.getName().toLowerCase().endsWith(".bin")) {
                 memory.cartridge = FileLoader.readFile(file);
             }
         
@@ -487,7 +490,9 @@ public class Genefusto {
     				z80.PC = (z80.PC + 1) & 0xFFFF;
             		z80.executeInstruction(opcode);
             	}
-            	cpu.runInstruction();
+            	if (!cpu.stop) {
+            		cpu.runInstruction();
+            	}
             	bus.checkInterrupts();
             	vdp.run(36);
             	vdp.dmaFill();

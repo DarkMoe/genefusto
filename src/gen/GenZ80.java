@@ -5727,6 +5727,12 @@ public class GenZ80 {
 //			System.out.println("YM2612 D1");
 //			return YMD1;
 			return 0;
+		} else if (address == 0x6000) {		//	BankSwitching
+			return 0xFF;	// confirmar que devuelve
+			
+		} else if (address >= 0x6001 && address <= 0x7F10) {	//	Reserved
+			return 0;
+			
 		} else if (address >= 0x8000 && address <= 0xFFFF) {		//	8000h	FFFFh	M68k memory bank
 			System.out.println("LECTURA 68k !!!!!!");
 			return 0; //bus.read(address)	FIXME implementar lectura desde 68k

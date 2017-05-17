@@ -102,8 +102,7 @@ public class BCC implements GenInstructionHandler {
 		
 		boolean taken = cpu.evaluateBranchCondition(cc, Size.WORD);
 
-		long offset  = cpu.bus.read(cpu.PC + 2) << 8;
-			 offset |= cpu.bus.read(cpu.PC + 3);
+		long offset = cpu.bus.read(cpu.PC + 2, Size.WORD);
 		
 		if ((offset & 0x8000) == 0x8000) {
 			offset |= 0xFFFF_0000;

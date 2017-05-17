@@ -2,6 +2,7 @@ package gen.instruction;
 
 import gen.Gen68;
 import gen.GenInstruction;
+import gen.Size;
 
 public class RTE implements GenInstructionHandler {
 
@@ -47,22 +48,14 @@ public class RTE implements GenInstructionHandler {
 	}
 	
 	private void RTEpc(int opcode) {
-		long SR = cpu.bus.read(cpu.SSP) << 8;
-		cpu.SSP++;
-		SR |= cpu.bus.read(cpu.SSP);
-		cpu.SSP++;
+		long SR = cpu.bus.read(cpu.SSP, Size.WORD);
+		cpu.SSP += 2;
 		
 		cpu.SR = (int) SR;
 		
 		long newPC;
-		newPC = cpu.bus.read(cpu.SSP) << 24;
-		cpu.SSP++;
-		newPC |= cpu.bus.read(cpu.SSP) << 16;
-		cpu.SSP++;
-		newPC |= cpu.bus.read(cpu.SSP) << 8;
-		cpu.SSP++;
-		newPC |= cpu.bus.read(cpu.SSP);
-		cpu.SSP++;
+		newPC = cpu.bus.read(cpu.SSP, Size.LONG);
+		cpu.SSP += 4;
 		
 		cpu.PC = newPC - 2;
 		

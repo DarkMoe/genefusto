@@ -61,6 +61,8 @@ public class Gen68 {
 //level 7 |  1    1    1 |  ---------> highest priority
 	public int SR;
 	
+	public boolean stop = false;
+	
 	public GenBus bus;
 	
 	Gen68(GenBus bus) {
@@ -76,8 +78,7 @@ public class Gen68 {
 	public boolean print;
 
 	public int runInstruction() {
-		long opcode  = bus.read(PC) << 8;
-			 opcode |= bus.read(PC + 1);
+		long opcode = bus.read(PC, Size.WORD);
 		
 		sb.append(pad4((int) PC) + " - Opcode: " + pad4((int) opcode) + " - SR: " + pad4(SR) + " - SSP: "
 				+ pad4((int) SSP) + " - USP: " + pad4((int) USP) + "\r\n");
@@ -107,8 +108,8 @@ public class Gen68 {
 //			System.out.println();
 		}
 		
-		if (PC == 0xfdab2) {
-			print = true;
+		if (PC == 0x3aa) {
+//			print = true;
 		}
 		
 		GenInstruction instruction = getInstruction((int) opcode);
@@ -270,18 +271,12 @@ public class Gen68 {
     
 	public void initialize() {
 		//	the processor fetches an initial stack pointer from locations $000000-$000003
-		SSP |= (bus.read(0) << 24);
-		SSP |= (bus.read(1) << 16);
-		SSP |= (bus.read(2) << 8);
-		SSP |= (bus.read(3) << 0);
+		SSP = bus.read(0, Size.LONG);
 		
 		USP = 0xFFFF_FFFFL;
 
 		//	initial PC specified by locations $000004-$000007
-		PC |= (bus.read(4) << 24);
-		PC |= (bus.read(5) << 16);
-		PC |= (bus.read(6) << 8);
-		PC |= (bus.read(7) << 0);
+		PC = bus.read(4, Size.LONG);
 		
 		for (int i = 0; i < A.length; i++) {
 			A[i] = 0xFFFF_FFFFL;
@@ -310,7 +305,7 @@ public class Gen68 {
 			} else if (size == Size.WORD) {		//	word
 				data = D[register] & 0xFFFF;
 			} else if (size == Size.LONG) {		//	long
-				data = D[register];
+				data = D[register] & 0xFFFF_FFFFL;
 			}
 			
 		} else if (mode == 0b001) {		//	An		Address Register Direct Mode 
@@ -319,7 +314,7 @@ public class Gen68 {
 			} else if (size == Size.WORD) {		//	word
 				data = getA(register) & 0xFFFF;
 			} else if (size == Size.LONG) {		//	long
-				data = getA(register);
+				data = getA(register) & 0xFFFF_FFFFL;
 			}
 			
 		} else if (mode == 0b010) {				//	(An)	Address Register Indirect Mode
@@ -332,7 +327,6 @@ public class Gen68 {
 			oper.setAddress(addr);
 			
 			if (size == Size.BYTE) {	//	byte
-//				data = bus.read(addr);
 				if (register == 7) {	// stack pointer siempre alineado de a 2
 					addr += 2;
 				} else {
@@ -341,17 +335,10 @@ public class Gen68 {
 				setALong(register, addr);
 				
 			} else if (size == Size.WORD) {	//	word
-//				data  = (bus.read(addr)     << 8);
-//				data |= (bus.read(addr + 1) << 0);
-
 				addr += 2;
 				setALong(register, addr);
 				
 			} else if (size == Size.LONG) {	//	long
-//				data  = (bus.read(addr)     << 24);
-//				data |= (bus.read(addr + 1) << 16);
-//				data |= (bus.read(addr + 2) << 8);
-//				data |= (bus.read(addr + 3) << 0);
 				addr += 4;
 				setALong(register, addr);
 				
@@ -372,17 +359,9 @@ public class Gen68 {
 				addr -= 2;
 				setALong(register, addr);
 				
-//				data  = (bus.read(addr)     << 8);
-//				data |= (bus.read(addr + 1) << 0);
-				
 			} else if (size == Size.LONG) {	//	long
 				addr -= 4;
 				setALong(register, addr);
-				
-//				data  = (bus.read(addr)     << 24);
-//				data |= (bus.read(addr + 1) << 16);
-//				data |= (bus.read(addr + 2) << 8);
-//				data |= (bus.read(addr + 3) << 0);
 				
 			}
 			
@@ -390,24 +369,23 @@ public class Gen68 {
 			
 		} else if (mode == 0b101) {	//	(d16,An)	Address with Displacement
 			long base = A[register] & 0xFFFF_FFFFL;
-			long displac = bus.read(PC + 2) << 8;
-			displac |= bus.read(PC + 3);
+			long displac = bus.read(PC + 2, Size.WORD);
+			
+			PC += 2;
 			
 			long displacement = (long) displac;
 			if ((displacement & 0x8000) > 0) {
 				displacement |= 0xFFFF_0000L;	// sign extend 32 bits
 			}
 			addr = (int) (base + displacement);	// TODO verificar esto, al pasarlo a int hace el wrap bien parece
-//			data = bus.read(addr);
 			
 			oper.setAddress(addr);
 			
-			PC += 2;
-			
 		} else if (mode == 0b110) {	//	AddressRegisterWithIndex
-			long exten  = (bus.read(PC + 2) << 8);
-		     	 exten |= (bus.read(PC + 3));
+			long exten = bus.read(PC + 2, Size.WORD);
 			int displacement = (int) (exten & 0xFF);		// es 8 bits, siempre el ultimo byte ?
+			
+			PC += 2;
 			
 			if ((displacement & 0x80) > 0) { 	// sign extend
 				displacement = 0xFFFF_FF00 | displacement;
@@ -439,24 +417,12 @@ public class Gen68 {
 			long result = getA(register) + displacement + data;
 			oper.setAddress(result);
 			
-			PC += 2;
-			
 		} else if (mode == 0b111) {
 			if (register == 0b000) {		//	Abs.W
-				addr  = (bus.read(offset) << 8);
-				addr |= (bus.read(offset + 1) << 0);
+				addr = bus.read(offset, Size.WORD);
 			
 				if ((addr & 0x8000) > 0) {
 					addr |= 0xFFFF_0000L;
-				}
-				
-				if (size == Size.BYTE) {
-//					data = bus.read(addr);
-				} else if (size == Size.WORD) {
-//					data = (bus.read(addr) << 8);
-//					data |= bus.read(addr + 1);
-				} else {
-//					throw new RuntimeException("AA");
 				}
 				
 				oper.setAddress(addr);
@@ -464,12 +430,8 @@ public class Gen68 {
 				PC += 2;
 				
 			} else if (register == 0b001) {		//	Abs.L
-				addr  = (bus.read(offset) << 24);
-				addr |= (bus.read(offset + 1) << 16);
-				addr |= (bus.read(offset + 2) << 8);		
-				addr |= (bus.read(offset + 3));
-//				data = (bus.read(addr));
-				
+				addr  = bus.read(offset, Size.LONG);
+
 				oper.setAddress(addr);
 				
 				PC += 4;
@@ -477,8 +439,7 @@ public class Gen68 {
 				cycles = 10;
 				
 			} else if (register == 0b010) {		//	 (d16,PC)	Program Counter Indirect with Displacement Mode
-				long displacement = (bus.read(PC + 2) << 8);
-				displacement 	 |= (bus.read(PC + 3));
+				long displacement = bus.read(PC + 2, Size.WORD);
 				
 				if ((displacement & 0x8000) > 0) {
 					displacement = -displacement;
@@ -490,12 +451,12 @@ public class Gen68 {
 				oper.setAddress(addr);
 				
 				PC += 2;
-				// TODO check otros sizes
 
 			} else if (register == 0b011) {		 //	(d8,PC,Xi)		PC With index operand
-				long exten  = (bus.read(PC + 2) << 8);
-				     exten |= (bus.read(PC + 3));
+				long exten = bus.read(PC + 2, Size.WORD);
 				int displacement = (int) (exten & 0xFF);		// es 8 bits, siempre el ultimo byte ?
+				
+				PC += 2;
 				
 				if ((displacement & 0x80) > 0) { 	// sign extend
 					displacement = 0xFFFF_FF00 | displacement;
@@ -524,34 +485,20 @@ public class Gen68 {
 					}
 				}
 				
-				long result = PC + 2 + displacement + data;
+				long result = PC + displacement + data;
 				oper.setAddress(result);
-				
-				PC += 2;
 				
 			} else if (register == 0b100) {		//	#data
 				
 				oper.setAddress(PC + 2);
 				
 				if (size == Size.BYTE) {		//	aunque sea byte, siempre ocupa 2 bytes y cuenta el de la derecha
-//					data  = (bus.read(PC + 2) << 8);
-//					data |= (bus.read(PC + 3) << 0);
-					
-//					data = data & 0xFF;
-					
 					PC += 2;
-				} else if (size == Size.WORD) {
-//					data  = (bus.read(PC + 2) << 8);
-//					data |= (bus.read(PC + 3) << 0);
 					
+				} else if (size == Size.WORD) {
 					PC += 2;
 					
 				} else if (size == Size.LONG) {	// long
-//					data  = (bus.read(PC + 2) << 24);
-//					data |= (bus.read(PC + 3) << 16);
-//					data |= (bus.read(PC + 4) << 8);
-//					data |= (bus.read(PC + 5));
-					
 					PC += 4;
 					
 				}
@@ -562,8 +509,6 @@ public class Gen68 {
 		} else {
 			throw new RuntimeException("Addressing no soportado: " + mode);
 		}
-		
-//		oper.setData(data);
 		
 		return oper;
 	}

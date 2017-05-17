@@ -13,6 +13,8 @@ public class GenBus {
 	GenJoypad joypad;
 	Gen68 cpu;
 	
+	boolean writeSram;
+	
 	GenBus(Genefusto emu, GenMemory memory, GenVdp vdp, GenZ80 z80, GenJoypad joypad, Gen68 cpu) {
 		this.emu = emu;
 		this.memory = memory;
@@ -22,11 +24,20 @@ public class GenBus {
 		this.cpu = cpu;
 	}
 	
-	public long read(long address) {
+	public long read(long address, Size size) {
 		address = address & 0xFFFFFF;	// el memory map llega hasta ahi
 		long data;
 		if (address <= 0x3FFFFF) {
-			data = memory.readCartridge(address);
+			if (size == Size.BYTE) {
+				data = memory.readCartridgeByte(address);
+				
+			} else if (size == Size.WORD) {
+				data = memory.readCartridgeWord(address);
+				
+			} else {
+				data  = memory.readCartridgeWord(address) << 16;
+				data |= memory.readCartridgeWord(address + 2);
+			}
 			return data;
 			
 		} else if (address >= 0xA00000 && address <= 0xA0FFFF) {	//	Z80 addressing space
@@ -68,24 +79,63 @@ public class GenBus {
 //			return 0;	//	FIXME hacer esto bien
 		
 		} else if (address == 0xC00000 || address == 0xC00002) {	// VDP Data
-			return (vdp.readDataPort(false) >> 8);
+			if (size == Size.BYTE) {
+				return (vdp.readDataPort(size) >> 8);
+			} else if (size == Size.WORD) {
+				return (vdp.readDataPort(size));
+			} else {
+				data  = vdp.readDataPort(size) << 16;
+				data |= vdp.readDataPort(size);
+			}
 
 		} else if (address == 0xC00001 || address == 0xC00003) {	// VDP Data
-			return (vdp.readDataPort(true) & 0xFF);
+			return (vdp.readDataPort(size) & 0xFF);
 			
 		} else if (address == 0xC00004 || address == 0xC00006) {	// VDP Control
-			return (vdp.readControl() >> 8);
+			data = vdp.readControl(); 
+			if (size == Size.WORD) {
+				return data;
+			} else if (size == Size.BYTE) {
+				return data >> 8;
+			} else {
+				throw new RuntimeException();
+			}
 
 		} else if (address == 0xC00005 || address == 0xC00007) {
-			return (vdp.readControl() & 0xFF);
+			data = vdp.readControl(); 
+			if (size == Size.BYTE) {
+				return data & 0xFF;
+			} else {
+				throw new RuntimeException("");
+			}
 			
 		} else if (address == 0xC00008 || address == 0xC00009) {
 			int v = vdp.line;
 			int h = new Random().nextInt(256);
-			return (v << 8) | h;	//	VDP HV counter
+			if (size == Size.WORD) {
+				return (v << 8) | h;	//	VDP HV counter
+			} else if (size == Size.BYTE) {
+				if (address == 0xC00008) {
+					return v;
+				} else {
+					return h;
+				}
+			}
 			
 		} else if (address >= 0xFF0000) {
-			return memory.readRam(address);
+			if (size == Size.BYTE) {
+				return memory.readRam(address);
+			} else if (size == Size.WORD) {
+				data  = memory.readRam(address) << 8;
+				data |= memory.readRam(address + 1);
+				return data;
+			} else {
+				data  = memory.readRam(address) << 24;
+				data |= memory.readRam(address + 1) << 16;
+				data |= memory.readRam(address + 2) << 8;
+				data |= memory.readRam(address + 3);
+				return data;
+			}
 			
 		} else {
 			System.out.println("NOT MAPPED: " + pad4(address) + " - " + pad4(cpu.PC));
@@ -180,6 +230,14 @@ public class GenBus {
 				}
 			}
 			
+		} else if (addressL == 0xA130F1) {	//	Sonic 3 will write to this register to enable and disable writing to its save game memory
+			System.out.println("SRAM Register enable: " + Integer.toHexString((int) data));
+			if (data == 0) {
+				writeSram = false;
+			} else {
+				writeSram = true;
+			}
+			
 		} else if (addressL == 0xC00000 || addressL == 0xC00001
 				|| addressL == 0xC00002 || addressL == 0xC00003) {	// word / long word
 			vdp.writeDataPort((int) data);
@@ -206,7 +264,8 @@ public class GenBus {
 			}
 			
 		} else {
-			throw new RuntimeException("WRITE NOT SUPPORTED ! " + Integer.toHexString((int) address) + " - PC: " + Integer.toHexString((int) cpu.PC));
+			System.out.println("WRITE NOT SUPPORTED ! " + Integer.toHexString((int) address) + " - PC: " + Integer.toHexString((int) cpu.PC));
+//			throw new RuntimeException("WRITE NOT SUPPORTED ! " + Integer.toHexString((int) address) + " - PC: " + Integer.toHexString((int) cpu.PC));
 		}
 	}
 	
@@ -275,10 +334,8 @@ public class GenBus {
 	}
 
 	public long readInterruptVector(long vector) {
-		long address  = memory.readCartridge(vector) << 24;
-			 address |= memory.readCartridge(vector + 1) << 16;
-			 address |= memory.readCartridge(vector + 2) << 8;
-			 address |= memory.readCartridge(vector + 3) << 0;
+		long address  = memory.readCartridgeWord(vector) << 16;
+			 address |= memory.readCartridgeWord(vector + 2);
 		return address;
 	}
 	

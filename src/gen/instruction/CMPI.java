@@ -122,9 +122,8 @@ public class CMPI implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 
-		long data  = cpu.bus.read(cpu.PC + 2) << 8;
-		  	 data |= cpu.bus.read(cpu.PC + 3);
-		data = data & 0xFF;
+		long data = cpu.bus.read(cpu.PC + 2, Size.WORD);
+		data = data & 0xFF;	//	ultimo byte
 		
 		cpu.PC += 2;
 		
@@ -140,8 +139,7 @@ public class CMPI implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 
-		long data  = cpu.bus.read(cpu.PC + 2) << 8;
-			 data |= cpu.bus.read(cpu.PC + 3);
+		long data = cpu.bus.read(cpu.PC + 2, Size.WORD);
 		
 		cpu.PC += 2;
 		
@@ -157,10 +155,7 @@ public class CMPI implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 
-		long data  = cpu.bus.read(cpu.PC + 2) << 24;
-  			 data |= cpu.bus.read(cpu.PC + 3) << 16;
-  			 data |= cpu.bus.read(cpu.PC + 4) << 8;
-  			 data |= cpu.bus.read(cpu.PC + 5);
+		long data = cpu.bus.read(cpu.PC + 2, Size.LONG);
 		
 		cpu.PC += 4;
 		

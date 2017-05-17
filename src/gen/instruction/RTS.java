@@ -2,6 +2,7 @@ package gen.instruction;
 
 import gen.Gen68;
 import gen.GenInstruction;
+import gen.Size;
 
 public class RTS implements GenInstructionHandler {
 
@@ -50,27 +51,15 @@ public class RTS implements GenInstructionHandler {
 		long newPC;
 		
 		if ((cpu.SR & 0x2000) == 0x2000) {
-			newPC = cpu.bus.read(cpu.SSP) << 24;
-			cpu.SSP++;
-			newPC |= cpu.bus.read(cpu.SSP) << 16;
-			cpu.SSP++;
-			newPC |= cpu.bus.read(cpu.SSP) << 8;
-			cpu.SSP++;
-			newPC |= cpu.bus.read(cpu.SSP);
-			cpu.SSP++;
+			newPC = cpu.bus.read(cpu.SSP, Size.LONG);
+			cpu.SSP += 4;
 			
 			cpu.setALong(7, cpu.SSP);
 			
 			cpu.PC = newPC - 2;
 		} else {
-			newPC = cpu.bus.read(cpu.USP) << 24;
-			cpu.USP++;
-			newPC |= cpu.bus.read(cpu.USP) << 16;
-			cpu.USP++;
-			newPC |= cpu.bus.read(cpu.USP) << 8;
-			cpu.USP++;
-			newPC |= cpu.bus.read(cpu.USP);
-			cpu.USP++;
+			newPC = cpu.bus.read(cpu.USP, Size.LONG);
+			cpu.USP += 4;
 			
 			cpu.setALong(7, cpu.USP);
 			

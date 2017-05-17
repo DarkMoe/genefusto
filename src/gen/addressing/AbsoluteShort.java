@@ -37,7 +37,7 @@ public class AbsoluteShort implements AddressingMode {
 	@Override
 	public long getByte(Operation o) {
 		long addr = o.getAddress();
-		long data = cpu.bus.read(addr);
+		long data = cpu.bus.read(addr, Size.BYTE);
 		
 		return data;
 	}
@@ -45,8 +45,7 @@ public class AbsoluteShort implements AddressingMode {
 	@Override
 	public long getWord(Operation o) {
 		long addr = o.getAddress();
-		long data  = (cpu.bus.read(addr) << 8);
-			 data |= (cpu.bus.read(addr + 1));
+		long data = cpu.bus.read(addr, Size.WORD);
 		
 		return data;
 	}
@@ -54,10 +53,7 @@ public class AbsoluteShort implements AddressingMode {
 	@Override
 	public long getLong(Operation o) {
 		long addr = o.getAddress();
-		long data  = (cpu.bus.read(addr) << 24);
-			 data |= (cpu.bus.read(addr + 1) << 16);
-			 data |= (cpu.bus.read(addr + 2) << 8);
-			 data |= (cpu.bus.read(addr + 3));
+		long data = cpu.bus.read(addr, Size.LONG);
 		
 		return data;
 	}
