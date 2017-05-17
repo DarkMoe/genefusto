@@ -83,6 +83,7 @@ import gen.instruction.MOVE_TO_FROM_USP;
 import gen.instruction.MOVE_TO_SR;
 import gen.instruction.MULS;
 import gen.instruction.MULU;
+import gen.instruction.NBCD;
 import gen.instruction.NEG;
 import gen.instruction.NOP;
 import gen.instruction.NOT;
@@ -215,6 +216,7 @@ public class Genefusto {
         new MOVEQ(cpu).generate();
         new MULS(cpu).generate();
         new MULU(cpu).generate();
+        new NBCD(cpu).generate();
         new NEG(cpu).generate();
         new NOP(cpu).generate();
         new NOT(cpu).generate();

@@ -208,9 +208,9 @@ public class ROR implements GenInstructionHandler {
 			toShift = numRegister;
 		} else {
 			toShift = cpu.getD(numRegister);
+			toShift &= 63;	//	wrap
 		}
 		
-		toShift &= 15;	//	wrap
 		
 		long data = cpu.getD(register) & 0xFF;
 		long rot = (data << toShift);
@@ -220,7 +220,7 @@ public class ROR implements GenInstructionHandler {
 			res = res | (((rot & (1 << (8 + i))) >> (8)));
 		}
 		
-		boolean carry = ((rot >> 8) > 0);
+		boolean carry = (((rot >> 8) & 1) == 1);
 		
 		cpu.setDByte(register, res);
 		
@@ -240,9 +240,8 @@ public class ROR implements GenInstructionHandler {
 			toShift = numRegister;
 		} else {
 			toShift = cpu.getD(numRegister);
+			toShift &= 63;	//	wrap
 		}
-		
-		toShift &= 15;	//	wrap
 		
 		long data = cpu.getD(register) & 0xFFFF;
 		long rot = (data << toShift);
@@ -252,7 +251,7 @@ public class ROR implements GenInstructionHandler {
 			res = res | (((rot & (1 << (16 + i))) >> (16)));
 		}
 		
-		boolean carry = ((rot >> 16) > 0);
+		boolean carry = (((rot >> 16) & 1) == 1);
 		
 		cpu.setDWord(register, res);
 		
@@ -272,19 +271,18 @@ public class ROR implements GenInstructionHandler {
 			toShift = numRegister;
 		} else {
 			toShift = cpu.getD(numRegister);
+			toShift &= 63;	//	wrap
 		}
-		
-		toShift &= 31;	//	wrap
 		
 		long data = cpu.getD(register);
 		long rot = (data << toShift);
 		
 		long res = rot & 0xFFFF_FFFFL;
 		for (int i = 0; i < toShift; i++) {		// rotacion de bits
-			res = res | (rot >> (32 + i));
+			res = res | ((rot >> (32 + i) & (0x1 << i)));
 		}
 		
-		boolean carry = ((rot >> 32) > 0);
+		boolean carry = (((rot >> 32) & 1) == 1);
 		
 		cpu.setDLong(register, res);
 		

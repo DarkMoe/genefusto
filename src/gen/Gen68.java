@@ -100,7 +100,7 @@ public class Gen68 {
 		
 //		print = true;
 		
-		if (bus.vdp.vram[0x4278] == 0x88){
+		if (bus.vdp.vram[0x80b0] == 0xa3){
 //			System.out.println();
 		}
 
@@ -108,12 +108,12 @@ public class Gen68 {
 //			System.out.println();
 		}
 		
-		if (PC == 0x3aa) {
+		if (PC == 0x1634) {
 //			print = true;
 		}
 		
 		GenInstruction instruction = getInstruction((int) opcode);
- 		instruction.run((int) opcode);
+		instruction.run((int) opcode);
 		
 		PC += 2;
 		

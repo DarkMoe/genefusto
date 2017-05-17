@@ -119,8 +119,8 @@ public class GenVdp {
 //	When FULL is set, the FIFO is full.
 //	If the FIFO has items but is not full, both EMPTY and FULL will be clear.
 //	The FIFO can hold 4 16-bit words for the VDP to process. If the M68K attempts to write another word once the FIFO has become full, it will be frozen until the first word can be delivered.
-	int empty;
-	int full;
+	int empty = 1;
+	int full = 0;
 	
 //	VIP indicates that a vertical interrupt has occurred, approximately at line $E0. It seems to be cleared at the end of the frame.
 	int vip;
@@ -140,14 +140,6 @@ public class GenVdp {
 	int dma;
 //	PAL seems to be set when the system's display is PAL, and possibly reflects the state of having 240 line display enabled. The same information can be obtained from the version register.
 	int pal;
-	
-	boolean vramWrite;
-	boolean cramWrite;
-	boolean vsramWrite;
-	
-	boolean vramRead;
-	boolean cramRead;
-	boolean vsramRead;
 	
 	long all;
 	
@@ -307,58 +299,25 @@ public class GenVdp {
 				int addressMode = code & 0xF;	// solo el primer byte, el bit 4 y 5 son para DMA
 												// que ya fue contemplado arriba
 				if (addressMode == 0b0000) { // VRAM Read
-					System.out.println("vramRead");
-					
-					vramRead = true;
-					cramRead = false;
-					
-					cramWrite = false;
-					vramWrite = false;
-					vsramWrite = false;
+					vramMode = VramMode.vramRead;
 
 				} else if (addressMode == 0b0001) { // VRAM Write
-					System.out.println("vramWrite");
-					
-					vramRead = false;
-					cramRead = false;
-					
-					vramWrite = true;
-					cramWrite = false;
-					vsramWrite = false;
+					vramMode = VramMode.vramWrite;
 
 				} else if (addressMode == 0b1000) { // CRAM Read
-					System.out.println("cramRead");
-					
-					vramRead = false;
-					cramRead = true;
-					
-					cramWrite = false;
-					vramWrite = false;
-					vsramWrite = false;
+					vramMode = VramMode.cramRead;
 
 				} else if (addressMode == 0b0011) { // CRAM Write
-					System.out.println("cramWrite");
-					
-					vramRead = false;
-					cramRead = false;
-					
-					cramWrite = true;
-					vramWrite = false;
-					vsramWrite = false;
+					vramMode = VramMode.cramWrite;
 
 				} else if (addressMode == 0b0100) { // VSRAM Read
-					throw new RuntimeException("ADDR WRITE !");
+					vramMode = VramMode.vsramWrite;
 
 				} else if (addressMode == 0b0101) { // VSRAM Write
-					System.out.println("vsramWrite");
-					
-					vramRead = false;
-					cramRead = false;
-					
-					vsramWrite = true;
-					vramWrite = false;
-					cramWrite = false;
+					vramMode = VramMode.vsramWrite;
 				}
+				
+				System.out.println("Video mode: " + vramMode.toString());
 				
 				//	https://wiki.megadrive.org/index.php?title=VDP_DMA
 				if ((code & 0b100000) > 0) { // DMA
@@ -441,7 +400,7 @@ public class GenVdp {
 //			int data1 = (int) bus.read(sourceTrue);
 //			int data2 = (int) bus.read(sourceTrue + 1);
 			
-			if (vramWrite) {
+			if (vramMode == VramMode.vramWrite) {
 				writeVramByte(destAddr, data1);
 				writeVramByte(destAddr + 1, data2);
 			} else {
@@ -506,17 +465,18 @@ public class GenVdp {
 				System.out.println("M1 should be 1 in the DMA transfer. otherwise we can't guarantee the operation.");
 			}
 			
-		} else if (vramWrite) {
+		} else if (vramMode == VramMode.vramWrite) {
 			vramWrite(data);
 			
-		} else if (cramWrite) {
+		} else if (vramMode == VramMode.cramWrite) {
 			cramWrite(data);
 			
-		} else if (vsramWrite) {
+		} else if (vramMode == VramMode.vsramWrite) {
 			vsramWrite(data);
 			
 		} else {
-			throw new RuntimeException("NOT IMPL !");
+			System.out.println("Write pero mando read, Modo video: " + vramMode.toString());
+//			throw new RuntimeException("NOT IMPL !");
 		}
 	}
 
@@ -585,16 +545,18 @@ public class GenVdp {
 			if (destAddr > 0xFFFF) {
 				return;
 			}
-			if (vramWrite) {
+			if (vramMode == VramMode.vramWrite) {
 				writeVramByte(destAddr, data1);
 				writeVramByte(destAddr + 1, data2);
-			} else if (cramWrite) {
+				
+			} else if (vramMode == VramMode.cramWrite) {
 				writeCramByte(destAddr, data1);
 				writeCramByte(destAddr + 1, data2);
 				
-			} else if (vsramWrite) {
+			} else if (vramMode == VramMode.vsramWrite) {
 				vsram[destAddr] = data1;
 				vsram[destAddr + 1] = data2;
+				
 			} else {
 				throw new RuntimeException("not");
 			}
@@ -638,6 +600,9 @@ public class GenVdp {
 	}
 
 	private void writeCramByte(int address, int data) {
+		if (address > 0x80) {
+			return;
+		}
 		cram[address] = data;
 //		System.out.println(Integer.toHexString(address) + ": " + Integer.toHexString(data));
 	}
@@ -849,7 +814,7 @@ public class GenVdp {
 			line++;
 			totalCycles = 0;
 		}
-		if (line == 0xFF) {
+		if (line > 0xFF) {
 			line = 0;
 			evaluateSprites();
 		}
@@ -1632,17 +1597,23 @@ public class GenVdp {
     }
 
 	public long readDataPort(Size size) {
-		if (vramRead) {
+		if (vramMode == VramMode.vramRead) {
 			long data = readVram(size);
 			return data;
 			
-		} else if (cramRead) {
+		} else if (vramMode == VramMode.cramRead) {
 			long data = readCram(size);
+			return data;
+		
+		} else if (vramMode == VramMode.vsramRead) {
+			long data = readVsram(size);
 			return data;
 			
 		} else {
-			throw new RuntimeException("IMPL !");
+			System.out.println("Read pero mando write, Modo video: " + vramMode.toString());
+//			throw new RuntimeException("Modo video: " + vramMode.toString());
 		}
+		return 0;
 	}
 
 	private long readVram(Size size) {
@@ -1696,8 +1667,51 @@ public class GenVdp {
 		
 		int offset = addr + autoIncrementTotal;
 		
+		if (offset > 0x80) {
+			return 0;
+		}
+		
 		long data1 = cram[offset] & 0xEEE;
 		long data2 = cram[offset + 1] & 0xEEE;
+		
+		long data = ((data1 << 8) | (data2));
+		
+		System.out.println("addr: " + Integer.toHexString(offset) + "-" + Integer.toHexString(offset + 1) + ": "
+				+ Integer.toHexString((int) data));
+		
+//		fifoAddress[index] = offset;
+//		fifoCode[index] = code;
+//		fifoData[index] = word;
+		
+//		if (incrementAddr) {
+			int incrementOffset = autoIncrementTotal + autoIncrementData;
+			autoIncrementTotal = incrementOffset;
+//		}
+
+		return data;
+		
+//		address = address + incrementOffset;	// FIXME wrap
+//		offset = offset + incrementOffset;
+//		index = (index + 1) % 4;
+//		
+//		nextFIFOReadEntry = index;
+//		nextFIFOWriteEntry = index;
+	}
+	
+	private long readVsram(Size size) {
+		int index = nextFIFOReadEntry;
+		int address = addressPort;
+		
+		long first =  all >> 16;
+		long second = all & 0xFFFF;
+		
+		int code = (int) ((first >> 14) | (((second >> 4) & 0xF) << 2));
+		int addr = (int) ((first & 0x3FFF) | ((second & 0x3) << 14));
+		
+		int offset = addr + autoIncrementTotal;
+		
+		long data1 = vsram[offset] & 0xEEE;
+		long data2 = vsram[offset + 1] & 0xEEE;
 		
 		long data = ((data1 << 8) | (data2));
 		
