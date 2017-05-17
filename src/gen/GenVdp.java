@@ -1422,26 +1422,29 @@ public class GenVdp {
 				
 				int tileLocator = nameTableLocation;
 				
+				int reg10 = registers[0x10];
+				int horScrollSize = reg10 & 3;
+				
 				int limitHorTiles = 0;
-//				if (horScrollSize == 0) {	//TODO implementar otros casos
-//					limitHorTiles = 32;
-//				} else if (horScrollSize == 1) {
+				if (horScrollSize == 0) {
+					limitHorTiles = 32;
+				} else if (horScrollSize == 1) {
 					limitHorTiles = 40;		//	40 words / tiles por scanline
-//				} else {
-//					limitHorTiles = 40;
-//				}
+				} else {
+					limitHorTiles = 40;
+				}
 				
 				int line = this.line;
 				
 				int vertTile = (line / 8);
 				
-//				if (horScrollSize == 0) {
-//					tileLocator += (64 * vertTile);
-//				} else if (horScrollSize == 1) {
+				if (horScrollSize == 0) {
+					tileLocator += (64 * vertTile);
+				} else if (horScrollSize == 1) {
 					tileLocator += (128 * vertTile);		// fuera del active view, 24 words o 48 bytes
-//				} else {
-//					tileLocator += (256 * vertTile);	//	256 bytes por tile vertical en modo ancho
-//				}
+				} else {
+					tileLocator += (256 * vertTile);	//	256 bytes por tile vertical en modo ancho
+				}
 				
 				int vertLimit = (windowVert * 8);
 					

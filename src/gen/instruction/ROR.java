@@ -279,7 +279,7 @@ public class ROR implements GenInstructionHandler {
 		
 		long res = rot & 0xFFFF_FFFFL;
 		for (int i = 0; i < toShift; i++) {		// rotacion de bits
-			res = res | ((rot >> (32 + i) & (0x1 << i)));
+			res = res | (((rot >> 32) & (0x1 << i)));
 		}
 		
 		boolean carry = (((rot >> 32) & 1) == 1);
