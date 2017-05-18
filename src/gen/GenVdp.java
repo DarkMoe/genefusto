@@ -1172,6 +1172,13 @@ public class GenVdp {
 		
 		int line = this.line;
 		
+		int regD = registers[0xD];
+		int hScrollBase = regD & 0x3F;	//	bit 6 = mode 128k
+		hScrollBase *= 0x400;
+		
+		int regB = registers[0xB];
+		int HS = regB & 0x3;
+			
 		int vertTile = (line / 8);
 		
 		if (horScrollSize == 0) {
@@ -1180,6 +1187,58 @@ public class GenVdp {
 			tileLocator += (128 * vertTile);		// fuera del active view, 24 words o 48 bytes
 		} else {
 			tileLocator += (256 * vertTile);	//	256 bytes por tile vertical en modo ancho
+		}
+		
+		long scrollData = 0;
+		if (HS == 0b00) {	//	entire screen is scrolled at once by one longword in the horizontal scroll table
+			scrollData  = vram[hScrollBase] << 8;
+			scrollData |= vram[hScrollBase + 1];
+			
+			scrollData &= 0xFFF;
+			
+			if (scrollData != 0) {
+				scrollData = 0x1000 - scrollData;	//	inverse
+				scrollData /= 8;
+			}
+			
+			tileLocator += (scrollData * 2); 
+			
+		} else if (HS == 0b10) {	//	long scrolls 8 pixels
+			int scrollLine = hScrollBase + ((line / 8) * 32);	// 32 bytes por 8 scanlines
+			
+			scrollData  = vram[scrollLine] << 8;
+			scrollData |= vram[scrollLine + 1];
+			
+			if (scrollData != 0) {
+				if (horScrollSize == 1) {	//	64 tiles
+					scrollData &= 0x1FF;
+					
+					scrollData = 0x200 - scrollData;
+					scrollData /= 8;
+				} else {
+					scrollData &= 0xFFF;
+					
+					scrollData = 0x1000 - scrollData;	//	inverse
+					scrollData /= 8;
+				}
+			}
+			
+			tileLocator += (scrollData * 2); 
+			
+		} else if (HS == 0b11) {	//	scroll one scanline
+			int scrollLine = hScrollBase + ((line) * 4);	// 4 bytes por 1 scanline
+			
+			scrollData  = vram[scrollLine] << 8;
+			scrollData |= vram[scrollLine + 1];
+			
+			scrollData &= 0xFFF;
+			
+			if (scrollData != 0) {
+				scrollData = 0x1000 - scrollData;	//	inverse
+				scrollData /= 8;
+			}
+			
+			tileLocator += (scrollData * 2); 
 		}
 		
 		for (int horTile = 0; horTile < limitHorTiles; horTile++) {
@@ -1302,6 +1361,13 @@ public class GenVdp {
 		
 		int line = this.line;
 		
+		int regD = registers[0xD];
+		int hScrollBase = regD & 0x3F;	//	bit 6 = mode 128k
+		hScrollBase *= 0x400;
+		
+		int regB = registers[0xB];
+		int HS = regB & 0x3;
+			
 		int vertTile = (line / 8);
 		
 		if (horScrollSize == 0) {
@@ -1312,6 +1378,58 @@ public class GenVdp {
 			tileLocator += (256 * vertTile);	//	256 bytes por tile vertical en modo ancho
 		}
 		
+		long scrollData = 0;
+		if (HS == 0b00) {	//	entire screen is scrolled at once by one longword in the horiontal scroll table
+			scrollData  = vram[hScrollBase + 2] << 8;
+			scrollData |= vram[hScrollBase + 3];
+			
+			scrollData &= 0xFFF;
+			
+			if (scrollData != 0) {
+				scrollData = 0x1000 - scrollData;	//	inverse
+				scrollData /= 8;
+			}
+			
+			tileLocator += (scrollData * 2); 
+			
+		} else if (HS == 0b10) {	//	long scrolls 8 pixels
+			int scrollLine = hScrollBase + ((line / 8) * 32);	// 32 bytes por 8 scanlines
+			
+			scrollData  = vram[scrollLine + 2] << 8;
+			scrollData |= vram[scrollLine + 3];
+			
+			
+			if (scrollData != 0) {
+				if (horScrollSize == 1) {	//	64 tiles
+					scrollData &= 0x1FF;
+					
+					scrollData = 0x200 - scrollData;
+					scrollData /= 8;
+				} else {
+					scrollData &= 0xFFF;
+					
+					scrollData = 0x1000 - scrollData;	//	inverse
+					scrollData /= 8;
+				}
+			}
+			
+			tileLocator += (scrollData * 2); 
+		} else if (HS == 0b11) {	//	scroll one scanline
+			int scrollLine = hScrollBase + ((line) * 4);	// 32 bytes por 8 scanlines
+			
+			scrollData  = vram[scrollLine + 2] << 8;
+			scrollData |= vram[scrollLine + 3];
+			
+			scrollData &= 0xFFF;
+			
+			if (scrollData != 0) {
+				scrollData = 0x1000 - scrollData;	//	inverse
+				scrollData /= 8;
+			}
+			
+			tileLocator += (scrollData * 2); 
+		}
+		
 		for (int horTile = 0; horTile < limitHorTiles; horTile++) {
 			int loc = tileLocator;
 			
@@ -1320,9 +1438,9 @@ public class GenVdp {
 			
 			tileLocator += 2;
 		
-//				An entry in a name table is 16 bits, and works as follows:
-//				15			14 13	12				11		   			10 9 8 7 6 5 4 3 2 1 0
-//				Priority	Palette	Vertical Flip	Horizontal Flip		Tile Index
+//			An entry in a name table is 16 bits, and works as follows:
+//			15			14 13	12				11		   			10 9 8 7 6 5 4 3 2 1 0
+//			Priority	Palette	Vertical Flip	Horizontal Flip		Tile Index
 			int tileIndex = (nameTable & 0x07FF);	// cada tile ocupa 32 bytes
 			
 			boolean horFlip = bitTest(nameTable, 11);

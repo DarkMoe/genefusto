@@ -64,6 +64,7 @@ import gen.instruction.DIVS;
 import gen.instruction.DIVU;
 import gen.instruction.EOR;
 import gen.instruction.EORI;
+import gen.instruction.EORI_SR;
 import gen.instruction.EXG;
 import gen.instruction.EXT;
 import gen.instruction.JMP;
@@ -197,6 +198,7 @@ public class Genefusto {
         new DIVU(cpu).generate();
         new EOR(cpu).generate();
         new EORI(cpu).generate();
+        new EORI_SR(cpu).generate();
         new EXG(cpu).generate();
         new EXT(cpu).generate();
         new JMP(cpu).generate();
