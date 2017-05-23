@@ -211,7 +211,6 @@ public class ROR implements GenInstructionHandler {
 			toShift &= 63;	//	wrap
 		}
 		
-		
 		long data = cpu.getD(register) & 0xFF;
 		long rot = (data << toShift);
 		

@@ -202,6 +202,7 @@ public class ASL implements GenInstructionHandler {
 			}
 		} else {
 			toShift = cpu.getD(numRegister);
+			toShift = toShift & 63;
 		}
 		
 		long shiftee = cpu.getD(register) & 0xFF;
@@ -225,6 +226,7 @@ public class ASL implements GenInstructionHandler {
 			}
 		} else {
 			toShift = cpu.getD(numRegister);
+			toShift = toShift & 63;
 		}
 		
 		long shiftee = cpu.getD(register) & 0xFFFF;
@@ -248,6 +250,7 @@ public class ASL implements GenInstructionHandler {
 			}
 		} else {
 			toShift = cpu.getD(numRegister);
+			toShift = toShift & 63;
 		}
 		
 		long shiftee = cpu.getD(register);

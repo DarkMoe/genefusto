@@ -498,7 +498,7 @@ public class Genefusto {
             		cpu.runInstruction();
             	}
             	bus.checkInterrupts();
-            	vdp.run(36);
+            	vdp.run(70);
             	vdp.dmaFill();
             }
         } catch (RuntimeException e) {

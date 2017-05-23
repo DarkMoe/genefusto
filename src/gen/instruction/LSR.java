@@ -206,6 +206,7 @@ public class LSR implements GenInstructionHandler {
 			toShift = numRegister;
 		} else {
 			toShift = cpu.getD(numRegister);
+			toShift = toShift & 63;
 		}
 
 		long data = cpu.getD(register) & 0xFF;
@@ -235,6 +236,7 @@ public class LSR implements GenInstructionHandler {
 			toShift = numRegister;
 		} else {
 			toShift = cpu.getD(numRegister);
+			toShift = toShift & 63;
 		}
 
 		long data = cpu.getD(register) & 0xFFFF;
@@ -265,6 +267,7 @@ public class LSR implements GenInstructionHandler {
 			toShift = numRegister;
 		} else {
 			toShift = cpu.getD(numRegister);
+			toShift = toShift & 63;
 		}
 
 		long data = cpu.getD(register);

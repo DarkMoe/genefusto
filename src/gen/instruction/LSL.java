@@ -205,6 +205,7 @@ public class LSL implements GenInstructionHandler {
 			toShift = numRegister;
 		} else {
 			toShift = cpu.getD(numRegister);
+			toShift = toShift & 63;
 		}
 		
 		long res = (cpu.getD(register) & 0xFF) << toShift;
@@ -228,6 +229,7 @@ public class LSL implements GenInstructionHandler {
 			toShift = numRegister;
 		} else {
 			toShift = cpu.getD(numRegister);
+			toShift = toShift & 63;
 		}
 		
 		long res = (cpu.getD(register) & 0xFFFF) << toShift;
@@ -251,6 +253,7 @@ public class LSL implements GenInstructionHandler {
 			toShift = numRegister;
 		} else {
 			toShift = cpu.getD(numRegister);
+			toShift = toShift & 63;
 		}
 		
 		long data = cpu.getD(register);

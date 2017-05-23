@@ -319,17 +319,7 @@ public class ADD implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
 		long data = o.getAddressingMode().getWord(o);
 		
-		long tot = (toAdd + data);
-		
-		boolean Dm = (data & 0x8000) > 0;
-		boolean Sm = (toAdd & 0x8000) > 0;
-		boolean Rm = (tot & 0x8000) > 0;
-		
-		if((Sm && Dm && !Rm) || (!Sm && !Dm && Rm)) {
-			cpu.setV();
-		} else {
-			cpu.clearV();
-		}
+		long tot = (data + toAdd);
 		
 		cpu.writeKnownAddressingMode(o, tot, Size.WORD);
 		
@@ -341,15 +331,15 @@ public class ADD implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 		
-		long toAdd = cpu.getD(dataRegister);
-		
 		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
 		long data = o.getAddressingMode().getLong(o);
+
+		long toAdd = cpu.getD(dataRegister);
 		
-		long tot = (toAdd + data);
+		long tot = (data + toAdd);
 		cpu.writeKnownAddressingMode(o, tot, Size.LONG);
 		
-		calcFlags(tot, data, toAdd, Size.LONG.getMsb(), 0xFFFF_FFFFL);
+		calcFlags(tot, data, toAdd, Size.LONG.getMsb(), Size.LONG.getMax());
 	}
 	
 	void calcFlags(long tot, long data, long toAdd, long msb, long maxSize) {
@@ -368,13 +358,13 @@ public class ADD implements GenInstructionHandler {
 		boolean Sm = (toAdd & msb) > 0;
 		boolean Rm = (tot & msb) > 0;
 		
-		if((Sm && Dm && !Rm) || (!Sm && !Dm && Rm)) {
+		if ((Sm && Dm && !Rm) || (!Sm && !Dm && Rm)) {
 			cpu.setV();
 		} else {
 			cpu.clearV();
 		}
 		
-		if (tot > maxSize) {
+		if ((Sm && Dm) || (!Rm && Dm) || (Sm && !Rm)) {
 			cpu.setC();
 			cpu.setX();
 		} else {
