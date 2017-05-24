@@ -36,10 +36,10 @@ public class GenJoypad {
 	
 	void writeDataRegister1(long data) {
 		if (data == 0) {
-			System.out.println("Deassert TH " + Long.toHexString(data));
+//			System.out.println("Deassert TH " + Long.toHexString(data));
 			asserted1 = true;
 		} else {
-			System.out.println("Assert TH " + Long.toHexString(data));
+//			System.out.println("Assert TH " + Long.toHexString(data));
 			asserted1 = false;
 		}
 	}
@@ -56,10 +56,10 @@ public class GenJoypad {
 	
 	void writeDataRegister2(long data) {
 		if (data == 0) {
-			System.out.println("Assert TH " + Long.toHexString(data));
+//			System.out.println("Assert TH " + Long.toHexString(data));
 			asserted2 = true;
 		} else {
-			System.out.println("Deassert TH " + Long.toHexString(data));
+//			System.out.println("Deassert TH " + Long.toHexString(data));
 			asserted2 = false;
 		}
 	}
@@ -73,16 +73,18 @@ public class GenJoypad {
 	}
 	
 	void writeControlRegister1(long data) {
-		System.out.println("control data port 1! " + Long.toHexString(data));
+//		System.out.println("control data port 1! " + Long.toHexString(data));
 		control1 = data;
 	}
 	
 	void writeControlRegister2(long data) {
-		System.out.println("control data port 2! " + Long.toHexString(data));
+//		System.out.println("control data port 2! " + Long.toHexString(data));
+		control2 = data;
 	}
 	
 	void writeControlRegister3(long data) {
-		System.out.println("control data port 3! " + Long.toHexString(data));
+//		System.out.println("control data port 3! " + Long.toHexString(data));
+		control3 = data;
 	}
 	
 }

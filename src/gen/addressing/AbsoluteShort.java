@@ -30,8 +30,7 @@ public class AbsoluteShort implements AddressingMode {
 	public void setLong(Operation o) {
 		long addr = o.getAddress();
 		long data = o.getData();
-		cpu.bus.write(addr, data >> 16, Size.LONG);
-		cpu.bus.write(addr + 2, (data & 0xFFFF), Size.LONG);
+		cpu.bus.write(addr, data, Size.LONG);
 	}
 	
 	@Override

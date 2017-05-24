@@ -33,8 +33,7 @@ public class AbsoluteLong implements AddressingMode {
 		long address = o.getAddress();
 		long data = o.getData();
 		
-		cpu.bus.write(address, (data >> 16), Size.LONG);
-		cpu.bus.write(address + 2, data & 0xFFFF, Size.LONG);
+		cpu.bus.write(address, data, Size.LONG);
 	}
 	
 	@Override

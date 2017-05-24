@@ -100,15 +100,18 @@ public class Gen68 {
 		
 //		print = true;
 		
-		if (bus.vdp.vram[0x80b0] == 0xa3){
-//			System.out.println();
+		if (bus.vdp.vram[0xf404] == 0x01){
+			System.out.println();
 		}
 
 		if (bus.memory.ram[0x4258] != 0) {
 //			System.out.println();
 		}
 		
-		if (PC == 0x1634) {
+		if (bus.vdp.cram[0x7b] == 0xa3) {
+			
+		}
+		if (PC == 0xce0ee) {
 //			print = true;
 		}
 		
@@ -119,6 +122,23 @@ public class Gen68 {
 		
 		return 0;
 	}
+	
+	private void printMemory() {
+		int offset = 0xF400;
+		for (int i = 0xF400; i < 0xF410; i++) {
+			System.out.println(pad(offset) + ": " + pad(bus.vdp.vram[offset]) + pad(bus.vdp.vram[offset + 1]));
+			offset += 2;
+		}
+	}
+	
+	private void printCRAM() {
+    	for (int i = 0; i < bus.vdp.cram.length; i += 4) {
+			System.out.println(Integer.toHexString(i) + ": "
+					+ Integer.toHexString(bus.vdp.cram[i]) + Integer.toHexString(bus.vdp.cram[i + 1])
+					+ Integer.toHexString(bus.vdp.cram[i + 2]) + Integer.toHexString(bus.vdp.cram[i + 3])
+					);
+		}
+    }
 	
 	private GenInstruction getInstruction(int opcode) {
 		GenInstruction instr = instructions[opcode];

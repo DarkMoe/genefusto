@@ -152,7 +152,7 @@ public class GenBus {
 		} else if (size == Size.WORD) {
 			data = data & 0xFFFF;
 		} else {
-			data = data & 0xFFFF;	// manejado afuera, quizas deberia manejarse tambien aca
+			data = data & 0xFFFF_FFFFL;
 		}
 		
 		if (addressL <= 0x3FFFFF) {	//	Cartridge ROM/RAM
@@ -240,11 +240,18 @@ public class GenBus {
 			
 		} else if (addressL == 0xC00000 || addressL == 0xC00001
 				|| addressL == 0xC00002 || addressL == 0xC00003) {	// word / long word
-			vdp.writeDataPort((int) data);
+			vdp.writeDataPort((int) data, size);
 			
 		} else if (addressL == 0xC00004 || addressL == 0xC00005
 				|| addressL == 0xC00006 || addressL == 0xC00007) {	// word / long word
-			vdp.writeControlPort(data);
+			if (size == Size.BYTE) {
+				throw new RuntimeException();
+			} else if (size == Size.WORD) {
+				vdp.writeControlPort(data);
+			} else {
+				vdp.writeControlPort(data >> 16);
+				vdp.writeControlPort(data & 0xFFFF);
+			}
 
 		} else if (addressL == 0xC00011) {	//	PSG output
 			System.out.println("PSG Output");
@@ -259,8 +266,10 @@ public class GenBus {
 				memory.writeRam(addr, (data >> 8));
 				memory.writeRam(addr + 1, (data & 0xFF));
 			} else if (size == Size.LONG) {
-				memory.writeRam(addr, (data >> 8));			//	FIXME, debe escribir 2 words
-				memory.writeRam(addr + 1, (data & 0xFF));
+				memory.writeRam(addr, (data >> 24) & 0xFF);
+				memory.writeRam(addr + 1, (data >> 16) & 0xFF);
+				memory.writeRam(addr + 2, (data >> 8) & 0xFF);
+				memory.writeRam(addr + 3, (data & 0xFF));
 			}
 			
 		} else {

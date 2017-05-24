@@ -214,143 +214,155 @@ public class GenVdp {
 //	VRAM Copy		1	1
 	public void writeControlPort(long data) {
 		long mode = (data >> 13);
-		
+			
 		if (!addressSecondWrite && mode == 0b100) {		//	Write 1 - Setting Register
-			int dataControl = (int) (data & 0x00FF);
-			int reg = (int) ((data >> 8) & 0x1F);
-			
-			System.out.println("REG: " + pad(reg) + " - data: " + pad(dataControl));
-			
-			registers[reg] = dataControl;
-			
-			if (reg == 0x00) {
-				vsi = 	((data >> 7) & 1) == 1;
-				hsi = 	((data >> 6) & 1) == 1;
-				lcb = 	((data >> 5) & 1) == 1;
-				ie1 = 	((data >> 4) & 1) == 1;
-				ssHsm = ((data >> 3) & 1) == 1;
-				ps = 	((data >> 2) & 1) == 1;
-				m2 = 	((data >> 1) & 1) == 1;
-				es = 	((data >> 0) & 1) == 1;
-				
-			} else if (reg == 0x01) {
-				if ((disp) && ((data & 0x40) == 0)) {	// el display estaba prendido pero se apago
-					vb = 1;
-				} else if ((!disp) && ((data & 0x40) == 0x40)) {	// el display se prende
-					vb = 0;
-				}
-				
-				evram = ((data >> 7) & 1) == 1;
-				disp = 	((data >> 6) & 1) == 1;
-				ie0 = 	((data >> 5) & 1) == 1;
-				m1 = 	((data >> 4) & 1) == 1;
-				m3 = 	((data >> 3) & 1) == 1;
-				m5 = 	((data >> 2) & 1) == 1;
-				sz = 	((data >> 1) & 1) == 1;
-				mag = 	((data >> 0) & 1) == 1;
-			
-			} else if (reg == 0x0F) {
-				autoIncrementData = (int) (data & 0xFF);
-			
-			} else if (reg == 0x13) {
-				dmaLengthCounterLo = (int) (data & 0xFF);
-			
-			} else if (reg == 0x14) {
-				dmaLengthCounterHi = (int) (data & 0xFF);
-			
-			} else if (reg == 0x15) {
-				dmaSourceAddressLow = (int) (data & 0xFF);
-				
-			} else if (reg == 0x16) {
-				dmaSourceAddressMid = (int) (data & 0xFF);
-			
-			} else if (reg == 0x17) {
-				dmaSourceAddressHi = (int) (data & 0x3F);
-				dmaMode = (int) ((data >> 6) & 0x3);
-			}
+			writeRegister(data);
 			
 		} else { // Write 2 - Setting RAM address
-			if (!addressSecondWrite) {
-				System.out.println("first");
-				
-				firstWrite = data;
-				addressSecondWrite = true;
-				
-			} else {
-				addressSecondWrite = false;
+			writeRamAddress(data);
+		}
+	}
 
-				long first = firstWrite;
-				long second = data;
-				all = (first << 16) | second;
-				
-				int code = (int) ((first >> 14) | (((second >> 4) & 0xF) << 2));
-				int addr = (int) ((first & 0x3FFF) | ((second & 0x3) << 14));
+	private void writeRamAddress(long data) {
+		if (!addressSecondWrite) {
+			System.out.println("first");
+			
+			firstWrite = data;
+			addressSecondWrite = true;
+			
+		} else {
+			addressSecondWrite = false;
 
-				System.out.println("second code " + Integer.toHexString(code));
-				
-				addressPort = addr;
-				autoIncrementTotal = 0;	// reset este acumulador
-				
-				//	reset de los flags	TODO confirmar que van aca
-				cramWrite2 = false;
-				vramWrite2 = false;
-				vsramWrite2 = false;
-				
-				int addressMode = code & 0xF;	// solo el primer byte, el bit 4 y 5 son para DMA
-												// que ya fue contemplado arriba
-				if (addressMode == 0b0000) { // VRAM Read
-					vramMode = VramMode.vramRead;
+			long first = firstWrite;
+			long second = data;
+			all = (first << 16) | second;
+			
+			int code = (int) ((first >> 14) | (((second >> 4) & 0xF) << 2));
+			int addr = (int) ((first & 0x3FFF) | ((second & 0x3) << 14));
 
-				} else if (addressMode == 0b0001) { // VRAM Write
-					vramMode = VramMode.vramWrite;
+			System.out.println("second code " + Integer.toHexString(code));
+			
+			addressPort = addr;
+			autoIncrementTotal = 0;	// reset este acumulador
+			
+			//	reset de los flags	TODO confirmar que van aca
+			cramWrite2 = false;
+			vramWrite2 = false;
+			vsramWrite2 = false;
+			
+			int addressMode = code & 0xF;	// solo el primer byte, el bit 4 y 5 son para DMA
+											// que ya fue contemplado arriba
+			if (addressMode == 0b0000) { // VRAM Read
+				vramMode = VramMode.vramRead;
 
-				} else if (addressMode == 0b1000) { // CRAM Read
-					vramMode = VramMode.cramRead;
+			} else if (addressMode == 0b0001) { // VRAM Write
+				vramMode = VramMode.vramWrite;
 
-				} else if (addressMode == 0b0011) { // CRAM Write
-					vramMode = VramMode.cramWrite;
+			} else if (addressMode == 0b1000) { // CRAM Read
+				vramMode = VramMode.cramRead;
 
-				} else if (addressMode == 0b0100) { // VSRAM Read
-					vramMode = VramMode.vsramWrite;
+			} else if (addressMode == 0b0011) { // CRAM Write
+				vramMode = VramMode.cramWrite;
 
-				} else if (addressMode == 0b0101) { // VSRAM Write
-					vramMode = VramMode.vsramWrite;
-				}
-				
-				System.out.println("Video mode: " + vramMode.toString());
-				
-				//	https://wiki.megadrive.org/index.php?title=VDP_DMA
-				if ((code & 0b100000) > 0) { // DMA
-					int dmaBits = code >> 4;
-					dmaRecien = true;
-						
-					if ((dmaBits & 0b10) > 0) {		//	VRAM Fill
-						if ((registers[0x17] & 0x80) == 0x80) {
+			} else if (addressMode == 0b0100) { // VSRAM Read
+				vramMode = VramMode.vsramWrite;
+
+			} else if (addressMode == 0b0101) { // VSRAM Write
+				vramMode = VramMode.vsramWrite;
+			}
+			
+			System.out.println("Video mode: " + vramMode.toString());
+			
+			//	https://wiki.megadrive.org/index.php?title=VDP_DMA
+			if ((code & 0b100000) > 0) { // DMA
+				int dmaBits = code >> 4;
+				dmaRecien = true;
+					
+				if ((dmaBits & 0b10) > 0) {		//	VRAM Fill
+					if ((registers[0x17] & 0x80) == 0x80) {
 //						FILL mode fills with same data from free even VRAM address.
 //						FILL for only VRAM.
-							dmaModo = DmaMode.VRAM_FILL;
-							vramFill = true;
-							
-						} else {
-							dmaModo = DmaMode.MEM_TO_VRAM;
-							memToVram = true;
-							
-							if (m1) {
-								dmaMem2Vram(all);
-							} else {
-								System.out.println("OO !");
-							}
-						}
+						dmaModo = DmaMode.VRAM_FILL;
+						vramFill = true;
 						
-					} else if ((dmaBits & 0b11) > 0) {		//	VRAM Copy
-						dmaModo = DmaMode.VRAM_COPY;
-						throw new RuntimeException();
+					} else {
+						dmaModo = DmaMode.MEM_TO_VRAM;
+						memToVram = true;
+						
+						if (m1) {
+							dmaMem2Vram(all);
+						} else {
+							throw new RuntimeException("Como entro aca");
+						}
 					}
+					
+				} else if ((dmaBits & 0b11) > 0) {		//	VRAM Copy
+					dmaModo = DmaMode.VRAM_COPY;
+					throw new RuntimeException();
 				}
 			}
 		}
 	}
 	
+	private void writeRegister(long data) {
+		int dataControl = (int) (data & 0x00FF);
+		int reg = (int) ((data >> 8) & 0x1F);
+		
+		System.out.println("REG: " + pad(reg) + " - data: " + pad(dataControl));
+		
+		cramWrite2 = false;
+		vramWrite2 = false;
+		vsramWrite2 = false;
+		
+		registers[reg] = dataControl;
+		
+		if (reg == 0x00) {
+			vsi = 	((data >> 7) & 1) == 1;
+			hsi = 	((data >> 6) & 1) == 1;
+			lcb = 	((data >> 5) & 1) == 1;
+			ie1 = 	((data >> 4) & 1) == 1;
+			ssHsm = ((data >> 3) & 1) == 1;
+			ps = 	((data >> 2) & 1) == 1;
+			m2 = 	((data >> 1) & 1) == 1;
+			es = 	((data >> 0) & 1) == 1;
+			
+		} else if (reg == 0x01) {
+			if ((disp) && ((data & 0x40) == 0)) {	// el display estaba prendido pero se apago
+				vb = 1;
+			} else if ((!disp) && ((data & 0x40) == 0x40)) {	// el display se prende
+				vb = 0;
+			}
+			
+			evram = ((data >> 7) & 1) == 1;
+			disp = 	((data >> 6) & 1) == 1;
+			ie0 = 	((data >> 5) & 1) == 1;
+			m1 = 	((data >> 4) & 1) == 1;
+			m3 = 	((data >> 3) & 1) == 1;
+			m5 = 	((data >> 2) & 1) == 1;
+			sz = 	((data >> 1) & 1) == 1;
+			mag = 	((data >> 0) & 1) == 1;
+		
+		} else if (reg == 0x0F) {
+			autoIncrementData = (int) (data & 0xFF);
+		
+		} else if (reg == 0x13) {
+			dmaLengthCounterLo = (int) (data & 0xFF);
+		
+		} else if (reg == 0x14) {
+			dmaLengthCounterHi = (int) (data & 0xFF);
+		
+		} else if (reg == 0x15) {
+			dmaSourceAddressLow = (int) (data & 0xFF);
+			
+		} else if (reg == 0x16) {
+			dmaSourceAddressMid = (int) (data & 0xFF);
+		
+		} else if (reg == 0x17) {
+			dmaSourceAddressHi = (int) (data & 0x3F);
+			dmaMode = (int) ((data >> 6) & 0x3);
+		}		
+	}
+
 	boolean dmaRecien = false;
 	
 	public void dmaFill() {
@@ -452,32 +464,64 @@ public class GenVdp {
 	
 	boolean dmaRequested;
 	
-	public void writeDataPort(int data) {
+	public void writeDataPort(int data, Size size) {
 		this.dataPort = data;
 
-		if (vramFill) {
-			if (m1) {
-				dma = 1;
-				vramFill = false;
-				
-				return;
+		if (size == Size.BYTE) {
+			if (vramFill) {
+				throw new RuntimeException("IMPL");
 			} else {
-				System.out.println("M1 should be 1 in the DMA transfer. otherwise we can't guarantee the operation.");
+				throw new RuntimeException("IMPL");
 			}
 			
-		} else if (vramMode == VramMode.vramWrite) {
-			vramWrite(data);
-			
-		} else if (vramMode == VramMode.cramWrite) {
-			cramWrite(data);
-			
-		} else if (vramMode == VramMode.vsramWrite) {
-			vsramWrite(data);
+		} else if (size == Size.WORD) {
+			if (vramFill) {
+				if (m1) {
+					dma = 1;
+					vramFill = false;
+					
+					dataPort = data;
+					
+					return;
+				} else {
+					System.out.println("M1 should be 1 in the DMA transfer. otherwise we can't guarantee the operation.");
+				}
+				
+			} else if (vramMode == VramMode.vramWrite) {
+				vramWriteWord(data);
+				
+			} else if (vramMode == VramMode.cramWrite) {
+				cramWriteWord(data);
+				
+			} else if (vramMode == VramMode.vsramWrite) {
+				vsramWriteWord(data);
+				
+			} else {
+				System.out.println("Write pero mando read, Modo video: " + vramMode.toString());
+//				throw new RuntimeException("NOT IMPL !");
+			}
 			
 		} else {
-			System.out.println("Write pero mando read, Modo video: " + vramMode.toString());
-//			throw new RuntimeException("NOT IMPL !");
+			if (vramFill) {
+				throw new RuntimeException();
+			} else if (vramMode == VramMode.vramWrite) {
+				vramWriteWord(data >> 16);
+				vramWriteWord(data & 0xFFFF);
+				
+			} else if (vramMode == VramMode.cramWrite) {
+				cramWriteWord(data >> 16);
+				cramWriteWord(data & 0xFFFF);
+				
+			} else if (vramMode == VramMode.vsramWrite) {
+				vsramWriteWord(data >> 16);
+				vsramWriteWord(data & 0xFFFF);
+				
+			} else {
+				System.out.println("Write pero mando read, Modo video: " + vramMode.toString());
+//				throw new RuntimeException("NOT IMPL !");
+			}
 		}
+		
 	}
 
 //	 Registers 19, 20, specify how many 16-bit words to transfer:
@@ -600,7 +644,7 @@ public class GenVdp {
 	}
 
 	private void writeCramByte(int address, int data) {
-		if (address > 0x80) {
+		if (address > 0x7F) {
 			return;
 		}
 		cram[address] = data;
@@ -608,12 +652,15 @@ public class GenVdp {
 	}
 
 	private void writeVramByte(int address, int data) {
+		if (address == 0x8617) {
+			System.out.println();
+		}
 		vram[address] = data;
 	}
 	
 	int autoIncrementTotal;
 	
-	private void vramWrite(int data) {
+	private void vramWriteWord(int data) {
 		int word = data;
 		
 		int index = nextFIFOReadEntry;
@@ -628,7 +675,7 @@ public class GenVdp {
 		int offset = addr + autoIncrementTotal;
 		
 		int data1 = (word >> 8) & 0xFF;
-		int data2 = (word >> 0) & 0xFF;
+		int data2 = word & 0xFF;
 		
 		//	hack por si se pasa
 		if (offset > 0xFFFE) {
@@ -656,19 +703,30 @@ public class GenVdp {
 		autoIncrementTotal = incrementOffset;
 	}
 	
+	private void cramWriteByte(int data) {
+		
+	}
+	
 //	https://emu-docs.org/Genesis/sega2f.htm
-
 //The CRAM contains 128 bytes, addresses 0 to 7FH.  For word wide writes to the CRAM, use:
-//D15 ~ D0 are valid when we use word for data set.  If the writes are byte wide, write the high byte to $C00000 and the low byte to $C00001.  A long word wide access is equivalent to two sequential word wide accesses.  Place the first data in D31 - D16 and the second data in D15 - D0.  The date may be written sequentially;  the address is incremented by the value of REGISTER #15 after every write, independent of whether the width is byte of word.
+	// D15 ~ D0 are valid when we use word for data set. If the writes are byte
+	// wide, write the high byte to $C00000 and the low byte to $C00001. A long
+	// word wide access is equivalent to two sequential word wide accesses.
+	// Place the first data in D31 - D16 and the second data in D15 - D0. The
+	// date may be written sequentially; the address is incremented by the value
+	// of REGISTER #15 after every write, independent of whether the width is
+	// byte of word.
 //Note that A0 is used in the increment but not in address decoding, resulting in some interesting side-effects if writes are attempted at odd addresses.
-	private void cramWrite(int data) {
-		if (!cramWrite2) {
-			cramWriteData = data;
-			cramWrite2 = true;
-		} else {
-			cramWrite2 = false;
-			int word = (cramWriteData << 16) | data;
+	private void cramWriteWord(int data) {
+//		if (!cramWrite2) {
+//			cramWriteData = data;
+//			cramWrite2 = true;
+//		} else {
+//			cramWrite2 = false;
+//			int word = (cramWriteData << 16) | data;
 			
+			int word = data;
+		
 			int index = nextFIFOReadEntry;
 			int address = addressPort;
 			
@@ -680,8 +738,8 @@ public class GenVdp {
 			
 			int offset = address + autoIncrementTotal;
 			
-			int data1 = (word >> 24) & 0xFF;
-			int data2 = (word >> 16) & 0xFF;
+			int data1 = (word >> 8) & 0xFF;
+			int data2 = word & 0xFF;
 			
 			writeCramByte(offset, data1);
 			writeCramByte(offset + 1, data2);
@@ -690,27 +748,20 @@ public class GenVdp {
 			fifoCode[index] = code;
 			fifoData[index] = (data1 << 8) | data2;
 			
-			int data3 = (word >> 8) & 0xFF;
-			int data4 = (word >> 0) & 0xFF;
-			
-			writeCramByte(offset + 2, data3);
-			writeCramByte(offset + 3, data4);
-
 			int incrementOffset = autoIncrementTotal + autoIncrementData;
 			
 			address = address + incrementOffset;	// FIXME wrap
 			index = (index + 1) % 4;
 			fifoAddress[index] = address;
 			fifoCode[index] = code;
-			fifoData[index] = (data3 << 8) | data4;
 			
 			nextFIFOReadEntry = (index + 1) % 4;
 			nextFIFOWriteEntry = (index + 1) % 4;
-			autoIncrementTotal = incrementOffset + 2;
-		}
+			autoIncrementTotal = incrementOffset;
+//		}
 	}
 	
-	private void vsramWrite(int data) {
+	private void vsramWriteWord(int data) {
 //			int word = (vsramWriteData << 16) | data;
 		int word = data;
 			
