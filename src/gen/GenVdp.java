@@ -652,9 +652,6 @@ public class GenVdp {
 	}
 
 	private void writeVramByte(int address, int data) {
-		if (address == 0x8617) {
-			System.out.println();
-		}
 		vram[address] = data;
 	}
 	
@@ -971,13 +968,6 @@ public class GenVdp {
 //				return;
 //			}
 			
-			if (currSprite == 0x17) {
-				System.out.println();
-			}
-			if (line == 171) {
-				System.out.println();
-			}
-			
 			int horSize = (byte2 >> 2) & 0x3;
 			int verSize = byte2 & 0x3;
 			
@@ -1160,9 +1150,6 @@ public class GenVdp {
 				int pix = 0;
 				if (W) {
 					pix = window[i][j];
-					if (pix == 0) {
-						System.out.println();
-					}
 					window[i][j] = 0;
 					windowIndex[i][j] = 0;
 				} else {
@@ -1204,19 +1191,30 @@ public class GenVdp {
 		int nameTableLocation = registers[2] & 0x38;	// bit 6 para modo extendido de vram, no lo emulo
 		nameTableLocation *= 0x400;
 		
+		int tileLocator = nameTableLocation;
+
 		int reg10 = registers[0x10];
 		int horScrollSize = reg10 & 3;
 		int verScrollSize = (reg10 >> 4) & 3;
 		
-		int tileLocator = nameTableLocation;
-		
-		int limitHorTiles = 0;
+		int horPixelsSize = 0;
 		if (horScrollSize == 0) {
-			limitHorTiles = 32;
+			horPixelsSize = 32;
 		} else if (horScrollSize == 1) {
-			limitHorTiles = 40;		//	40 words / tiles por scanline
+			horPixelsSize = 64;
 		} else {
+			horPixelsSize = 128;
+		}
+		
+		int regC = registers[0xC];
+		boolean rs0 = bitTest(regC, 7);
+		boolean rs1 = bitTest(regC, 0);
+		
+		int limitHorTiles;
+		if (rs0 && rs1) {
 			limitHorTiles = 40;
+		} else {
+			limitHorTiles = 32;
 		}
 		
 		int line = this.line;
@@ -1256,27 +1254,118 @@ public class GenVdp {
 			}
 			
 		} else {	// 16 columns (2 tiles) scrolling
-			
+			throw new RuntimeException();
 		}
 		
-//		if (horScrollSize == 0) {
-//			tileLocator += (64 * vertTileScreen);
-//		} else if (horScrollSize == 1) {
-//			tileLocator += (128 * vertTileScreen);		// fuera del active view, 24 words o 48 bytes
-//		} else {
-//			tileLocator += (256 * vertTileScreen);	//	256 bytes por tile vertical en modo ancho
+//		tileLocator = scrollCalculate(horScrollSize, tileLocator, line, hScrollBase, HS, "A");
+		
+		long scrollData = 0;
+		long scrollTile = 0;
+		if (HS == 0b00) {	//	entire screen is scrolled at once by one longword in the horizontal scroll table
+			scrollData  = vram[hScrollBase] << 8;
+			scrollData |= vram[hScrollBase + 1];
+			
+			if (horScrollSize == 0) {	//	32 tiles
+				scrollData &= 0xFF;
+				if (scrollData != 0) {
+					
+					scrollData = 0x100 - scrollData;
+					scrollTile = scrollData / 8;
+				}
+				
+			} else if (horScrollSize == 1) {	//	64 tiles
+				scrollData &= 0x1FF;
+				if (scrollData != 0) {
+					
+					scrollData = 0x200 - scrollData;
+					scrollTile = scrollData / 8;
+				}
+			} else  {
+				scrollData &= 0xFFF;	//	128 tiles
+			
+				if (scrollData != 0) {
+					scrollData = 0x1000 - scrollData;
+					scrollTile = scrollData / 8;
+				}
+			}
+			
+//			tileLocator += (scrollTile * 2); 
+			
+		} else if (HS == 0b10) {	//	long scrolls 8 pixels
+			int scrollLine = hScrollBase + ((line / 8) * 32);	// 32 bytes por 8 scanlines
+			
+			scrollData  = vram[scrollLine] << 8;
+			scrollData |= vram[scrollLine + 1];
+			
+			if (scrollData != 0) {
+				if (horScrollSize == 0) {	//	32 tiles
+					scrollData &= 0xFF;
+					
+					scrollData = 0x100 - scrollData;
+					scrollTile = scrollData / 8;
+					
+				} else if (horScrollSize == 1) {	//	64 tiles
+					scrollData &= 0x1FF;
+					
+					scrollData = 0x200 - scrollData;
+					scrollTile = scrollData / 8;
+					
+				} else {		//	128 tiles
+					scrollData &= 0x3FF;
+				
+					scrollData = 0x400 - scrollData;
+					scrollTile = scrollData / 8;
+				}
+			}
+			
+//			tileLocator += (scrollTile * 2);
+			
+		} else if (HS == 0b11) {	//	scroll one scanline
+			int scrollLine = hScrollBase + ((line) * 4);	// 4 bytes por 1 scanline
+			
+			scrollData  = vram[scrollLine] << 8;
+			scrollData |= vram[scrollLine + 1];
+			
+			if (horScrollSize == 0) {	//	32 tiles
+				scrollData &= 0xFF;
+
+				if (scrollData != 0) {
+					scrollData = 0x100 - scrollData;
+					scrollTile = scrollData / 8;
+				}
+				
+			} else if (horScrollSize == 1) {	//	64 tiles
+				scrollData &= 0x1FF;
+				
+				if (scrollData != 0) {
+					scrollData = 0x200 - scrollData;
+					scrollTile = scrollData / 8;
+				}
+				
+			} else  {
+				scrollData &= 0x3FF;
+			
+				if (scrollData != 0) {
+					scrollData = 0x400 - scrollData;
+					scrollTile = scrollData / 8;
+				}
+			}
+			
+//			tileLocator += (scrollTile * 2); 
+		}
+		
+//		if (line == 0) {
+//			System.out.println();
 //		}
 		
-		tileLocator = scrollCalculate(horScrollSize, tileLocator, line, hScrollBase, HS, "A");
-		
-		for (int horTile = 0; horTile < limitHorTiles; horTile++) {
-			int loc = tileLocator;
+		int loc = tileLocator;
+		for (int pixel = 0; pixel < (limitHorTiles * 8); pixel++) {
+			int tileHor = (pixel / 8);
+			loc = (int) (tileLocator + (((scrollTile * 2) + (tileHor * 2)) % (horPixelsSize * 2)));
 			
 			int nameTable  = vram[loc] << 8;
 				nameTable |= vram[loc + 1];
-			
-			tileLocator += 2;
-		
+				
 //			An entry in a name table is 16 bits, and works as follows:
 //			15			14 13	12				11		   			10 9 8 7 6 5 4 3 2 1 0
 //			Priority	Palette	Vertical Flip	Horizontal Flip		Tile Index
@@ -1291,6 +1380,10 @@ public class GenVdp {
 
 			tileIndex *= 0x20;
 			
+			if (tileIndex != 0 ){
+//				System.out.println();
+			}
+			
 			int filas = (line % 8);
 			
 			int pointVert;
@@ -1299,66 +1392,84 @@ public class GenVdp {
 			} else {
 				pointVert = filas;
 			}
-			for (int k = 0; k < 4; k++) {
-				int point;
-				if (horFlip) {
-					point = (k - 3) * -1;
-				} else {
-					point = k;
-				}
+//			for (int k = 0; k < 4; k++) {
+			
+			int pixelInTile = (int) ((pixel + scrollData) % 8);
+			
+			int point = pixelInTile;
+			if (horFlip) {
+				point = (pixelInTile - 7) * -1;
+			}
+			
+//				int point;
+//				if (horFlip) {
+//					point = (k - 3) * -1;
+//				} else {
+//					point = k;
+//				}
 				
-				int po = horTile * 8 + (k * 2);
-				int pu = vertTileScreen * 8 + (filas);
-				
+//				int po = pixel + (k * 2);
+
 				if (!disp) {
-					planeA[po][line] = 0;
-					planeA[po + 1][line] = 0;
+					planeA[pixel][line] = 0;
+//					planeA[po + 1][line] = 0;
 					
-					planePrioA[po][line] = false;
-					planePrioA[po + 1][line] = false;
+					planePrioA[pixel][line] = false;
+//					planePrioA[po + 1][line] = false;
 					
-					planeIndexColorA[po][line] = 0;
-					planeIndexColorA[po + 1][line] = 0;
+					planeIndexColorA[pixel][line] = 0;
+//					planeIndexColorA[po + 1][line] = 0;
 				} else {
+					point /= 2;
+					
 					int grab = (tileIndex + point) + (pointVert * 4);
 					int data = vram[grab];
 					
-					int pixel1, pixel2;
-					if (horFlip) {
-						pixel1 = data & 0x0F;
-						pixel2 = (data & 0xF0) >> 4;
+//					int pixel1, pixel2;
+					int pixel1;
+					if ((pixelInTile % 2) == 0) {
+						if (horFlip) {
+							pixel1 = data & 0x0F;
+//						pixel2 = (data & 0xF0) >> 4;
+						} else {
+							pixel1 = (data & 0xF0) >> 4;
+//						pixel2 = data & 0x0F;
+						}
 					} else {
-						pixel1 = (data & 0xF0) >> 4;
-						pixel2 = data & 0x0F;
+						if (horFlip) {
+							pixel1 = (data & 0xF0) >> 4;
+						} else {
+							pixel1 = data & 0x0F;
+						}
 					}
 					
 					int colorIndex1 = paletteLine + (pixel1 * 2);
-					int colorIndex2 = paletteLine + (pixel2 * 2);
+//					int colorIndex2 = paletteLine + (pixel2 * 2);
 					
 					int color1 = cram[colorIndex1] << 8 | cram[colorIndex1 + 1];
-					int color2 = cram[colorIndex2] << 8 | cram[colorIndex2 + 1];
+//					int color2 = cram[colorIndex2] << 8 | cram[colorIndex2 + 1];
 					
 					int r = (color1 >> 1) & 0x7;
 					int g = (color1 >> 5) & 0x7;
 					int b = (color1 >> 9) & 0x7;
 					
-					int r2 = (color2 >> 1) & 0x7;
-					int g2 = (color2 >> 5) & 0x7;
-					int b2 = (color2 >> 9) & 0x7;
+//					int r2 = (color2 >> 1) & 0x7;
+//					int g2 = (color2 >> 5) & 0x7;
+//					int b2 = (color2 >> 9) & 0x7;
 					
 					int theColor1 = getColour(r, g, b);
-					int theColor2 = getColour(r2, g2, b2);
+//					int theColor2 = getColour(r2, g2, b2);
 					
-					planeA[po][line] = theColor1;
-					planeA[po + 1][line] = theColor2;
+					planeA[pixel][line] = theColor1;
+//					planeA[pixel + 1][line] = theColor2;
 					
-					planePrioA[po][line] = priority;
-					planePrioA[po + 1][line] = priority;
+					planePrioA[pixel][line] = priority;
+//					planePrioA[po + 1][line] = priority;
 					
-					planeIndexColorA[po][line] = pixel1;
-					planeIndexColorA[po + 1][line] = pixel2;
+					planeIndexColorA[pixel][line] = pixel1;
+//					planeIndexColorA[po + 1][line] = pixel2;
 				}
-			}
+//			}
 		}
 	}
 
@@ -1386,10 +1497,10 @@ public class GenVdp {
 					scrollData /= 8;
 				}
 			} else  {
-				scrollData &= 0xFFF;
+				scrollData &= 0xFFF;	//	128 tiles
 			
 				if (scrollData != 0) {
-					scrollData = 0x1000 - scrollData;	//	inverse
+					scrollData = 0x1000 - scrollData;
 					scrollData /= 8;
 				}
 			}
@@ -1472,19 +1583,30 @@ public class GenVdp {
 		int nameTableLocation = (registers[4] & 0x7) << 3;	// bit 3 para modo extendido de vram, no lo emulo
 		nameTableLocation *= 0x400;
 		
+		int tileLocator = nameTableLocation;
+		
 		int reg10 = registers[0x10];
 		int horScrollSize = reg10 & 3;
 		int verScrollSize = (reg10 >> 4) & 3;
 		
-		int tileLocator = nameTableLocation;
-		
-		int limitHorTiles = 0;
+		int horPixelsSize = 0;
 		if (horScrollSize == 0) {
-			limitHorTiles = 32;
+			horPixelsSize = 32;
 		} else if (horScrollSize == 1) {
-			limitHorTiles = 40;		//	40 words / tiles por scanline
+			horPixelsSize = 64;
 		} else {
+			horPixelsSize = 128;
+		}
+		
+		int regC = registers[0xC];
+		boolean rs0 = bitTest(regC, 7);
+		boolean rs1 = bitTest(regC, 0);
+		
+		int limitHorTiles;
+		if (rs0 && rs1) {
 			limitHorTiles = 40;
+		} else {
+			limitHorTiles = 32;
 		}
 		
 		int line = this.line;
@@ -1497,8 +1619,6 @@ public class GenVdp {
 		int HS = regB & 0x3;
 		int VS = (regB >> 2) & 0x1;
 			
-		int vertTile = (line / 8);
-		
 		int vertTileScreen = (line / 8);
 		int scrollMap = 0;
 		
@@ -1526,27 +1646,114 @@ public class GenVdp {
 			}
 			
 		} else {	// 16 columns (2 tiles) scrolling
-			
+			throw new RuntimeException();
 		}
 		
-//		if (horScrollSize == 0) {
-//			tileLocator += (64 * vertTile);
-//		} else if (horScrollSize == 1) {
-//			tileLocator += (128 * vertTile);		// fuera del active view, 24 words o 48 bytes
-//		} else {
-//			tileLocator += (256 * vertTile);	//	256 bytes por tile vertical en modo ancho
-//		}
+//		tileLocator = scrollCalculate(horScrollSize, tileLocator, line, hScrollBase, HS, "B");
 		
-		tileLocator = scrollCalculate(horScrollSize, tileLocator, line, hScrollBase, HS, "B");
+		long scrollData = 0;
+		long scrollTile = 0;
+		if (HS == 0b00) {	//	entire screen is scrolled at once by one longword in the horizontal scroll table
+			scrollData  = vram[hScrollBase + 2] << 8;
+			scrollData |= vram[hScrollBase + 3];
+			
+			if (horScrollSize == 0) {	//	32 tiles
+				scrollData &= 0xFF;
+				if (scrollData != 0) {
+					
+					scrollData = 0x100 - scrollData;
+					scrollTile = scrollData / 8;
+				}
+				
+			} else if (horScrollSize == 1) {	//	64 tiles
+				scrollData &= 0x1FF;
+				if (scrollData != 0) {
+					
+					scrollData = 0x200 - scrollData;
+					scrollTile = scrollData / 8;
+				}
+			} else  {
+				scrollData &= 0xFFF;	//	128 tiles
+			
+				if (scrollData != 0) {
+					scrollData = 0x1000 - scrollData;
+					scrollTile = scrollData / 8;
+				}
+			}
+			
+//			tileLocator += (scrollTile * 2); 
+			
+		} else if (HS == 0b10) {	//	long scrolls 8 pixels
+			int scrollLine = hScrollBase + ((line / 8) * 32);	// 32 bytes por 8 scanlines
+			
+			scrollData  = vram[scrollLine] << 8;
+			scrollData |= vram[scrollLine + 1];
+			
+			if (scrollData != 0) {
+				if (horScrollSize == 0) {	//	32 tiles
+					scrollData &= 0xFF;
+					
+					scrollData = 0x100 - scrollData;
+					scrollTile = scrollData / 8;
+					
+				} else if (horScrollSize == 1) {	//	64 tiles
+					scrollData &= 0x1FF;
+					
+					scrollData = 0x200 - scrollData;
+					scrollTile = scrollData / 8;
+					
+				} else {		//	128 tiles
+					scrollData &= 0x3FF;
+				
+					scrollData = 0x400 - scrollData;
+					scrollTile = scrollData / 8;
+				}
+			}
+			
+//			tileLocator += (scrollTile * 2);
+			
+		} else if (HS == 0b11) {	//	scroll one scanline
+			int scrollLine = hScrollBase + ((line) * 4);	// 4 bytes por 1 scanline
+			
+			scrollData  = vram[scrollLine + 2] << 8;
+			scrollData |= vram[scrollLine + 3];
+			
+			if (horScrollSize == 0) {	//	32 tiles
+				scrollData &= 0xFF;
+
+				if (scrollData != 0) {
+					scrollData = 0x100 - scrollData;
+					scrollTile = scrollData / 8;
+				}
+				
+			} else if (horScrollSize == 1) {	//	64 tiles
+				scrollData &= 0x1FF;
+				
+				if (scrollData != 0) {
+					scrollData = 0x200 - scrollData;
+					scrollTile = scrollData / 8;
+				}
+				
+			} else  {
+				scrollData &= 0x3FF;
+			
+				if (scrollData != 0) {
+					scrollData = 0x400 - scrollData;
+					scrollTile = scrollData / 8;
+				}
+			}
+			
+//			tileLocator += (scrollTile * 2); 
+		}
 		
-		for (int horTile = 0; horTile < limitHorTiles; horTile++) {
-			int loc = tileLocator;
+		int loc = tileLocator;
+		for (int pixel = 0; pixel < (limitHorTiles * 8); pixel++) {
+			int tileHor = (pixel / 8);
+			loc = (int) (tileLocator + (((scrollTile * 2) + (tileHor * 2)) % (horPixelsSize * 2)));
 			
 			int nameTable  = vram[loc] << 8;
 				nameTable |= vram[loc + 1];
 			
-			tileLocator += 2;
-		
 //			An entry in a name table is 16 bits, and works as follows:
 //			15			14 13	12				11		   			10 9 8 7 6 5 4 3 2 1 0
 //			Priority	Palette	Vertical Flip	Horizontal Flip		Tile Index
@@ -1569,66 +1776,74 @@ public class GenVdp {
 			} else {
 				pointVert = filas;
 			}
-			for (int k = 0; k < 4; k++) {
-				int point;
-				if (horFlip) {
-					point = (k - 3) * -1;
-				} else {
-					point = k;
-				}
+//			for (int k = 0; k < 4; k++) {
+			
+			int pixelInTile = (int) ((pixel + scrollData) % 8);
+			
+			int point = pixelInTile;
+			if (horFlip) {
+				point = (pixelInTile - 7) * -1;
+			}
+			
+//				int point;
+//				if (horFlip) {
+//					point = (k - 3) * -1;
+//				} else {
+//					point = k;
+//				}
 				
-				int po = horTile * 8 + (k * 2);
-				int pu = vertTile * 8 + (filas);
-				
+//				int po = pixel + (k * 2);
+
 				if (!disp) {
-					planeB[po][line] = 0;
-					planeB[po + 1][line] = 0;
-					
-					planePrioB[po][line] = false;
-					planePrioB[po + 1][line] = false;
-					
-					planeIndexColorB[po][line] = 0;
-					planeIndexColorB[po + 1][line] = 0;
+					planeB[pixel][line] = 0;
+					planePrioB[pixel][line] = false;
+					planeIndexColorB[pixel][line] = 0;
 				} else {
+					point /= 2;
+					
 					int grab = (tileIndex + point) + (pointVert * 4);
 					int data = vram[grab];
 					
-					int pixel1, pixel2;
-					if (horFlip) {
-						pixel1 = data & 0x0F;
-						pixel2 = (data & 0xF0) >> 4;
+//					int pixel1, pixel2;
+					int pixel1;
+					if ((pixelInTile % 2) == 0) {
+						if (horFlip) {
+							pixel1 = data & 0x0F;
+//						pixel2 = (data & 0xF0) >> 4;
+						} else {
+							pixel1 = (data & 0xF0) >> 4;
+//						pixel2 = data & 0x0F;
+						}
 					} else {
-						pixel1 = (data & 0xF0) >> 4;
-						pixel2 = data & 0x0F;
+						if (horFlip) {
+							pixel1 = (data & 0xF0) >> 4;
+						} else {
+							pixel1 = data & 0x0F;
+						}
 					}
 					
 					int colorIndex1 = paletteLine + (pixel1 * 2);
-					int colorIndex2 = paletteLine + (pixel2 * 2);
+//					int colorIndex2 = paletteLine + (pixel2 * 2);
 					
 					int color1 = cram[colorIndex1] << 8 | cram[colorIndex1 + 1];
-					int color2 = cram[colorIndex2] << 8 | cram[colorIndex2 + 1];
+//					int color2 = cram[colorIndex2] << 8 | cram[colorIndex2 + 1];
 					
 					int r = (color1 >> 1) & 0x7;
 					int g = (color1 >> 5) & 0x7;
 					int b = (color1 >> 9) & 0x7;
 					
-					int r2 = (color2 >> 1) & 0x7;
-					int g2 = (color2 >> 5) & 0x7;
-					int b2 = (color2 >> 9) & 0x7;
+//					int r2 = (color2 >> 1) & 0x7;
+//					int g2 = (color2 >> 5) & 0x7;
+//					int b2 = (color2 >> 9) & 0x7;
 					
 					int theColor1 = getColour(r, g, b);
-					int theColor2 = getColour(r2, g2, b2);
+//					int theColor2 = getColour(r2, g2, b2);
 					
-					planeB[po][line] = theColor1;
-					planeB[po + 1][line] = theColor2;
-					
-					planePrioB[po][line] = priority;
-					planePrioB[po + 1][line] = priority;
-					
-					planeIndexColorB[po][line] = pixel1;
-					planeIndexColorB[po + 1][line] = pixel2;
+					planeB[pixel][line] = theColor1;
+					planePrioB[pixel][line] = priority;
+					planeIndexColorB[pixel][line] = pixel1;
 				}
-			}
+//			}
 		}
 	}
 	
