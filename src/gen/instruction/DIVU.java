@@ -129,7 +129,7 @@ public class DIVU implements GenInstructionHandler {
 		} else {
 			long quot = data / div;
 
-			if (quot > 0x0000ffffL) {
+			if (quot > 0x0000FFFFL) {
 				//Overflow
 				cpu.setV();
 				cpu.setN();   // the n flag seems to be set every time an overflow is generated

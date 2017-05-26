@@ -101,7 +101,7 @@ public class Gen68 {
 //		print = true;
 		
 		if (bus.vdp.vram[0xf404] == 0x01){
-			System.out.println();
+//			System.out.println();
 		}
 
 		if (bus.memory.ram[0x4258] != 0) {
@@ -111,7 +111,7 @@ public class Gen68 {
 		if (bus.vdp.cram[0x7b] == 0xa3) {
 			
 		}
-		if (PC == 0xce0ee) {
+		if (PC == 0x6324) {
 //			print = true;
 		}
 		

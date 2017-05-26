@@ -72,6 +72,10 @@ public class GenJoypad {
 		}
 	}
 	
+	int readDataRegister3() {
+		return 0x3F;
+	}
+	
 	void writeControlRegister1(long data) {
 //		System.out.println("control data port 1! " + Long.toHexString(data));
 		control1 = data;

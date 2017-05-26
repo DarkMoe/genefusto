@@ -193,23 +193,36 @@ public class ASL implements GenInstructionHandler {
 		boolean ir = cpu.bitTest(opcode, 5);
 		int numRegister = (opcode >> 9) & 0x7;
 		
-		long toShift;
+		long shift;
 		if (!ir) {
 			if (numRegister == 0) {
-				toShift = 8;
+				shift = 8;
 			} else {
-				toShift = numRegister;
+				shift = numRegister;
 			}
 		} else {
-			toShift = cpu.getD(numRegister);
-			toShift = toShift & 63;
+			shift = cpu.getD(numRegister);
+			shift = shift & 63;
 		}
 		
-		long shiftee = cpu.getD(register) & 0xFF;
-		long res = shiftee << toShift;
-		cpu.setDByte(register, res);
-					
-		calcFlags(res, shiftee, Size.BYTE.getMsb(), 0xFF);
+		int data = (int) (cpu.getD(register) & 0xFF);
+		
+		int msb;
+		int last_out = 0;
+		int msb_changed = 0;
+		for(int s= 0; s < shift; s++) {
+			last_out = data & 0x80;
+			data <<= 1;
+			msb = data & 0x80;
+			if (msb != last_out) {
+				msb_changed = 1;
+			}
+		}
+		data &= 0xFF;
+		
+		cpu.setDByte(register, data);
+		
+		calcFlags(data, shift, msb_changed, last_out, Size.BYTE.getMsb());
 	}
 	
 	private void ASLWord(int opcode) {
@@ -217,23 +230,36 @@ public class ASL implements GenInstructionHandler {
 		boolean ir = cpu.bitTest(opcode, 5);
 		int numRegister = (opcode >> 9) & 0x7;
 		
-		long toShift;
+		long shift;
 		if (!ir) {
 			if (numRegister == 0) {
-				toShift = 8;
+				shift = 8;
 			} else {
-				toShift = numRegister;
+				shift = numRegister;
 			}
 		} else {
-			toShift = cpu.getD(numRegister);
-			toShift = toShift & 63;
+			shift = cpu.getD(numRegister);
+			shift = shift & 63;
 		}
 		
-		long shiftee = cpu.getD(register) & 0xFFFF;
-		long res = shiftee << toShift;
-		cpu.setDWord(register, res);
-					
-		calcFlags(res, shiftee, Size.WORD.getMsb(), 0xFFFF);
+		int data = (int) (cpu.getD(register) & 0xFFFF);
+		
+		int msb;
+		int last_out = 0;
+		int msb_changed = 0;
+		for(int s= 0; s < shift; s++) {
+			last_out = data & 0x8000;
+			data <<= 1;
+			msb = data & 0x8000;
+			if (msb != last_out) {
+				msb_changed = 1;
+			}
+		}
+		data &= 0xFFFF;
+		
+		cpu.setDWord(register, data);
+		
+		calcFlags(data, shift, msb_changed, last_out, Size.WORD.getMsb());
 	}
 	
 	private void ASLLong(int opcode) {
@@ -241,53 +267,68 @@ public class ASL implements GenInstructionHandler {
 		boolean ir = cpu.bitTest(opcode, 5);
 		int numRegister = (opcode >> 9) & 0x7;
 		
-		long toShift;
+		long shift;
 		if (!ir) {
 			if (numRegister == 0) {
-				toShift = 8;
+				shift = 8;
 			} else {
-				toShift = numRegister;
+				shift = numRegister;
 			}
 		} else {
-			toShift = cpu.getD(numRegister);
-			toShift = toShift & 63;
+			shift = cpu.getD(numRegister);
+			shift = shift & 63;
 		}
 		
-		long shiftee = cpu.getD(register);
-		long res = shiftee << toShift;
-		cpu.setDLong(register, res);
+		long data = cpu.getD(register);
+		
+		long msb;
+		long last_out = 0;
+		long msb_changed = 0;
+		for(int s= 0; s < shift; s++) {
+			last_out = data & 0x8000_0000;
+			data <<= 1;
+			msb = data & 0x8000_0000;
+			if (msb != last_out) {
+				msb_changed = 1;
+			}
+		}
+		
+		cpu.setDLong(register, data);
 					
-		calcFlags(res, shiftee, Size.LONG.getMsb(), 0xFFFF_FFFFL);
+		calcFlags(data, shift, msb_changed, last_out, Size.LONG.getMsb());
 	}
 	
 	private void ASLMemoryWord(int opcode) {
 		throw new RuntimeException("NOT IMPL");
 	}
 	
-	private void calcFlags(long data, long old, long msb, long maxSize) {
-		if ((data & maxSize) == 0) {
+	private void calcFlags(long data, long shift, long msb_changed, long last_out, long msb) {
+		if (data == 0) {
 			cpu.setZ();
 		} else {
 			cpu.clearZ();
 		}
+		
 		if ((data & msb) > 0) {
 			cpu.setN();
 		} else {
 			cpu.clearN();
 		}
 		
-		if (((data & msb) ^ (old & msb)) == msb) {
+		if (msb_changed != 0) {
 			cpu.setV();
 		} else {
 			cpu.clearV();
 		}
 		
-		if (data > maxSize) {
-			cpu.setC();
-			cpu.setX();
-		} else {
-			cpu.clearC();
-			cpu.clearX();
+		if (shift != 0) {
+			if (last_out != 0) {
+				cpu.setC();
+				cpu.setX();
+			} else {
+				cpu.clearC();
+				cpu.clearX();
+			}
 		}
 	}
 	

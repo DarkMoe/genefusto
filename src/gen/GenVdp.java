@@ -469,7 +469,17 @@ public class GenVdp {
 
 		if (size == Size.BYTE) {
 			if (vramFill) {
-				throw new RuntimeException("IMPL");
+				if (m1) {
+					dma = 1;
+					vramFill = false;
+					
+					dataPort = data;
+					
+					return;
+				} else {
+					System.out.println("M1 should be 1 in the DMA transfer. otherwise we can't guarantee the operation.");
+				}
+				
 			} else {
 				throw new RuntimeException("IMPL");
 			}
@@ -847,7 +857,11 @@ public class GenVdp {
 	
 	public void run(int cycles) {
 		totalCycles += cycles;
-		if (totalCycles > 982) {
+		if (totalCycles < 800) {
+			hb = 0;
+		} else if (totalCycles >= 800 && totalCycles <= 982) {
+			hb = 1;
+		} else if (totalCycles > 982) {
 			if ((registers[1] & 0x40) == 0x40) {
 				if (line < 0xE0) {
 					spritesLine = 0;
@@ -1686,8 +1700,8 @@ public class GenVdp {
 		} else if (HS == 0b10) {	//	long scrolls 8 pixels
 			int scrollLine = hScrollBase + ((line / 8) * 32);	// 32 bytes por 8 scanlines
 			
-			scrollData  = vram[scrollLine] << 8;
-			scrollData |= vram[scrollLine + 1];
+			scrollData  = vram[scrollLine + 2] << 8;
+			scrollData |= vram[scrollLine + 3];
 			
 			if (scrollData != 0) {
 				if (horScrollSize == 0) {	//	32 tiles

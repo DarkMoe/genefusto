@@ -15,6 +15,8 @@ public class GenBus {
 	
 	boolean writeSram;
 	
+	int[] sram = new int[0x80];
+	
 	GenBus(Genefusto emu, GenMemory memory, GenVdp vdp, GenZ80 z80, GenJoypad joypad, Gen68 cpu) {
 		this.emu = emu;
 		this.memory = memory;
@@ -25,11 +27,30 @@ public class GenBus {
 	}
 	
 	public long read(long address, Size size) {
-		address = address & 0xFFFFFF;	// el memory map llega hasta ahi
+		address = address & 0xFF_FFFF;	// el memory map llega hasta ahi
 		long data;
-		if (address <= 0x3FFFFF) {
+		if (address <= 0x3F_FFFF) {
 			if (size == Size.BYTE) {
-				data = memory.readCartridgeByte(address);
+				if (address >= 0x200000 && address <= 0x20FFFF && writeSram) {
+					address = address - 0x200000;
+					
+					if (size == Size.BYTE) {
+						data = sram[(int) address];
+						
+					} else if (size == Size.WORD) {
+						data  = sram[(int) address] << 8;
+						data |= sram[(int) address + 1];
+						
+					} else {
+						data  = sram[(int) address] << 24;
+						data |= sram[(int) address + 1] << 16;
+						data |= sram[(int) address + 2] << 8;
+						data |= sram[(int) address + 3];
+						
+					}
+				} else {
+					data = memory.readCartridgeByte(address);
+				}
 				
 			} else if (size == Size.WORD) {
 				data = memory.readCartridgeWord(address);
@@ -51,6 +72,9 @@ public class GenBus {
 			
 		} else if (address == 0xA10004 || address == 0xA10005) {	//	Controller 2 data
 			return joypad.readDataRegister2();
+			
+		} else if (address == 0xA10006 || address == 0xA10007) {	//	Expansion data
+			return joypad.readDataRegister3();
 		
 		} else if (address == 0xA1000C || address == 0xA1000D) {	//	Expansion Port Control
 			if (address == 0xA1000C) {
@@ -156,7 +180,24 @@ public class GenBus {
 		}
 		
 		if (addressL <= 0x3FFFFF) {	//	Cartridge ROM/RAM
-			System.out.println("write cart rom ram ? " + Integer.toHexString((int) addressL));
+			if (addressL >= 0x200000 && address <= 0x20FFFF && writeSram) {
+				addressL = addressL - 0x200000;
+				
+				if (size == Size.BYTE) {
+					sram[(int) addressL] = (int) data;
+				} else if (size == Size.WORD) {
+					sram[(int) addressL] = (int) (data >> 8) & 0xFF;
+					sram[(int) addressL + 1] = (int) data & 0xFF;
+				} else {
+					sram[(int) addressL] = (int) (data >> 24) & 0xFF;
+					sram[(int) addressL + 1] = (int) (data >> 16) & 0xFF;
+					sram[(int) addressL + 2] = (int) (data >> 8) & 0xFF;
+					sram[(int) addressL + 3] = (int) data & 0xFF;
+				}
+				
+			} else {
+				System.out.println("write cart rom ram ? " + Integer.toHexString((int) addressL));
+			}
 			
 		} else if (addressL >= 0xA00000 && addressL <= 0xA0FFFF) {	//	Z80 addressing space
 			int addr = (int) (address - 0xA00000);
@@ -309,6 +350,8 @@ public class GenBus {
 			if (vdp.vip == 1) {		//	level 6 interrupt
 				int mask = cpu.getInterruptMask();
 				if (mask < 0x6) {
+					cpu.stop = false;
+					
 					long oldPC = cpu.PC;
 					int oldSR = cpu.SR;
 					long ssp = cpu.SSP;

@@ -3,6 +3,7 @@ package gen.instruction;
 import gen.Gen68;
 import gen.GenInstruction;
 import gen.Size;
+import m68k.cpu.InstructionType;
 
 public class ASR implements GenInstructionHandler {
 
@@ -199,37 +200,29 @@ public class ASR implements GenInstructionHandler {
 		boolean ir = cpu.bitTest(opcode, 5);
 		int numRegister = (opcode >> 9) & 0x7;
 		
-		long toShift;
+		long shift;
 		if (!ir) {
 			if (numRegister == 0) {
-				toShift = 8;
+				shift = 8;
 			} else {
-				toShift = numRegister;
+				shift = numRegister;
 			}
 		} else {
-			toShift = cpu.getD(numRegister);
+			shift = cpu.getD(numRegister);
 		}
 		
 		long data = cpu.getD(register) & 0xFF;
-		long res = data >> toShift;
-		if ((data & 0x8000_0000L) > 0) {
-			long pad = 0;
-			for (int i = 0; i < toShift; i++) {
-				pad = (pad << 1) | 1;
-			} 
-			res = (pad << (8 - toShift)) | res;	//	the sign bit (MSB) is shifted into the high-order bit
+		long msb = data & 0x80;
+		long last_out = 0;
+		for(int s= 0; s < shift; s++)
+		{
+			last_out = data & 0x01;
+			data >>>= 1;
+			data |= msb;	//shift in the msb if set
 		}
-		
-		boolean carry = false;
-		if (toShift != 0) {
-			if (((data >> toShift - 1) & 1) > 0) {
-				carry = true;
-			}
-		}
-		
-		cpu.setDByte(register, res);
+		cpu.setDByte(register, data);
 					
-		calcFlags(res, data, Size.BYTE.getMsb(), carry, 0xFF);
+		calcFlags(data, shift, last_out, Size.BYTE.getMsb());
 	}
 	
 	private void ASRWord(int opcode) {
@@ -237,37 +230,31 @@ public class ASR implements GenInstructionHandler {
 		boolean ir = cpu.bitTest(opcode, 5);
 		int numRegister = (opcode >> 9) & 0x7;
 		
-		long toShift;
+		long shift;
 		if (!ir) {
 			if (numRegister == 0) {
-				toShift = 8;
+				shift = 8;
 			} else {
-				toShift = numRegister;
+				shift = numRegister;
 			}
 		} else {
-			toShift = cpu.getD(numRegister);
+			shift = cpu.getD(numRegister);
 		}
 		
 		long data = cpu.getD(register) & 0xFFFF;
-		long res = data >> toShift;
-		if ((data & 0x8000_0000L) > 0) {
-			long pad = 0;
-			for (int i = 0; i < toShift; i++) {
-				pad = (pad << 1) | 1;
-			} 
-			res = (pad << (16 - toShift)) | res;	//	the sign bit (MSB) is shifted into the high-order bit
+		
+		long msb = data & 0x8000;
+		long last_out = 0;
+		for(int s= 0; s < shift; s++)
+		{
+			last_out = data & 0x01;
+			data >>>= 1;
+			data |= msb;	//shift in the msb if set
 		}
+		data &= 0xFFFF;
+		cpu.setDWord(register, data);
 					
-		boolean carry = false;
-		if (toShift != 0) {
-			if (((data >> toShift - 1) & 1) > 0) {
-				carry = true;
-			}
-		}
-								
-		cpu.setDWord(register, res);
-					
-		calcFlags(res, data, Size.WORD.getMsb(), carry, 0xFFFF);
+		calcFlags(data, shift, last_out, Size.WORD.getMsb());
 	}
 	
 	private void ASRLong(int opcode) {
@@ -275,37 +262,30 @@ public class ASR implements GenInstructionHandler {
 		boolean ir = cpu.bitTest(opcode, 5);
 		int numRegister = (opcode >> 9) & 0x7;
 		
-		long toShift;
+		long shift;
 		if (!ir) {
 			if (numRegister == 0) {
-				toShift = 8;
+				shift = 8;
 			} else {
-				toShift = numRegister;
+				shift = numRegister;
 			}
 		} else {
-			toShift = cpu.getD(numRegister);
+			shift = cpu.getD(numRegister);
 		}
 		
 		long data = cpu.getD(register);
-		long res = data >> toShift;
-		if ((data & 0x8000_0000L) > 0) {
-			long pad = 0;
-			for (int i = 0; i < toShift; i++) {
-				pad = (pad << 1) | 1;
-			} 
-			res = (pad << (32 - toShift)) | res;	//	the sign bit (MSB) is shifted into the high-order bit
+
+		long msb = data & 0x8000_0000L;
+		long last_out = 0;
+		for(int s= 0; s < shift; s++)
+		{
+			last_out = data & 0x01;
+			data >>>= 1;
+			data |= msb;	//shift in the msb if set
 		}
-		
-		boolean carry = false;
-		if (toShift != 0) {
-			if (((data >> toShift - 1) & 1) > 0) {
-				carry = true;
-			}
-		}
-		
-		cpu.setDLong(register, res);
+		cpu.setDLong(register, data);
 					
-		calcFlags(res, data, Size.LONG.getMsb(), carry,  0xFFFF_FFFFL);
+		calcFlags(data, shift, last_out, Size.LONG.getMsb());
 	}
 
 	private void ASRMemoryWord(int opcode) {
@@ -313,46 +293,42 @@ public class ASR implements GenInstructionHandler {
 		int register = (opcode & 0x7);
 		
 		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
-		long data = o.getAddressingMode().getWord(o);
-		long toShift = 1;
-		
-		long res = data >> toShift;
-								
-		boolean carry = false;
-		if ((data & 1) > 0) {
-			carry = true;
-		}
-								
-		cpu.writeKnownAddressingMode(o, res, Size.WORD);
-					
-		calcFlags(res, data, Size.WORD.getMsb(), carry, 0xFFFF);		
+		long v = o.getAddressingMode().getWord(o);
+		long last_out = v & 0x01;
+		long msb = v & 0x8000;
+
+		v >>>= 1;
+		v |= msb;
+
+		cpu.writeKnownAddressingMode(o, v, Size.WORD);
+
+		calcFlags(v, 1, last_out, Size.WORD.getMsb());
 	}
 	
-	private void calcFlags(long data, long old, long msb, boolean carry, long maxSize) {
-		if ((data & maxSize) == 0) {
+	private void calcFlags(long data, long shift, long last_out, long msb) {
+		if (data == 0) {
 			cpu.setZ();
 		} else {
 			cpu.clearZ();
 		}
+		
 		if ((data & msb) > 0) {
 			cpu.setN();
 		} else {
 			cpu.clearN();
 		}
 		
-		if (((data & msb) ^ (old & msb)) == msb) {
-			cpu.setV();
-		} else {
-			cpu.clearV();
+		if (shift != 0) {
+			if (last_out != 0) {
+				cpu.setC();
+				cpu.setX();
+			} else {
+				cpu.clearC();
+				cpu.clearX();
+			}
 		}
 		
-		if (carry) {
-			cpu.setC();
-			cpu.setX();
-		} else {
-			cpu.clearC();
-			cpu.clearX();
-		}
+		cpu.clearV();
 	}
 	
 }

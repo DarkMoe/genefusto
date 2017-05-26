@@ -127,18 +127,18 @@ public class MULU implements GenInstructionHandler {
 		int register = (opcode & 0x7);
 		
 		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
-		long data = o.getAddressingMode().getWord(o);
+		int data = (int) o.getAddressingMode().getWord(o);
 		
-		long mult = cpu.getD(dataRegister) & 0xFFFF;
+		int mult = (int) (cpu.getD(dataRegister) & 0xFFFF);
 		
-		long tot = mult * data;
+		int tot = mult * data;
 		
 		cpu.setDLong(dataRegister, tot);
 		
 		calcFlags(tot);
 	}
 	
-	void calcFlags(long tot) {//TODO  overflow siempre clear ?
+	void calcFlags(int tot) {//TODO  overflow siempre clear ?
 		if (tot < 0) {
 			cpu.setN();
 		} else {
@@ -150,7 +150,7 @@ public class MULU implements GenInstructionHandler {
 			cpu.clearZ();
 		}
 		cpu.clearV();
-		cpu.clearX();
+		cpu.clearC();
 	}
 	
 }
