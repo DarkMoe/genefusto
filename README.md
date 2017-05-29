@@ -6,10 +6,10 @@ This is my personal project for learning how to code emulators.
 Compability is terrible, status:
 
 -boots some games
--display plane A, B and sprites
--sprite evaluation
+-display plane A, B, Window and sprites
+-Sprite evaluation
+-Scrolling
 
--no scrolling
--no sound
--no hblank support
--no accurate timings
+-No sound
+-No accurate cpu and video timings
+-Broken Z80 communication
