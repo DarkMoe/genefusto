@@ -480,8 +480,16 @@ public class GenVdp {
 					System.out.println("M1 should be 1 in the DMA transfer. otherwise we can't guarantee the operation.");
 				}
 				
+			} else if (vramMode == VramMode.vramWrite) {
+				vramWriteByte(data);
+				
+			} else if (vramMode == VramMode.cramWrite) {
+				throw new RuntimeException("NOT IMPL !");
+			} else if (vramMode == VramMode.vsramWrite) {
+				throw new RuntimeException("NOT IMPL !");
 			} else {
-				throw new RuntimeException("IMPL");
+				System.out.println("Write pero mando read, Modo video: " + vramMode.toString());
+//				throw new RuntimeException("NOT IMPL !");
 			}
 			
 		} else if (size == Size.WORD) {
@@ -573,10 +581,6 @@ public class GenVdp {
 		long sourceAddr = ((registers[0x17] & 0x7F) << 16) | (registers[0x16] << 8) | (registers[0x15]);
 		long sourceTrue = sourceAddr << 1;	// duplica, trabaja asi
 		int destAddr = (int) (((commandWord & 0x3) << 14) | ((commandWord & 0x3FFF_0000L) >> 16));
-		
-		if (destAddr == 0xF000) {
-			System.out.println();
-		}
 		
 		int index, data;
 		while (dmaLength > 0) {
@@ -714,8 +718,43 @@ public class GenVdp {
 		autoIncrementTotal = incrementOffset;
 	}
 	
-	private void cramWriteByte(int data) {
+	private void vramWriteByte(int data) {
+		int index = nextFIFOReadEntry;
+		int address = addressPort;
 		
+		long first =  all >> 16;
+		long second = all & 0xFFFF;
+		
+		int code = (int) ((first >> 14) | (((second >> 4) & 0xF) << 2));
+		int addr = (int) ((first & 0x3FFF) | ((second & 0x3) << 14));
+		
+		int offset = addr + autoIncrementTotal;
+		
+		data = data & 0xFF;
+		
+		//	hack por si se pasa
+		if (offset > 0xFFFF) {
+			return;
+		}
+		
+		writeVramByte(offset, data);
+		
+//		System.out.println("addr: " + Integer.toHexString(offset) + " - data: " + Integer.toHexString(data1));
+//		System.out.println("addr: " + Integer.toHexString(offset + 1) + " - data: " + Integer.toHexString(data2));
+		
+		fifoAddress[index] = offset;
+		fifoCode[index] = code;
+		fifoData[index] = data;
+		
+		int incrementOffset = autoIncrementTotal + autoIncrementData;
+
+		address = address + incrementOffset;	// FIXME wrap
+		offset = offset + incrementOffset;
+		index = (index + 1) % 4;
+		
+		nextFIFOReadEntry = index;
+		nextFIFOWriteEntry = index;
+		autoIncrementTotal = incrementOffset;
 	}
 	
 //	https://emu-docs.org/Genesis/sega2f.htm
@@ -1145,8 +1184,19 @@ public class GenVdp {
 		
 		backColor = getColour(r, g, b);
 		
+		int regC = registers[0xC];
+		boolean rs0 = bitTest(regC, 7);
+		boolean rs1 = bitTest(regC, 0);
+		
+		int limitHorTiles;
+		if (rs0 && rs1) {
+			limitHorTiles = 40;
+		} else {
+			limitHorTiles = 32;
+		}
+
 		for (int j = 0; j < 256; j++) {
-			for (int i = 0; i < 320; i++) {
+			for (int i = 0; i < limitHorTiles * 8; i++) {
 				boolean aPrio = planePrioA[i][j];
 				boolean bPrio = planePrioB[i][j];
 				boolean sPrio = spritesPrio[i][j];

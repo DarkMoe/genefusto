@@ -112,13 +112,17 @@ public class Gen68 {
 			
 		}
 		
-		if (PC == 0x854e) {
+		if (PC == 0x1ce58a) {
 //			print = true;
 		}
 		
 		if (D[2] == 0x1c) {
 //			System.out.println();
 		}
+		
+//		if ((SSP & 0xFFFF_FFFFL) != getA(7) && (SR & 0x2000) == 0x2000) {
+//			System.out.println();
+//		}
 		
 		GenInstruction instruction = getInstruction((int) opcode);
 		instruction.run((int) opcode);

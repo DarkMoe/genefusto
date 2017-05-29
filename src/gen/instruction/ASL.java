@@ -299,7 +299,22 @@ public class ASL implements GenInstructionHandler {
 	}
 	
 	private void ASLMemoryWord(int opcode) {
-		throw new RuntimeException("NOT IMPL");
+		int register = (opcode & 0x7);
+		int mode = (opcode >> 3) & 0x7;
+		
+		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
+		long data = o.getData() & 0xFFFF;
+		int last_out = (int) (data & 0x8000);
+		int msb_changed = 0;
+
+		data <<= 1;
+		if((data & 0x8000) != last_out) {
+			msb_changed = 1;
+		}
+		
+		cpu.setDWord(register, data);
+					
+		calcFlags(data, 1, msb_changed, last_out, Size.WORD.getMsb());
 	}
 	
 	private void calcFlags(long data, long shift, long msb_changed, long last_out, long msb) {
