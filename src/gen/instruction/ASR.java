@@ -3,7 +3,6 @@ package gen.instruction;
 import gen.Gen68;
 import gen.GenInstruction;
 import gen.Size;
-import m68k.cpu.InstructionType;
 
 public class ASR implements GenInstructionHandler {
 
