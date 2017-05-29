@@ -173,7 +173,7 @@ public class ADDX implements GenInstructionHandler {
 		int extended = cpu.isX() ? 1 : 0;
 		
 		long tot = data + toAdd + extended;
-		cpu.setDWord(ry, tot);
+		cpu.setDWord(rx, tot);
 		
 		calcFlags(tot, data, toAdd, Size.WORD.getMsb(), Size.WORD.getMax());
 	}
@@ -188,7 +188,7 @@ public class ADDX implements GenInstructionHandler {
 		int extended = cpu.isX() ? 1 : 0;
 		
 		long tot = data + toAdd + extended;
-		cpu.setDLong(ry, tot);
+		cpu.setDLong(rx, tot);
 		
 		calcFlags(tot, data, toAdd, Size.LONG.getMsb(), Size.LONG.getMax());
 	}

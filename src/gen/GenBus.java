@@ -343,44 +343,97 @@ public class GenBus {
 		throw new RuntimeException("Z80 !");
 	}
 
+	boolean hintFrameTaken = false;
+	
+	int hLinesPassed = 0;
+	private boolean vintPending;
+	private boolean hintPending;
+	
 	//	https://www.gamefaqs.com/genesis/916377-genesis/faqs/9755
 	//	http://darkdust.net/writings/megadrive/initializing
 	public void checkInterrupts() {
 		if (vdp.ie0) {				//	vint on
 			if (vdp.vip == 1) {		//	level 6 interrupt
-				int mask = cpu.getInterruptMask();
-				if (mask < 0x6) {
-					cpu.stop = false;
-					
-					long oldPC = cpu.PC;
-					int oldSR = cpu.SR;
-					long ssp = cpu.SSP;
-					
-					ssp--;
-					write(ssp, oldPC & 0xFF, Size.BYTE);
-					ssp--;
-					write(ssp, (oldPC >> 8) & 0xFF, Size.BYTE);
-					ssp--;
-					write(ssp, (oldPC >> 16) & 0xFF, Size.BYTE);
-					ssp--;
-					write(ssp, (oldPC >> 24), Size.BYTE);
-					
-					ssp--;
-					write(ssp, oldSR & 0xFF, Size.BYTE);
-					ssp--;
-					write(ssp, (oldSR >> 8) & 0xFF, Size.BYTE);
-					
-					long address = readInterruptVector(0x78);
-					cpu.PC = address;
-					cpu.SR = (cpu.SR & 0xF8FF) | 0x0600;
-
-					cpu.SR |= 0x2000;	// force supervisor mode
-					
-					cpu.setALong(7, ssp);
-					
-					vdp.vip = 0;
-				}
+				vintPending = true;
 			}
+		}
+		
+		if (vdp.ie1) {
+			int intLine = hLinesPassed;
+			if (intLine != 0 && vdp.line == hLinesPassed) {
+				hintPending = true;
+				hLinesPassed = vdp.registers[0xA];
+			}
+		}
+		
+		int mask = cpu.getInterruptMask();
+		
+		if (vintPending && mask < 0x6) {
+			cpu.stop = false;
+			
+			long oldPC = cpu.PC;
+			int oldSR = cpu.SR;
+			long ssp = cpu.SSP;
+			
+			ssp--;
+			write(ssp, oldPC & 0xFF, Size.BYTE);
+			ssp--;
+			write(ssp, (oldPC >> 8) & 0xFF, Size.BYTE);
+			ssp--;
+			write(ssp, (oldPC >> 16) & 0xFF, Size.BYTE);
+			ssp--;
+			write(ssp, (oldPC >> 24), Size.BYTE);
+			
+			ssp--;
+			write(ssp, oldSR & 0xFF, Size.BYTE);
+			ssp--;
+			write(ssp, (oldSR >> 8) & 0xFF, Size.BYTE);
+			
+			long address = readInterruptVector(0x78);
+			cpu.PC = address;
+			cpu.SR = (cpu.SR & 0xF8FF) | 0x0600;
+
+			cpu.SR |= 0x2000;	// force supervisor mode
+			
+			cpu.setALong(7, ssp);
+			
+			vdp.vip = 0;
+			
+			vintPending = false;
+			
+			return;
+		}
+		
+		if (hintPending && mask < 0x4) {
+			cpu.stop = false;
+			
+			long oldPC = cpu.PC;
+			int oldSR = cpu.SR;
+			long ssp = cpu.SSP;
+			
+			ssp--;
+			write(ssp, oldPC & 0xFF, Size.BYTE);
+			ssp--;
+			write(ssp, (oldPC >> 8) & 0xFF, Size.BYTE);
+			ssp--;
+			write(ssp, (oldPC >> 16) & 0xFF, Size.BYTE);
+			ssp--;
+			write(ssp, (oldPC >> 24), Size.BYTE);
+			
+			ssp--;
+			write(ssp, oldSR & 0xFF, Size.BYTE);
+			ssp--;
+			write(ssp, (oldSR >> 8) & 0xFF, Size.BYTE);
+			
+			long address = readInterruptVector(0x70);
+			cpu.PC = address;
+			cpu.SR = (cpu.SR & 0xF8FF) | 0x0400;
+
+			cpu.SR |= 0x2000;	// force supervisor mode
+			
+			cpu.setALong(7, ssp);
+			
+			hintPending = false;
 		}
 	}
 

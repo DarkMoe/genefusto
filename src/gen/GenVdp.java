@@ -574,6 +574,10 @@ public class GenVdp {
 		long sourceTrue = sourceAddr << 1;	// duplica, trabaja asi
 		int destAddr = (int) (((commandWord & 0x3) << 14) | ((commandWord & 0x3FFF_0000L) >> 16));
 		
+		if (destAddr == 0xF000) {
+			System.out.println();
+		}
+		
 		int index, data;
 		while (dmaLength > 0) {
 //			currentFIFOReadEntry = nextFIFOReadEntry;
@@ -875,10 +879,14 @@ public class GenVdp {
 			
 			line++;
 			totalCycles = 0;
+			
+			bus.hLinesPassed--;
 		}
 		if (line > 0xFF) {
 			line = 0;
 			evaluateSprites();
+			
+			bus.hLinesPassed = registers[0xA];
 		}
 		if (line == 0xE0 && totalCycles == 0) {
 			vip = 1;
@@ -1700,135 +1708,136 @@ public class GenVdp {
 	// results in $3C, the proper value for this register.
 	private void renderWindow() {
 		int reg12 = registers[0x12];
-		boolean down = ((reg12 & 0x80) == 0x80) ? true : false;
 		int windowVert = reg12 & 0x1F;
+		boolean down = ((reg12 & 0x80) == 0x80) ? true : false;
 		
-		if (!down) {
-			if (windowVert != 0) {
-				int nameTableLocation = registers[0x3] & 0x3E;	//	bit 6 = 128k mode
-				nameTableLocation *= 0x400;
-				
-				int tileLocator = nameTableLocation;
-				
-				int reg10 = registers[0x10];
-				int horScrollSize = reg10 & 3;
-				
-				int limitHorTiles = 0;
-				if (horScrollSize == 0) {
-					limitHorTiles = 32;
-				} else if (horScrollSize == 1) {
-					limitHorTiles = 40;		//	40 words / tiles por scanline
-				} else {
-					limitHorTiles = 40;
-				}
-				
-				int line = this.line;
-				
-				int vertTile = (line / 8);
-				
-				if (horScrollSize == 0) {
-					tileLocator += (64 * vertTile);
-				} else if (horScrollSize == 1) {
-					tileLocator += (128 * vertTile);		// fuera del active view, 24 words o 48 bytes
-				} else {
-					tileLocator += (256 * vertTile);	//	256 bytes por tile vertical en modo ancho
-				}
-				
-				int vertLimit = (windowVert * 8);
-					
+		if (windowVert != 0) {
+
+			int line = this.line;
+			int vertTile = (line / 8);
+			
+			int vertLimit = (windowVert * 8);
+			
+			if (!down) {
 				if (line >= vertLimit) {
 					return;
 				}
-					
-				for (int horTile = 0; horTile < limitHorTiles; horTile++) {
-					int loc = tileLocator;
-					
-					int nameTable  = vram[loc] << 8;
-						nameTable |= vram[loc + 1];
-					
-					tileLocator += 2;
+			} else {
+				if (line < vertLimit) {
+					return;
+				}
+			}
+			
+			int regC = registers[0xC];
+			boolean rs0 = bitTest(regC, 7);
+			boolean rs1 = bitTest(regC, 0);
+			
+			int limitHorTiles;
+			int nameTableLocation;
+			int tileLocator;
+			if (rs0 && rs1) {
+				nameTableLocation = registers[0x3] & 0x3C;	//	WD11 is ignored if the display resolution is 320px wide (H40), which limits the Window nametable address to multiples of $1000.
+				nameTableLocation *= 0x400;
+		
+				limitHorTiles = 40;	//	H40 mode
 				
-//					An entry in a name table is 16 bits, and works as follows:
-//					15			14 13	12				11		   			10 9 8 7 6 5 4 3 2 1 0
-//					Priority	Palette	Vertical Flip	Horizontal Flip		Tile Index
-					int tileIndex = (nameTable & 0x07FF);	// cada tile ocupa 32 bytes
-					
-					boolean horFlip = bitTest(nameTable, 11);
-					boolean vertFlip = bitTest(nameTable, 12);
-					int paletteLineIndex = (nameTable >> 13) & 0x3;
-					boolean priority = bitTest(nameTable, 15);
-					
-					int paletteLine = paletteLineIndex * 32;	//	16 colores por linea, 2 bytes por color
+				tileLocator = nameTableLocation + (128 * vertTile);
+			} else {
+				nameTableLocation = registers[0x3] & 0x3E;	//	bit 6 = 128k mode
+				nameTableLocation *= 0x400;
 
-					tileIndex *= 0x20;
-					
-					int filas = (line % 8);
-					
-					int pointVert;
-					if (vertFlip) {
-						pointVert = (filas - 7) * -1;
+				limitHorTiles = 32;	//	H32 mode
+				
+				tileLocator = nameTableLocation + (64 * vertTile);
+			}
+			
+			for (int horTile = 0; horTile < limitHorTiles; horTile++) {
+				int loc = tileLocator;
+				
+				int nameTable  = vram[loc] << 8;
+					nameTable |= vram[loc + 1];
+				
+				tileLocator += 2;
+			
+//				An entry in a name table is 16 bits, and works as follows:
+//				15			14 13	12				11		   			10 9 8 7 6 5 4 3 2 1 0
+//				Priority	Palette	Vertical Flip	Horizontal Flip		Tile Index
+				int tileIndex = (nameTable & 0x07FF);	// cada tile ocupa 32 bytes
+				
+				boolean horFlip = bitTest(nameTable, 11);
+				boolean vertFlip = bitTest(nameTable, 12);
+				int paletteLineIndex = (nameTable >> 13) & 0x3;
+				boolean priority = bitTest(nameTable, 15);
+				
+				int paletteLine = paletteLineIndex * 32;	//	16 colores por linea, 2 bytes por color
+
+				tileIndex *= 0x20;
+				
+				int filas = (line % 8);
+				
+				int pointVert;
+				if (vertFlip) {
+					pointVert = (filas - 7) * -1;
+				} else {
+					pointVert = filas;
+				}
+				for (int k = 0; k < 4; k++) {
+					int point;
+					if (horFlip) {
+						point = (k - 3) * -1;
 					} else {
-						pointVert = filas;
+						point = k;
 					}
-					for (int k = 0; k < 4; k++) {
-						int point;
+					
+					int po = horTile * 8 + (k * 2);
+					
+					if (!disp) {
+						window[po][line] = 0;
+						window[po + 1][line] = 0;
+						
+						windowPrio[po][line] = false;
+						windowPrio[po + 1][line] = false;
+						
+						windowIndex[po][line] = 0;
+						windowIndex[po + 1][line] = 0;
+					} else {
+						int grab = (tileIndex + point) + (pointVert * 4);
+						int data = vram[grab];
+						
+						int pixel1, pixel2;
 						if (horFlip) {
-							point = (k - 3) * -1;
+							pixel1 = data & 0x0F;
+							pixel2 = (data & 0xF0) >> 4;
 						} else {
-							point = k;
+							pixel1 = (data & 0xF0) >> 4;
+							pixel2 = data & 0x0F;
 						}
 						
-						int po = horTile * 8 + (k * 2);
-						int pu = vertTile * 8 + (filas);
+						int colorIndex1 = paletteLine + (pixel1 * 2);
+						int colorIndex2 = paletteLine + (pixel2 * 2);
 						
-						if (!disp) {
-							window[po][line] = 0;
-							window[po + 1][line] = 0;
-							
-							windowPrio[po][line] = false;
-							windowPrio[po + 1][line] = false;
-							
-							windowIndex[po][line] = 0;
-							windowIndex[po + 1][line] = 0;
-						} else {
-							int grab = (tileIndex + point) + (pointVert * 4);
-							int data = vram[grab];
-							
-							int pixel1, pixel2;
-							if (horFlip) {
-								pixel1 = data & 0x0F;
-								pixel2 = (data & 0xF0) >> 4;
-							} else {
-								pixel1 = (data & 0xF0) >> 4;
-								pixel2 = data & 0x0F;
-							}
-							
-							int colorIndex1 = paletteLine + (pixel1 * 2);
-							int colorIndex2 = paletteLine + (pixel2 * 2);
-							
-							int color1 = cram[colorIndex1] << 8 | cram[colorIndex1 + 1];
-							int color2 = cram[colorIndex2] << 8 | cram[colorIndex2 + 1];
-							
-							int r = (color1 >> 1) & 0x7;
-							int g = (color1 >> 5) & 0x7;
-							int b = (color1 >> 9) & 0x7;
-							
-							int r2 = (color2 >> 1) & 0x7;
-							int g2 = (color2 >> 5) & 0x7;
-							int b2 = (color2 >> 9) & 0x7;
-							
-							int theColor1 = getColour(r, g, b);
-							int theColor2 = getColour(r2, g2, b2);
-							
-							window[po][line] = theColor1;
-							window[po + 1][line] = theColor2;
-							
-							windowPrio[po][line] = priority;
-							windowPrio[po + 1][line] = priority;
-							
-							windowIndex[po][line] = pixel1;
-							windowIndex[po + 1][line] = pixel2;
-						}
+						int color1 = cram[colorIndex1] << 8 | cram[colorIndex1 + 1];
+						int color2 = cram[colorIndex2] << 8 | cram[colorIndex2 + 1];
+						
+						int r = (color1 >> 1) & 0x7;
+						int g = (color1 >> 5) & 0x7;
+						int b = (color1 >> 9) & 0x7;
+						
+						int r2 = (color2 >> 1) & 0x7;
+						int g2 = (color2 >> 5) & 0x7;
+						int b2 = (color2 >> 9) & 0x7;
+						
+						int theColor1 = getColour(r, g, b);
+						int theColor2 = getColour(r2, g2, b2);
+						
+						window[po][line] = theColor1;
+						window[po + 1][line] = theColor2;
+						
+						windowPrio[po][line] = priority;
+						windowPrio[po + 1][line] = priority;
+						
+						windowIndex[po][line] = pixel1;
+						windowIndex[po + 1][line] = pixel2;
 					}
 				}
 			}

@@ -37,6 +37,9 @@ public class GenMemory {
 	}
 	
 	void writeRam(long address, long data) {
+		if (address == 0xc2bb){
+			System.out.println();
+		}
 		if (address <= 0xFFFF) {
 			ram[(int) address] = (int) data;
 		} else {
