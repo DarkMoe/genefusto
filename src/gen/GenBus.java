@@ -295,7 +295,7 @@ public class GenBus {
 			}
 
 		} else if (addressL == 0xC00011) {	//	PSG output
-			System.out.println("PSG Output");
+//			System.out.println("PSG Output");
 			// TODO implement audio		http://md.squee.co/PSG
 			
 		} else if (addressL >= 0xFF0000) {

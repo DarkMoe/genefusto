@@ -292,7 +292,7 @@ public class GenVdp {
 						if (m1) {
 							dmaMem2Vram(all);
 						} else {
-							System.out.println("DMA not done");
+							throw new RuntimeException("Como entro aca");
 						}
 					}
 					
@@ -309,10 +309,6 @@ public class GenVdp {
 		int reg = (int) ((data >> 8) & 0x1F);
 		
 		System.out.println("REG: " + pad(reg) + " - data: " + pad(dataControl));
-		
-		if (reg == 0x10) {
-			System.out.println();
-		}
 		
 		cramWrite2 = false;
 		vramWrite2 = false;
@@ -980,7 +976,7 @@ public class GenVdp {
 			
 			int linkData = byte3 & 0x7F;
 			
-			int verticalPos = ((byte0 & 0x3) << 8) | byte1;
+			int verticalPos = ((byte0 & 0x1) << 8) | byte1;
 			int verSize = byte2 & 0x3;
 			
 			int verSizePixels = (verSize + 1) * 8;
@@ -1027,7 +1023,7 @@ public class GenVdp {
 			int byte7 = vram[(int) (baseAddress + 7)];
 			
 			linkData = byte3 & 0x7F;
-			verticalPos = ((byte0 & 0x3) << 8) | byte1;
+			verticalPos = ((byte0 & 0x1) << 8) | byte1;
 			
 //			if (linkData == 0) {
 //				return;
@@ -1199,7 +1195,7 @@ public class GenVdp {
 			limitHorTiles = 32;
 		}
 
-		for (int j = 0; j < 224; j++) {
+		for (int j = 0; j < 224; j++) {		//	TODO 256 en modo pal
 			for (int i = 0; i < limitHorTiles * 8; i++) {
 				boolean aPrio = planePrioA[i][j];
 				boolean bPrio = planePrioB[i][j];
@@ -1269,6 +1265,8 @@ public class GenVdp {
 		
 		int tileLocator = nameTableLocation;
 
+		int line = this.line;
+		
 		int reg10 = registers[0x10];
 		int horScrollSize = reg10 & 3;
 		int verScrollSize = (reg10 >> 4) & 3;
@@ -1293,8 +1291,6 @@ public class GenVdp {
 			limitHorTiles = 32;
 		}
 		
-		int line = this.line;
-		
 		int regD = registers[0xD];
 		int hScrollBase = regD & 0x3F;	//	bit 6 = mode 128k
 		hScrollBase *= 0x400;
@@ -1305,19 +1301,13 @@ public class GenVdp {
 		
 		int vertTileScreen = (line / 8);
 		int scrollMap = 0;
-		
-		if (horScrollSize > 0) {
-			if (verScrollSize == 3) {	// if size > 4096 (0x1000) cells, horizontal dimension limits vertical dimension
-				verScrollSize = 1;
-			}
-		}
-		
+		int scrollDataVer = 0;
 		if (VS == 0) {	//	full screen scrolling
-			int scrollData  = vsram[0] << 8;
-				scrollData |= vsram[1];
+			scrollDataVer  = vsram[0] << 8;
+			scrollDataVer |= vsram[1];
 			
 			if (verScrollSize == 0) {	// 32 tiles (0x20)
-				scrollMap = (scrollData + line) & 0xFF;	//	32 * 8 lineas = 0x100
+				scrollMap = (scrollDataVer + line) & 0xFF;	//	32 * 8 lineas = 0x100
 				if (horScrollSize == 0) {
 					tileLocator += ((scrollMap / 8) * (0x40));
 				} else if (horScrollSize == 1) {
@@ -1327,11 +1317,11 @@ public class GenVdp {
 				}
 				
 			} else if (verScrollSize == 1) {	// 64 tiles (0x40)
-				scrollMap = (scrollData + line) & 0x1FF;	//	64 * 8 lineas = 0x200
+				scrollMap = (scrollDataVer + line) & 0x1FF;	//	64 * 8 lineas = 0x200
 				tileLocator += ((scrollMap / 8) * 0x80);
 				
 			} else {
-				scrollMap = (scrollData + line) & 0x3FF;	//	128 * 8 lineas = 0x400
+				scrollMap = (scrollDataVer + line) & 0x3FF;	//	128 * 8 lineas = 0x400
 				tileLocator += ((scrollMap / 8) * 0x100);
 			}
 			
@@ -1339,103 +1329,99 @@ public class GenVdp {
 			throw new RuntimeException();
 		}
 		
-		long scrollData = 0;
+		long scrollDataHor = 0;
 		long scrollTile = 0;
 		if (HS == 0b00) {	//	entire screen is scrolled at once by one longword in the horizontal scroll table
-			scrollData  = vram[hScrollBase] << 8;
-			scrollData |= vram[hScrollBase + 1];
+			scrollDataHor  = vram[hScrollBase] << 8;
+			scrollDataHor |= vram[hScrollBase + 1];
 			
 			if (horScrollSize == 0) {	//	32 tiles
-				scrollData &= 0xFF;
-				if (scrollData != 0) {
+				scrollDataHor &= 0xFF;
+				if (scrollDataHor != 0) {
 					
-					scrollData = 0x100 - scrollData;
-					scrollTile = scrollData / 8;
+					scrollDataHor = 0x100 - scrollDataHor;
+					scrollTile = scrollDataHor / 8;
 				}
 				
 			} else if (horScrollSize == 1) {	//	64 tiles
-				scrollData &= 0x1FF;
-				if (scrollData != 0) {
+				scrollDataHor &= 0x1FF;
+				if (scrollDataHor != 0) {
 					
-					scrollData = 0x200 - scrollData;
-					scrollTile = scrollData / 8;
+					scrollDataHor = 0x200 - scrollDataHor;
+					scrollTile = scrollDataHor / 8;
 				}
 			} else  {
-				scrollData &= 0xFFF;	//	128 tiles
+				scrollDataHor &= 0xFFF;	//	128 tiles
 			
-				if (scrollData != 0) {
-					scrollData = 0x1000 - scrollData;
-					scrollTile = scrollData / 8;
+				if (scrollDataHor != 0) {
+					scrollDataHor = 0x1000 - scrollDataHor;
+					scrollTile = scrollDataHor / 8;
 				}
 			}
 			
 		} else if (HS == 0b10) {	//	long scrolls 8 pixels
 			int scrollLine = hScrollBase + ((line / 8) * 32);	// 32 bytes por 8 scanlines
 			
-			scrollData  = vram[scrollLine] << 8;
-			scrollData |= vram[scrollLine + 1];
+			scrollDataHor  = vram[scrollLine] << 8;
+			scrollDataHor |= vram[scrollLine + 1];
 			
-			if (scrollData != 0) {
+			if (scrollDataHor != 0) {
 				if (horScrollSize == 0) {	//	32 tiles
-					scrollData &= 0xFF;
+					scrollDataHor &= 0xFF;
 					
-					scrollData = 0x100 - scrollData;
-					scrollTile = scrollData / 8;
+					scrollDataHor = 0x100 - scrollDataHor;
+					scrollTile = scrollDataHor / 8;
 					
 				} else if (horScrollSize == 1) {	//	64 tiles
-					scrollData &= 0x1FF;
+					scrollDataHor &= 0x1FF;
 					
-					scrollData = 0x200 - scrollData;
-					scrollTile = scrollData / 8;
+					scrollDataHor = 0x200 - scrollDataHor;
+					scrollTile = scrollDataHor / 8;
 					
 				} else {		//	128 tiles
-					scrollData &= 0x3FF;
+					scrollDataHor &= 0x3FF;
 				
-					scrollData = 0x400 - scrollData;
-					scrollTile = scrollData / 8;
+					scrollDataHor = 0x400 - scrollDataHor;
+					scrollTile = scrollDataHor / 8;
 				}
 			}
 			
 		} else if (HS == 0b11) {	//	scroll one scanline
 			int scrollLine = hScrollBase + ((line) * 4);	// 4 bytes por 1 scanline
 			
-			scrollData  = vram[scrollLine] << 8;
-			scrollData |= vram[scrollLine + 1];
+			scrollDataHor  = vram[scrollLine] << 8;
+			scrollDataHor |= vram[scrollLine + 1];
 			
 			if (horScrollSize == 0) {	//	32 tiles
-				scrollData &= 0xFF;
+				scrollDataHor &= 0xFF;
 
-				if (scrollData != 0) {
-					scrollData = 0x100 - scrollData;
-					scrollTile = scrollData / 8;
+				if (scrollDataHor != 0) {
+					scrollDataHor = 0x100 - scrollDataHor;
+					scrollTile = scrollDataHor / 8;
 				}
 				
 			} else if (horScrollSize == 1) {	//	64 tiles
-				scrollData &= 0x1FF;
+				scrollDataHor &= 0x1FF;
 				
-				if (scrollData != 0) {
-					scrollData = 0x200 - scrollData;
-					scrollTile = scrollData / 8;
+				if (scrollDataHor != 0) {
+					scrollDataHor = 0x200 - scrollDataHor;
+					scrollTile = scrollDataHor / 8;
 				}
 				
 			} else  {
-				scrollData &= 0x3FF;
+				scrollDataHor &= 0x3FF;
 			
-				if (scrollData != 0) {
-					scrollData = 0x400 - scrollData;
-					scrollTile = scrollData / 8;
+				if (scrollDataHor != 0) {
+					scrollDataHor = 0x400 - scrollDataHor;
+					scrollTile = scrollDataHor / 8;
 				}
 			}
 			
 		}
 		
-//		if (line == 0) {
-//			System.out.println();
-//		}
-		
 		int loc = tileLocator;
 		for (int pixel = 0; pixel < (limitHorTiles * 8); pixel++) {
-			loc = (int) (((pixel + scrollData)) % (horPixelsSize * 8)) / 8;
+			loc = (int) (((pixel + scrollDataHor)) % (horPixelsSize * 8)) / 8;
 			loc = tileLocator + (loc * 2);
 			
 			int nameTable  = vram[loc] << 8;
@@ -1455,11 +1441,7 @@ public class GenVdp {
 
 			tileIndex *= 0x20;
 			
-			if (tileIndex != 0 ){
-//				System.out.println();
-			}
-			
-			int filas = (line % 8);
+			int filas = (scrollMap % 8);
 			
 			int pointVert;
 			if (vertFlip) {
@@ -1468,7 +1450,7 @@ public class GenVdp {
 				pointVert = filas;
 			}
 			
-			int pixelInTile = (int) ((pixel + scrollData) % 8);
+			int pixelInTile = (int) ((pixel + scrollDataHor) % 8);
 			
 			int point = pixelInTile;
 			if (horFlip) {
@@ -1565,19 +1547,13 @@ public class GenVdp {
 			
 		int vertTileScreen = (line / 8);
 		int scrollMap = 0;
-		
-		if (horScrollSize > 0) {
-			if (verScrollSize == 3) {	// if size > 4096 (0x1000) cells, horizontal dimension limits vertical dimension
-				verScrollSize = 1;
-			}
-		}
-		
+		int scrollDataVer = 0;
 		if (VS == 0) {	//	full screen scrolling
-			int scrollData  = vsram[2] << 8;
-				scrollData |= vsram[3];
+			scrollDataVer  = vsram[2] << 8;
+			scrollDataVer |= vsram[3];
 			
 			if (verScrollSize == 0) {	// 32 tiles (0x20)
-				scrollMap = (scrollData + line) & 0xFF;	//	32 * 8 lineas = 0x100
+				scrollMap = (scrollDataVer + line) & 0xFF;	//	32 * 8 lineas = 0x100
 				if (horScrollSize == 0) {
 					tileLocator += ((scrollMap / 8) * (0x40));
 				} else if (horScrollSize == 1) {
@@ -1587,11 +1563,11 @@ public class GenVdp {
 				}
 				
 			} else if (verScrollSize == 1) {	// 64 tiles (0x40)
-				scrollMap = (scrollData + line) & 0x1FF;	//	64 * 8 lineas = 0x200
+				scrollMap = (scrollDataVer + line) & 0x1FF;	//	64 * 8 lineas = 0x200
 				tileLocator += ((scrollMap / 8) * 0x80);
 				
 			} else {
-				scrollMap = (scrollData + line) & 0x3FF;	//	128 * 8 lineas = 0x400
+				scrollMap = (scrollDataVer + line) & 0x3FF;	//	128 * 8 lineas = 0x400
 				tileLocator += ((scrollMap / 8) * 0x100);
 			}
 			
@@ -1599,98 +1575,98 @@ public class GenVdp {
 			throw new RuntimeException();
 		}
 		
-		long scrollData = 0;
+		long scrollDataHor = 0;
 		long scrollTile = 0;
 		if (HS == 0b00) {	//	entire screen is scrolled at once by one longword in the horizontal scroll table
-			scrollData  = vram[hScrollBase + 2] << 8;
-			scrollData |= vram[hScrollBase + 3];
+			scrollDataHor  = vram[hScrollBase + 2] << 8;
+			scrollDataHor |= vram[hScrollBase + 3];
 			
 			if (horScrollSize == 0) {	//	32 tiles
-				scrollData &= 0xFF;
-				if (scrollData != 0) {
+				scrollDataHor &= 0xFF;
+				if (scrollDataHor != 0) {
 					
-					scrollData = 0x100 - scrollData;
-					scrollTile = scrollData / 8;
+					scrollDataHor = 0x100 - scrollDataHor;
+					scrollTile = scrollDataHor / 8;
 				}
 				
 			} else if (horScrollSize == 1) {	//	64 tiles
-				scrollData &= 0x1FF;
-				if (scrollData != 0) {
+				scrollDataHor &= 0x1FF;
+				if (scrollDataHor != 0) {
 					
-					scrollData = 0x200 - scrollData;
-					scrollTile = scrollData / 8;
+					scrollDataHor = 0x200 - scrollDataHor;
+					scrollTile = scrollDataHor / 8;
 				}
 			} else  {
-				scrollData &= 0xFFF;	//	128 tiles
+				scrollDataHor &= 0xFFF;	//	128 tiles
 			
-				if (scrollData != 0) {
-					scrollData = 0x1000 - scrollData;
-					scrollTile = scrollData / 8;
+				if (scrollDataHor != 0) {
+					scrollDataHor = 0x1000 - scrollDataHor;
+					scrollTile = scrollDataHor / 8;
 				}
 			}
 			
 		} else if (HS == 0b10) {	//	long scrolls 8 pixels
 			int scrollLine = hScrollBase + ((line / 8) * 32);	// 32 bytes por 8 scanlines
 			
-			scrollData  = vram[scrollLine + 2] << 8;
-			scrollData |= vram[scrollLine + 3];
+			scrollDataHor  = vram[scrollLine + 2] << 8;
+			scrollDataHor |= vram[scrollLine + 3];
 			
-			if (scrollData != 0) {
+			if (scrollDataHor != 0) {
 				if (horScrollSize == 0) {	//	32 tiles
-					scrollData &= 0xFF;
+					scrollDataHor &= 0xFF;
 					
-					scrollData = 0x100 - scrollData;
-					scrollTile = scrollData / 8;
+					scrollDataHor = 0x100 - scrollDataHor;
+					scrollTile = scrollDataHor / 8;
 					
 				} else if (horScrollSize == 1) {	//	64 tiles
-					scrollData &= 0x1FF;
+					scrollDataHor &= 0x1FF;
 					
-					scrollData = 0x200 - scrollData;
-					scrollTile = scrollData / 8;
+					scrollDataHor = 0x200 - scrollDataHor;
+					scrollTile = scrollDataHor / 8;
 					
 				} else {		//	128 tiles
-					scrollData &= 0x3FF;
+					scrollDataHor &= 0x3FF;
 				
-					scrollData = 0x400 - scrollData;
-					scrollTile = scrollData / 8;
+					scrollDataHor = 0x400 - scrollDataHor;
+					scrollTile = scrollDataHor / 8;
 				}
 			}
 			
 		} else if (HS == 0b11) {	//	scroll one scanline
 			int scrollLine = hScrollBase + ((line) * 4);	// 4 bytes por 1 scanline
 			
-			scrollData  = vram[scrollLine + 2] << 8;
-			scrollData |= vram[scrollLine + 3];
+			scrollDataHor  = vram[scrollLine + 2] << 8;
+			scrollDataHor |= vram[scrollLine + 3];
 			
 			if (horScrollSize == 0) {	//	32 tiles
-				scrollData &= 0xFF;
+				scrollDataHor &= 0xFF;
 
-				if (scrollData != 0) {
-					scrollData = 0x100 - scrollData;
-					scrollTile = scrollData / 8;
+				if (scrollDataHor != 0) {
+					scrollDataHor = 0x100 - scrollDataHor;
+					scrollTile = scrollDataHor / 8;
 				}
 				
 			} else if (horScrollSize == 1) {	//	64 tiles
-				scrollData &= 0x1FF;
+				scrollDataHor &= 0x1FF;
 				
-				if (scrollData != 0) {
-					scrollData = 0x200 - scrollData;
-					scrollTile = scrollData / 8;
+				if (scrollDataHor != 0) {
+					scrollDataHor = 0x200 - scrollDataHor;
+					scrollTile = scrollDataHor / 8;
 				}
 				
 			} else  {
-				scrollData &= 0x3FF;
+				scrollDataHor &= 0x3FF;
 			
-				if (scrollData != 0) {
-					scrollData = 0x400 - scrollData;
-					scrollTile = scrollData / 8;
+				if (scrollDataHor != 0) {
+					scrollDataHor = 0x400 - scrollDataHor;
+					scrollTile = scrollDataHor / 8;
 				}
 			}
 		}
 		
 		int loc = tileLocator;
 		for (int pixel = 0; pixel < (limitHorTiles * 8); pixel++) {
-			loc = (int) (((pixel + scrollData)) % (horPixelsSize * 8)) / 8;
+			loc = (int) (((pixel + scrollDataHor)) % (horPixelsSize * 8)) / 8;
 			loc = tileLocator + (loc * 2);
 			
 			int nameTable  = vram[loc] << 8;
@@ -1710,7 +1686,7 @@ public class GenVdp {
 			
 			tileIndex *= 0x20;
 			
-			int filas = (line % 8);
+			int filas = (scrollMap % 8);
 			
 			int pointVert;
 			if (vertFlip) {
@@ -1719,7 +1695,7 @@ public class GenVdp {
 				pointVert = filas;
 			}
 			
-			int pixelInTile = (int) ((pixel + scrollData) % 8);
+			int pixelInTile = (int) ((pixel + scrollDataHor) % 8);
 			
 			int point = pixelInTile;
 			if (horFlip) {

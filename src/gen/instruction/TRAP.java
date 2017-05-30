@@ -88,7 +88,7 @@ public class TRAP implements GenInstructionHandler {
 			cpu.USP--;
 			cpu.bus.write(cpu.USP, (cpu.SR >> 8), Size.BYTE);
 
-			cpu.setALong(7, cpu.USP);
+			cpu.setALong(7, cpu.USP);	// TODO confirmar si debe pasarse a SUPERVISOR MODE
 		}
 		
 		long vector = 0x80 + (trap * 4);
