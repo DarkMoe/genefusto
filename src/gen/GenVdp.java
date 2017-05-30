@@ -156,8 +156,8 @@ public class GenVdp {
 	}
 	
 	int readControl() {
-//		return (0x7000 		// Exodus prende bit 14-13-12
-		return (
+//	TODO When you do a 16-bit read of the status register, the upper 6 bits are not set by the VDP. The value assigned to these bits will be whatever value these bits were set to from the last read the M68000 performed. Writes from the M68000 don't affect these bits, only reads.
+		int control = (
 				(empty << 9)
 				| (full << 8)
 				| (vip << 7)
@@ -169,6 +169,8 @@ public class GenVdp {
 				| (dma << 1)
 				| (pal << 0)
 				);
+		
+		return control;
 	}
 	
 	void init() {

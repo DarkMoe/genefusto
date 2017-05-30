@@ -15,7 +15,7 @@ public class GenBus {
 	
 	boolean writeSram;
 	
-	int[] sram = new int[0x80];
+	int[] sram = new int[0x200];
 	
 	GenBus(Genefusto emu, GenMemory memory, GenVdp vdp, GenZ80 z80, GenJoypad joypad, Gen68 cpu) {
 		this.emu = emu;

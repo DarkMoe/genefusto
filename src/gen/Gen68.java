@@ -112,12 +112,12 @@ public class Gen68 {
 			
 		}
 		
-		if (PC == 0x1ce58a) {
+		if (PC == 0x7DA5C) {
 //			print = true;
 		}
 		
-		if (D[2] == 0x1c) {
-//			System.out.println();
+		if (PC == 0xb748) {
+			print = true;
 		}
 		
 //		if ((SSP & 0xFFFF_FFFFL) != getA(7) && (SR & 0x2000) == 0x2000) {
