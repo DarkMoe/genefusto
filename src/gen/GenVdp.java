@@ -292,7 +292,7 @@ public class GenVdp {
 						if (m1) {
 							dmaMem2Vram(all);
 						} else {
-							throw new RuntimeException("Como entro aca");
+							System.out.println("DMA not done");
 						}
 					}
 					
@@ -309,6 +309,10 @@ public class GenVdp {
 		int reg = (int) ((data >> 8) & 0x1F);
 		
 		System.out.println("REG: " + pad(reg) + " - data: " + pad(dataControl));
+		
+		if (reg == 0x10) {
+			System.out.println();
+		}
 		
 		cramWrite2 = false;
 		vramWrite2 = false;
@@ -1195,7 +1199,7 @@ public class GenVdp {
 			limitHorTiles = 32;
 		}
 
-		for (int j = 0; j < 256; j++) {
+		for (int j = 0; j < 224; j++) {
 			for (int i = 0; i < limitHorTiles * 8; i++) {
 				boolean aPrio = planePrioA[i][j];
 				boolean bPrio = planePrioB[i][j];
@@ -1301,6 +1305,12 @@ public class GenVdp {
 		
 		int vertTileScreen = (line / 8);
 		int scrollMap = 0;
+		
+		if (horScrollSize > 0) {
+			if (verScrollSize == 3) {	// if size > 4096 (0x1000) cells, horizontal dimension limits vertical dimension
+				verScrollSize = 1;
+			}
+		}
 		
 		if (VS == 0) {	//	full screen scrolling
 			int scrollData  = vsram[0] << 8;
@@ -1555,6 +1565,12 @@ public class GenVdp {
 			
 		int vertTileScreen = (line / 8);
 		int scrollMap = 0;
+		
+		if (horScrollSize > 0) {
+			if (verScrollSize == 3) {	// if size > 4096 (0x1000) cells, horizontal dimension limits vertical dimension
+				verScrollSize = 1;
+			}
+		}
 		
 		if (VS == 0) {	//	full screen scrolling
 			int scrollData  = vsram[2] << 8;
