@@ -193,6 +193,7 @@ public class ROXR implements GenInstructionHandler {
 			toShift = numRegister;
 		} else {
 			toShift = cpu.getD(numRegister);
+			toShift = toShift & 63;
 		}
 		
 		long data = cpu.getD(register) & 0xFF;
@@ -224,6 +225,7 @@ public class ROXR implements GenInstructionHandler {
 			toShift = numRegister;
 		} else {
 			toShift = cpu.getD(numRegister);
+			toShift = toShift & 63;
 		}
 		
 		long data = cpu.getD(register) & 0xFFFF;
@@ -240,6 +242,38 @@ public class ROXR implements GenInstructionHandler {
 		}
 		
 		calcFlags(res, Size.WORD.getMsb(), 0xFFFF, carry);
+	}
+	
+	private void ROXRRegisterLong(int opcode) {
+		int register = (opcode & 0x7);
+		boolean ir = cpu.bitTest(opcode, 5);
+		int numRegister = (opcode >> 9) & 0x7;
+		
+		long toShift;
+		if (!ir) {
+			if (numRegister == 0) {
+				numRegister = 8;
+			}
+			toShift = numRegister;
+		} else {
+			toShift = cpu.getD(numRegister);
+			toShift = toShift & 63;
+		}
+		
+		long data = cpu.getD(register);
+		
+		long extended = cpu.isX() ? 0x8000_0000L : 0;
+		long res = (data >> toShift) | extended;
+		cpu.setDLong(register, res);
+		
+		boolean carry = false;
+		if (toShift != 0) {
+			if (((data >> toShift - 1) & 1) > 0) {
+				carry = true;
+			}
+		}
+		
+		calcFlags(res, Size.LONG.getMsb(), 0xFFFF_FFFFL, carry);
 	}
 	
 	private void ROXRMemoryWord(int opcode) {
@@ -260,10 +294,6 @@ public class ROXR implements GenInstructionHandler {
 		cpu.writeKnownAddressingMode(o, res, Size.WORD);
 		
 		calcFlags(res, Size.WORD.getMsb(), 0xFFFF, carry);
-	}
-
-	private void ROXRRegisterLong(int opcode) {
-		throw new RuntimeException("AA");
 	}
 
 	void calcFlags(long data, long msb, long maxSize, boolean carry) {

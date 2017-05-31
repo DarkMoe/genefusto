@@ -104,7 +104,7 @@ public class GenZ80 {
 		int cycles = 0;
 		
 		if (PC - 1 != 0) {
-			System.out.println("Z80: " + Integer.toHexString(PC - 1));
+//			System.out.println("Z80: " + Integer.toHexString(PC - 1));
 		}
 		
 		String fullOpcode = hex(opcode);
@@ -5731,6 +5731,10 @@ public class GenZ80 {
 			return 0xFF;	// confirmar que devuelve
 			
 		} else if (address >= 0x6001 && address <= 0x7F10) {	//	Reserved
+			return 0;
+			
+		} else if (address == 0x7F11) {		//	SN76489 PSG
+			System.out.println("PSG read Z80");
 			return 0;
 			
 		} else if (address >= 0x8000 && address <= 0xFFFF) {		//	8000h	FFFFh	M68k memory bank

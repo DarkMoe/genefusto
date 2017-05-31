@@ -33,31 +33,34 @@ public class GenBus {
 			if (size == Size.BYTE) {
 				if (address >= 0x200000 && address <= 0x20FFFF && writeSram) {
 					address = address - 0x200000;
+					data = sram[(int) address];
 					
-					if (size == Size.BYTE) {
-						data = sram[(int) address];
-						
-					} else if (size == Size.WORD) {
-						data  = sram[(int) address] << 8;
-						data |= sram[(int) address + 1];
-						
-					} else {
-						data  = sram[(int) address] << 24;
-						data |= sram[(int) address + 1] << 16;
-						data |= sram[(int) address + 2] << 8;
-						data |= sram[(int) address + 3];
-						
-					}
 				} else {
 					data = memory.readCartridgeByte(address);
 				}
 				
 			} else if (size == Size.WORD) {
-				data = memory.readCartridgeWord(address);
+				if (address >= 0x200000 && address <= 0x20FFFF && writeSram) {
+					address = address - 0x200000;
+					data  = sram[(int) address] << 8;
+					data |= sram[(int) address + 1];
+				} else {
+					data = memory.readCartridgeWord(address);
+				}
 				
 			} else {
-				data  = memory.readCartridgeWord(address) << 16;
-				data |= memory.readCartridgeWord(address + 2);
+				if (address >= 0x200000 && address <= 0x20FFFF && writeSram) {
+					address = address - 0x200000;
+					data  = sram[(int) address] << 24;
+					data |= sram[(int) address + 1] << 16;
+					data |= sram[(int) address + 2] << 8;
+					data |= sram[(int) address + 3];
+					
+				} else {
+					data  = memory.readCartridgeWord(address) << 16;
+					data |= memory.readCartridgeWord(address + 2);
+					
+				}
 			}
 			return data;
 			
@@ -203,8 +206,11 @@ public class GenBus {
 			int addr = (int) (address - 0xA00000);
 			if (size == Size.BYTE) {
 				z80.writeByte(addr, data);
-			} else {
+			} else if (size == Size.WORD) {
 				z80.writeWord(addr, data);
+			} else {
+				z80.writeWord(addr, data >> 16);
+				z80.writeWord(addr + 2, data & 0xFFFF);
 			}
 			
 //			System.out.println("Z80: " + pad4(addr) + " " + pad((int) data));
@@ -245,18 +251,21 @@ public class GenBus {
 			//	 #$0000 needs to be written to $A11100 to return the bus back to the Z80
 			} else if (data == 0x0000) {
 				z80.unrequestBus();
+				if (!z80.reset) {
+					emu.runZ80 = true;
+				}
 				
 			}
 		} else if (addressL == 0xA11200 || addressL == 0xA11201) {	//	Z80 bus reset
 			//	if the Z80 is required to be reset (for example, to load a new program to it's memory)
 			//	this may be done by writing #$0000 to $A11200, but only when the Z80 bus is requested
 			if (data == 0x0000) {
-				if (z80.busRequested) {
+//				if (z80.busRequested) {
 					z80.reset();
-				} else {
+//				} else {
 					z80.initialize();
 					emu.runZ80 = false;
-				}
+//				}
 				
 			//	After returning the bus after loading the new program to it's memory,
 			//	the Z80 may be let go from reset by writing #$0100 to $A11200.

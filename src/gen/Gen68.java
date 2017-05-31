@@ -116,8 +116,9 @@ public class Gen68 {
 //			print = true;
 		}
 		
-		if (PC == 0xb748) {
-			print = true;
+		if (PC == 0x3fb0) {
+			
+//			print = true;
 		}
 		
 //		if ((SSP & 0xFFFF_FFFFL) != getA(7) && (SR & 0x2000) == 0x2000) {

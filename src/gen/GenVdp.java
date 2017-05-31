@@ -294,7 +294,7 @@ public class GenVdp {
 						if (m1) {
 							dmaMem2Vram(all);
 						} else {
-							throw new RuntimeException("Como entro aca");
+							System.out.println("DMA but no m1 set !!");
 						}
 					}
 					
@@ -1025,7 +1025,7 @@ public class GenVdp {
 			int byte7 = vram[(int) (baseAddress + 7)];
 			
 			linkData = byte3 & 0x7F;
-			verticalPos = ((byte0 & 0x1) << 8) | byte1;
+			verticalPos = ((byte0 & 0x1) << 8) | byte1;		//	bit 9 interlace mode only
 			
 //			if (linkData == 0) {
 //				return;
