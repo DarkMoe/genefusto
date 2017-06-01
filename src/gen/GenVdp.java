@@ -1012,6 +1012,9 @@ public class GenVdp {
 		int[] spritesInLine = spritesPerLine[line];
 		int ind = 0;
 		int currSprite = spritesInLine[0];
+		
+		int[] priors = new int[320];
+		
 		while (currSprite != -1) {
 			baseAddress = spriteTable + (currSprite *8);
 			
@@ -1113,24 +1116,31 @@ public class GenVdp {
 							}
 						}
 					} else {
-						color1 = cram[colorIndex1] << 8 | cram[colorIndex1 + 1];
-						
-						int r = (color1 >> 1) & 0x7;
-						int g = (color1 >> 5) & 0x7;
-						int b = (color1 >> 9) & 0x7;
-
-						int theColor1 = getColour(r, g, b);
-						
 						if (horOffset >= 0 && horOffset < 320) {
-							sprites[horOffset][line] = theColor1;
-							spritesIndex[horOffset][line] = pixel1;
-							spritesPrio[horOffset][line] = priority;
+							if (priors[horOffset] == 0 || (priors[horOffset] == 1 && priority)) {
+								if (priority) {
+									priors[horOffset] = 1;
+								}
+								
+								color1 = cram[colorIndex1] << 8 | cram[colorIndex1 + 1];
+								
+								int r = (color1 >> 1) & 0x7;
+								int g = (color1 >> 5) & 0x7;
+								int b = (color1 >> 9) & 0x7;
+		
+								int theColor1 = getColour(r, g, b);
+								
+								
+								sprites[horOffset][line] = theColor1;
+								spritesIndex[horOffset][line] = pixel1;
+								spritesPrio[horOffset][line] = priority;
+							}
 						}
 					}
 					
 					int color2;
+					int horOffset2 = horOffset + 1;
 					if (pixel2 == 0) {
-						int horOffset2 = horOffset + 1;
 						if (horOffset2 >= 0 && horOffset2 < 320) {
 							if (spritesIndex[horOffset2][line] == 0) {	// solo pisa si la prioridad anterior era 0
 								spritesIndex[horOffset2][line] = pixel2;
@@ -1138,19 +1148,25 @@ public class GenVdp {
 							}
 						}
 					} else {
-						color2 = cram[colorIndex2] << 8 | cram[colorIndex2 + 1];
-						
-						int r2 = (color2 >> 1) & 0x7;
-						int g2 = (color2 >> 5) & 0x7;
-						int b2 = (color2 >> 9) & 0x7;
-						
-						int theColor2 = getColour(r2, g2, b2);
-						
-						int horOffset2 = horOffset + 1;
 						if (horOffset2 >= 0 && horOffset2 < 320) {
-							sprites[horOffset2][line] = theColor2;
-							spritesIndex[horOffset2][line] = pixel2;
-							spritesPrio[horOffset2][line] = priority;
+							if (priors[horOffset2] == 0 || (priors[horOffset2] == 1 && priority)) {
+								if (priority) {
+									priors[horOffset2] = 1;
+								}
+								
+								color2 = cram[colorIndex2] << 8 | cram[colorIndex2 + 1];
+								
+								int r2 = (color2 >> 1) & 0x7;
+								int g2 = (color2 >> 5) & 0x7;
+								int b2 = (color2 >> 9) & 0x7;
+								
+								int theColor2 = getColour(r2, g2, b2);
+								
+								
+								sprites[horOffset2][line] = theColor2;
+								spritesIndex[horOffset2][line] = pixel2;
+								spritesPrio[horOffset2][line] = priority;
+							}
 						}
 					}
 					

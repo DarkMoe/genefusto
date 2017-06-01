@@ -5739,7 +5739,7 @@ public class GenZ80 {
 			
 		} else if (address >= 0x8000 && address <= 0xFFFF) {		//	8000h	FFFFh	M68k memory bank
 			System.out.println("LECTURA 68k !!!!!!");
-			address = address - 0x8000 + (0x20000 * (romBank68k + 1));
+			address = address - 0x8000 + (0x8000 * (romBank68k + 1));
 			return (int) bus.read(address, Size.BYTE);
 		} else {
 			throw new RuntimeException("NOT " + Integer.toHexString(address));
