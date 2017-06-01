@@ -1,5 +1,7 @@
 package gen;
 
+import java.util.HashSet;
+
 import gen.addressing.AddressingMode;
 import gen.instruction.Operation;
 
@@ -100,7 +102,7 @@ public class Gen68 {
 		
 //		print = true;
 		
-		if (bus.vdp.vram[0xf009] != 0x00){
+		if (bus.vdp.vram[0xe220] == 0x2){
 //			System.out.println();
 		}
 
@@ -112,12 +114,7 @@ public class Gen68 {
 			
 		}
 		
-		if (PC == 0x7DA5C) {
-//			print = true;
-		}
-		
-		if (PC == 0x3fb0) {
-			
+		if (PC == 0x7c42) {
 //			print = true;
 		}
 		

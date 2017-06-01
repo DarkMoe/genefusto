@@ -964,7 +964,16 @@ public class GenVdp {
 			}
 		}
 		
-		for (int i = 0; i < 64; i++) {	//	FIXME 80 en otro modo
+		int regC = registers[0xC];
+		boolean rs0 = bitTest(regC, 7);
+		boolean rs1 = bitTest(regC, 0);
+		
+		int maxSprites = 64;
+		if (rs0 && rs1) {
+			maxSprites = 80;
+		}
+		
+		for (int i = 0; i < maxSprites; i++) {
 			long baseAddress = spriteTable + (i* 8);
 			
 			int byte0 = vram[(int) (baseAddress)];

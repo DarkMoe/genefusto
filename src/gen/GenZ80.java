@@ -5679,7 +5679,8 @@ public class GenZ80 {
     int YMD0;
     int YMA1;
     int YMD1;
-    int romBank68k;
+    int romBank68kSerial;
+    int romBankPointer;
     
     void writeMemory(int address, int data) {
     	if (address < 0x2000) {
@@ -5695,11 +5696,24 @@ public class GenZ80 {
 		} else if (address == 0x4003) {		//	YM2612 D1
 			YMD1 = data;
 		} else if (address == 0x6000) {		//	rom banking
-			romBank68k = data;
+//			 From 8000H - FFFFH is window of 68K memory.
+//		      Z-80 can access all of 68K memory by BANK
+//		      switching.   BANK select data create 68K address
+//		      from A15 to A23.  You must write these 9 bits
+//		      one at a time into 6000H serially, byte units, using the LSB.
+			if (romBankPointer == 9) {
+				romBank68kSerial = 0;
+				romBankPointer = 0;
+			}
+			romBank68kSerial = (romBank68kSerial << 1) | (data & 1);
+			romBankPointer++;
+			
 		} else if (address == 0x7F11) {		//	SN76489 PSG
 			System.out.println("PSG write Z80");
 		} else if (address >= 0x8000 && address <= 0xFFFF) {
 			System.out.println("ESCRITURA 68k!!!!!!");
+			address = address - 0x8000 + (0x8000 * romBank68kSerial);
+			bus.write(address, data, Size.BYTE);
 		} else {
 			throw new RuntimeException("NOT " + Integer.toHexString(address));
 		}
@@ -5739,7 +5753,7 @@ public class GenZ80 {
 			
 		} else if (address >= 0x8000 && address <= 0xFFFF) {		//	8000h	FFFFh	M68k memory bank
 			System.out.println("LECTURA 68k !!!!!!");
-			address = address - 0x8000 + (0x8000 * (romBank68k + 1));
+			address = address - 0x8000 + (0x8000 * romBank68kSerial);
 			return (int) bus.read(address, Size.BYTE);
 		} else {
 			throw new RuntimeException("NOT " + Integer.toHexString(address));
