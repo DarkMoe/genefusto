@@ -3,13 +3,13 @@ A Java Sega Genesis emulator made in ARGENTINA.
 
 This is my personal project for learning how to code emulators.
 
-Compability is terrible, status:
+Compability is average, status:
 
--boots some games
+-boots most games
 -display plane A, B, Window and sprites
 -Sprite evaluation
 -Scrolling
+-Semi working Z80 communication
 
 -No sound
 -No accurate cpu and video timings
--Broken Z80 communication
