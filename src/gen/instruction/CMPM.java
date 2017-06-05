@@ -143,9 +143,9 @@ public class CMPM implements GenInstructionHandler {
 			cpu.clearN();
 		}
 		
-		boolean Sm = (data & 0x8000_0000L) != 0;
-		boolean Dm = (toSub & 0x8000_0000L) != 0;
-		boolean Rm = (res & 0x8000_0000L) != 0;
+		boolean Sm = (data & msb) != 0;
+		boolean Dm = (toSub & msb) != 0;
+		boolean Rm = (res & msb) != 0;
 		if ((!Sm && Dm && !Rm) || (Sm && !Dm && Rm)) {
 			cpu.setV();
 		} else {

@@ -128,9 +128,9 @@ public class CMP implements GenInstructionHandler {
 		long toSub = (cpu.getD(dataRegister) & 0xFF);
 		long res = toSub - data;
 		
-		boolean Sm = (data & 0x8000_0000L) != 0;
-		boolean Dm = (toSub & 0x8000_0000L) != 0;
-		boolean Rm = (res & 0x8000_0000L) != 0;
+		boolean Sm = (data & 0x80) != 0;
+		boolean Dm = (toSub & 0x80) != 0;
+		boolean Rm = (res & 0x80) != 0;
 		
 		if ((!Sm && Dm && !Rm) || (Sm && !Dm && Rm)) {
 			cpu.setV();
@@ -158,9 +158,9 @@ public class CMP implements GenInstructionHandler {
 		long toSub = (cpu.getD(dataRegister) & 0xFFFF);
 		long res = toSub - data;
 		
-		boolean Sm = (data & 0x8000_0000L) != 0;
-		boolean Dm = (toSub & 0x8000_0000L) != 0;
-		boolean Rm = (res & 0x8000_0000L) != 0;
+		boolean Sm = (data & 0x8000) != 0;
+		boolean Dm = (toSub & 0x8000) != 0;
+		boolean Rm = (res & 0x8000) != 0;
 		
 		if ((!Sm && Dm && !Rm) || (Sm && !Dm && Rm)) {
 			cpu.setV();

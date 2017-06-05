@@ -8,7 +8,7 @@ public class GenMemory {
 	long readCartridgeByte(long address) {
 		long data = 0;
 		if (address <= 0x3FFFFF) {
-			if (address >= cartridge.length) {	//	wrapping ? TODO confirmar
+			while (address >= cartridge.length) {	//	wrapping ? TODO confirmar
 				address -= cartridge.length;
 			}
 			data = cartridge[(int) address];

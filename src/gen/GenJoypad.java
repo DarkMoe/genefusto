@@ -4,9 +4,9 @@ package gen;
 //	http://md.squee.co/Howto:Read_Control_Pads
 public class GenJoypad {
 
-	long control1;
-	long control2;
-	long control3;
+	long control1 = 0xFF;
+	long control2 = 0xFF;
+	long control3 = 0xFF;
 	
 	int D, U, L, R, A, B, C, S;
 	int D2, U2, L2, R2, A2, B2, C2, S2 = 1;
@@ -89,6 +89,18 @@ public class GenJoypad {
 	void writeControlRegister3(long data) {
 //		System.out.println("control data port 3! " + Long.toHexString(data));
 		control3 = data;
+	}
+	
+	long readControlRegister1() {
+		return control1;
+	}
+	
+	long readControlRegister2() {
+		return control2;
+	}
+	
+	long readControlRegister3() {
+		return control3;
 	}
 	
 }

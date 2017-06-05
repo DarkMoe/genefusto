@@ -68,7 +68,12 @@ public class GenBus {
 			return z80.readMemory((int) (address - 0xA00000));
 			
 		} else if (address == 0xA10000 || address == 0xA10001) {	//	Version register (read-only word-long)
-			return 0xA0;	//	US:	A1A1 o A0A0 ?	EU:	C1C1	US SEGA CD:	8181	(las 2 direcciones devuelven lo mismo)
+			data = emu.getRegion();
+			if (size == Size.BYTE) {
+				return data;
+			} else {
+				return data << 8 | data;
+			}
 			
 		} else if (address == 0xA10002 || address == 0xA10003) {	//	Controller 1 data
 			return joypad.readDataRegister1();
@@ -87,17 +92,17 @@ public class GenBus {
 			}
 			
 		} else if (address == 0xA10008 || address == 0xA10009) {	//	Controller 1 control
-			if (address == 0xA10008) {
-				return 0;
-			} else if (address == 0xA10009) {
-				return 0;
+			if (size == Size.BYTE) {
+				return joypad.readControlRegister1() & 0xFF;
+			} else {
+				return joypad.readControlRegister1();
 			}
 			
 		} else if (address == 0xA1000A || address == 0xA1000B) {	//	Controller 2 control
-			if (address == 0xA1000A) {
-				return 0;
-			} else if (address == 0xA1000B) {
-				return 0;
+			if (size == Size.BYTE) {
+				return joypad.readControlRegister2() & 0xFF;
+			} else {
+				return joypad.readControlRegister2();
 			}
 			
 		} else if (address == 0xA11100 || address == 0xA11101) {	//	Z80 bus request	
@@ -288,6 +293,9 @@ public class GenBus {
 				writeSram = true;
 			}
 			
+		} else if (address == 0xA14000) {	//	VDP TMSS
+			System.out.println("TMSS: " + Integer.toHexString((int) data));
+			
 		} else if (addressL == 0xC00000 || addressL == 0xC00001
 				|| addressL == 0xC00002 || addressL == 0xC00003) {	// word / long word
 			vdp.writeDataPort((int) data, size);
@@ -356,7 +364,7 @@ public class GenBus {
 	
 	int hLinesPassed = 0;
 	private boolean vintPending;
-	private boolean hintPending;
+	boolean hintPending;
 	
 	//	https://www.gamefaqs.com/genesis/916377-genesis/faqs/9755
 	//	http://darkdust.net/writings/megadrive/initializing
@@ -368,11 +376,11 @@ public class GenBus {
 		}
 		
 		if (vdp.ie1) {
-			int intLine = hLinesPassed;
-			if (intLine != 0 && vdp.line == hLinesPassed) {
-				hintPending = true;
-				hLinesPassed = vdp.registers[0xA];
-			}
+//			int intLine = hLinesPassed;
+//			if (intLine != 0 && vdp.line == hLinesPassed) {
+//				hintPending = true;
+//				hLinesPassed = vdp.registers[0xA];
+//			}
 		}
 		
 		int mask = cpu.getInterruptMask();
@@ -413,12 +421,14 @@ public class GenBus {
 			return;
 		}
 		
-		if (hintPending && mask < 0x4) {
+		if (hintPending && vdp.ie1 && mask < 0x4) {
 			cpu.stop = false;
 			
 			long oldPC = cpu.PC;
 			int oldSR = cpu.SR;
 			long ssp = cpu.SSP;
+			
+			System.out.println("HINT ! Line: " + Integer.toHexString(vdp.line));
 			
 			ssp--;
 			write(ssp, oldPC & 0xFF, Size.BYTE);

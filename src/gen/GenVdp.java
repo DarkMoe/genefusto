@@ -521,9 +521,19 @@ public class GenVdp {
 //				throw new RuntimeException("NOT IMPL !");
 			}
 			
-		} else {
+		} else {	//	LONG
 			if (vramFill) {
-				throw new RuntimeException();
+				if (m1) {
+					dma = 1;
+					vramFill = false;
+					
+					dataPort = data;
+					
+					return;
+				} else {
+					System.out.println("M1 should be 1 in the DMA transfer. otherwise we can't guarantee the operation.");
+				}
+				
 			} else if (vramMode == VramMode.vramWrite) {
 				vramWriteWord(data >> 16);
 				vramWriteWord(data & 0xFFFF);
@@ -827,11 +837,11 @@ public class GenVdp {
 		int addr = (int) ((first & 0x3FFF) | ((second & 0x3) << 13));
 		
 		int offset = address + autoIncrementTotal;
+		offset = offset & 0x4F;
 		
 		int data1 = (word >> 8) & 0xFF;
 		int data2 = word & 0xFF;
 		
-		//	si la direccion a escribir se pasa del limite, se pone en el fifo buffer, pero no escribe nada
 		if (offset < 0x50) {
 			vsram[offset] = data1;
 		}
@@ -918,10 +928,16 @@ public class GenVdp {
 				}
 			}
 			
+			if (line < 0xE0) {
+				bus.hLinesPassed--;
+				if (bus.hLinesPassed == -1) {
+					bus.hintPending = true;
+					bus.hLinesPassed = registers[0xA];
+				}
+			}
+			
 			line++;
 			totalCycles = 0;
-			
-			bus.hLinesPassed--;
 		}
 		if (line > 0xFF) {
 			line = 0;

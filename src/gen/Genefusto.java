@@ -64,6 +64,7 @@ import gen.instruction.DIVS;
 import gen.instruction.DIVU;
 import gen.instruction.EOR;
 import gen.instruction.EORI;
+import gen.instruction.EORI_CCR;
 import gen.instruction.EORI_SR;
 import gen.instruction.EXG;
 import gen.instruction.EXT;
@@ -136,6 +137,10 @@ public class Genefusto {
     private MyRunnable currentRunna;
     private boolean isRomOpened;
     
+    JCheckBoxMenuItem usaBios;
+    JCheckBoxMenuItem eurBios;
+    JCheckBoxMenuItem japBios;
+    
     StringBuilder lineLog = new StringBuilder(300);
     
     static BufferedImage img = new BufferedImage(320, 256, BufferedImage.TYPE_INT_RGB);
@@ -198,6 +203,7 @@ public class Genefusto {
         new DIVU(cpu).generate();
         new EOR(cpu).generate();
         new EORI(cpu).generate();
+        new EORI_CCR(cpu).generate();
         new EORI_SR(cpu).generate();
         new EXG(cpu).generate();
         new EXT(cpu).generate();
@@ -277,6 +283,20 @@ public class Genefusto {
     
         JMenu menu = new JMenu("File");
         bar.add(menu);
+        
+        JMenu menuBios = new JMenu("Region");
+        bar.add(menuBios);
+
+        usaBios = new JCheckBoxMenuItem("USA", true);
+//    	usaBios.addActionListener(new ScreenListener(1));
+    	menuBios.add(usaBios);
+    	
+    	eurBios = new JCheckBoxMenuItem("Europe", false);
+    	menuBios.add(eurBios);
+    	
+    	japBios = new JCheckBoxMenuItem("Japan", false);
+    	menuBios.add(japBios);
+        
 //        JMenu viewMenu = new JMenu("View");
 //        bar.add(viewMenu);
         JMenu helpMenu = new JMenu("Nefusto");
@@ -557,6 +577,9 @@ public class Genefusto {
             case KeyEvent.VK_U:
             	cpu.bus.joypad.C = 0;
                 break;
+            case KeyEvent.VK_ESCAPE:
+            	openRomDialog();
+            	break;
         }
     }
 
@@ -588,5 +611,19 @@ public class Genefusto {
 	            break;
 	    }
     }
+
+	//	US:	A0A0 rev 0 o A1A1 rev 1
+    //	EU:	C1C1
+    //	JP: ????
+    //	US SEGA CD:	8181
+	public long getRegion() {
+		if (japBios.isSelected()) {
+			return 0;
+		} else if (eurBios.isSelected()) {
+			return 0xC1;
+		} else {
+			return 0xA1;
+		}
+	}
 
 }
