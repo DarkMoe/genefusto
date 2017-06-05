@@ -212,10 +212,22 @@ public class ADD implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(Size.BYTE, mode, register);
 		long data = o.getAddressingMode().getByte(o);
 		
-		long tot = ((cpu.getD(dataRegister) & 0xFF) + data);
+		long toAdd = cpu.getD(dataRegister) & 0xFF;
+		
+		long tot = (toAdd + data);
 		cpu.setDByte(dataRegister, tot);
 		
-		calcFlags(tot, Size.BYTE.getMsb(), 0xFF);
+		boolean Dm = (data & 0x80) > 0;
+		boolean Sm = (toAdd & 0x80) > 0;
+		boolean Rm = (tot & 0x80) > 0;
+		
+		if((Sm && Dm && !Rm) || (!Sm && !Dm && Rm)) {
+			cpu.setV();
+		} else {
+			cpu.clearV();
+		}
+		
+		calcFlags(tot, data, toAdd, Size.BYTE.getMsb(), 0xFF);
 	}
 	
 	private void ADD_EASource_Word(int opcode) {
@@ -226,10 +238,22 @@ public class ADD implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
 		long data = o.getAddressingMode().getWord(o);
 		
-		long tot = ((cpu.getD(dataRegister) & 0xFFFF) + data);
+		long toAdd = (cpu.getD(dataRegister) & 0xFFFF);
+		
+		long tot = (toAdd + data);
 		cpu.setDWord(dataRegister, tot);
 		
-		calcFlags(tot, Size.WORD.getMsb(), 0xFFFF);
+		boolean Dm = (data & 0x8000) > 0;
+		boolean Sm = (toAdd & 0x8000) > 0;
+		boolean Rm = (tot & 0x8000) > 0;
+		
+		if((Sm && Dm && !Rm) || (!Sm && !Dm && Rm)) {
+			cpu.setV();
+		} else {
+			cpu.clearV();
+		}
+		
+		calcFlags(tot, data, toAdd, Size.WORD.getMsb(), 0xFFFF);
 	}
 	
 	private void ADD_EASource_Long(int opcode) {
@@ -245,7 +269,17 @@ public class ADD implements GenInstructionHandler {
 		long tot = (data + toAdd);
 		cpu.setDLong(dataRegister, tot);
 		
-		calcFlags(tot, Size.LONG.getMsb(), 0xFFFF_FFFFL);
+		boolean Dm = (data & 0x8000_0000L) > 0;
+		boolean Sm = (toAdd & 0x8000_0000L) > 0;
+		boolean Rm = (tot & 0x8000_0000L) > 0;
+		
+		if((Sm && Dm && !Rm) || (!Sm && !Dm && Rm)) {
+			cpu.setV();
+		} else {
+			cpu.clearV();
+		}
+		
+		calcFlags(tot, data, toAdd, Size.LONG.getMsb(), 0xFFFF_FFFFL);
 	}
 	
 	private void ADD_EADest_Byte(int opcode) {
@@ -259,9 +293,20 @@ public class ADD implements GenInstructionHandler {
 		long data = o.getAddressingMode().getByte(o);
 		
 		long tot = (toAdd + data);
+		
+		boolean Dm = (data & 0x80) > 0;
+		boolean Sm = (toAdd & 0x80) > 0;
+		boolean Rm = (tot & 0x80) > 0;
+		
+		if((Sm && Dm && !Rm) || (!Sm && !Dm && Rm)) {
+			cpu.setV();
+		} else {
+			cpu.clearV();
+		}
+		
 		cpu.writeKnownAddressingMode(o, tot, Size.BYTE);
 		
-		calcFlags(tot, Size.BYTE.getMsb(), 0xFF);
+		calcFlags(tot, data, toAdd, Size.BYTE.getMsb(), 0xFF);
 	}
 	
 	private void ADD_EADest_Word(int opcode) {
@@ -274,10 +319,11 @@ public class ADD implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
 		long data = o.getAddressingMode().getWord(o);
 		
-		long tot = (toAdd + data);
+		long tot = (data + toAdd);
+		
 		cpu.writeKnownAddressingMode(o, tot, Size.WORD);
 		
-		calcFlags(tot, Size.WORD.getMsb(), 0xFFFF);
+		calcFlags(tot, data, toAdd, Size.WORD.getMsb(), 0xFFFF);
 	}
 	
 	private void ADD_EADest_Long(int opcode) {
@@ -285,18 +331,18 @@ public class ADD implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 		
-		long toAdd = cpu.getD(dataRegister);
-		
 		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
 		long data = o.getAddressingMode().getLong(o);
+
+		long toAdd = cpu.getD(dataRegister);
 		
-		long tot = (toAdd + data);
+		long tot = (data + toAdd);
 		cpu.writeKnownAddressingMode(o, tot, Size.LONG);
 		
-		calcFlags(tot, Size.LONG.getMsb(), 0xFFFF_FFFFL);
+		calcFlags(tot, data, toAdd, Size.LONG.getMsb(), Size.LONG.getMax());
 	}
 	
-	void calcFlags(long tot, long msb, long maxSize) {	//TODO  overflow
+	void calcFlags(long tot, long data, long toAdd, long msb, long maxSize) {
 		if ((tot & maxSize) == 0) {
 			cpu.setZ();
 		} else {
@@ -307,7 +353,18 @@ public class ADD implements GenInstructionHandler {
 		} else {
 			cpu.clearN();
 		}
-		if (tot > maxSize) {
+		
+		boolean Dm = (data & msb) > 0;
+		boolean Sm = (toAdd & msb) > 0;
+		boolean Rm = (tot & msb) > 0;
+		
+		if ((Sm && Dm && !Rm) || (!Sm && !Dm && Rm)) {
+			cpu.setV();
+		} else {
+			cpu.clearV();
+		}
+		
+		if ((Sm && Dm) || (!Rm && Dm) || (Sm && !Rm)) {
 			cpu.setC();
 			cpu.setX();
 		} else {

@@ -126,83 +126,97 @@ public class SUBQ implements GenInstructionHandler {
 	}
 	
 	private void SUBQByte(int opcode) {
-		int dataToSub = (opcode >> 9) & 0x7;
+		int toSub = (opcode >> 9) & 0x7;
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 		
-		if (dataToSub == 0) {
-			dataToSub = 8;
+		if (toSub == 0) {
+			toSub = 8;
 		}
 		
 		Operation o = cpu.resolveAddressingMode(Size.BYTE, mode, register);
 		long data = o.getAddressingMode().getByte(o);
 		
-		long tot = (data - dataToSub);
+		long tot = (data - toSub);
 		
 		cpu.writeKnownAddressingMode(o, tot, Size.BYTE);
 		
-		calcFlags(tot, Size.BYTE.getMsb(), Size.BYTE.getMax());
+		calcFlags(tot, data, toSub, Size.BYTE.getMsb(), Size.BYTE.getMax());
 	}
 	
 	private void SUBQWord(int opcode) {
-		int dataToSub = (opcode >> 9) & 0x7;
+		int toSub = (opcode >> 9) & 0x7;
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 		
-		if (dataToSub == 0) {
-			dataToSub = 8;
+		if (toSub == 0) {
+			toSub = 8;
 		}
 
-		if (mode == 1) {	//	address register, siempre guarda longword y no calcula flags
-			long data = cpu.getA(register);		// usa word o long word FIXME ?
-			long tot = (data - dataToSub);
-			cpu.setALong(register, tot);
-			
-		} else {
+		if (mode != 1) {
 			Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
 			long data = o.getAddressingMode().getWord(o);
+			if ((data & 0x8000) == 0x8000) {
+				data |= 0xFFFF_0000;
+			}
 			
-			long tot = (data - dataToSub);
+			long tot = (data - toSub);
 			
 			cpu.writeKnownAddressingMode(o, tot, Size.WORD);
-			calcFlags(tot, Size.WORD.getMsb(), Size.WORD.getMax());
+			calcFlags(tot, data, toSub, Size.WORD.getMsb(), Size.WORD.getMax());
+			
+		} else {		//	address register, siempre guarda longword y no calcula flags
+			long data = cpu.getA(register);
+			
+			long tot = (data - toSub);
+			cpu.setALong(register, tot);
 		}
 	}
 	
 	private void SUBQLong(int opcode) {
-		int dataToSub = (opcode >> 9) & 0x7;
+		int toSub = (opcode >> 9) & 0x7;
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 		
-		if (dataToSub == 0) {
-			dataToSub = 8;
+		if (toSub == 0) {
+			toSub = 8;
 		}
 		
 		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
 		long data = o.getAddressingMode().getLong(o);
 		
-		long tot = (data - dataToSub);
+		long tot = (data - toSub);
 
 		cpu.writeKnownAddressingMode(o, tot, Size.LONG);
 		
 		// if destination is An no cambian los flags
 		if (mode != 1) {
-			calcFlags(tot, Size.LONG.getMsb(), Size.LONG.getMax());
+			calcFlags(tot, data, toSub, Size.LONG.getMsb(), Size.LONG.getMax());
 		}
 	}
 	
-	void calcFlags(long tot, long msb, long maxSize) {	//	TODO  overflow
-		if ((tot & maxSize) == 0) {
+	void calcFlags(long r, long d, long s, long msb, long maxSize) {
+		if ((r & maxSize) == 0) {
 			cpu.setZ();
 		} else {
 			cpu.clearZ();
 		}
-		if (((tot & maxSize) & msb) > 0) {
+		if (((r & maxSize) & msb) > 0) {
 			cpu.setN();
 		} else {
 			cpu.clearN();
 		}
-		if (tot < 0) {
+
+		boolean Dm = (d & msb) > 0;
+		boolean Sm = (s & msb) > 0;
+		boolean Rm = (r & msb) > 0;
+		if ((!Sm && Dm && !Rm) || (Sm && !Dm && Rm)) {
+			cpu.setV();
+		} else {
+			cpu.clearV();
+		}
+		
+		if ((Sm && !Dm) || (Rm && !Dm) || (Sm && Rm)) {
 			cpu.setC();
 			cpu.setX();
 		} else {

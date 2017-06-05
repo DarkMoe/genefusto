@@ -122,7 +122,7 @@ public class DIVS implements GenInstructionHandler {
 			s |= 0xFFFF_0000L;
 		}
 		
-		int d = (int) cpu.getD(dataRegister) & 0xFFFF;	//	TODO validar este mask
+		int d = (int) cpu.getD(dataRegister);
 
 		if (s == 0) {
 			throw new RuntimeException("div por 0");
@@ -135,7 +135,7 @@ public class DIVS implements GenInstructionHandler {
 			cpu.setV();
 		} else {
 			long remain = (d % s) & 0xFFFF;
-			long result = (quot & 0x0000_FFFF) | (remain << 16);
+			long result = (remain << 16) | (quot & 0xFFFF) ;
 			cpu.setDLong(dataRegister, result);
 
 			if ((quot & 0x8000) != 0) {

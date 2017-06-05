@@ -33,14 +33,13 @@ public class AbsoluteLong implements AddressingMode {
 		long address = o.getAddress();
 		long data = o.getData();
 		
-		cpu.bus.write(address, (data >> 16), Size.LONG);
-		cpu.bus.write(address + 2, data & 0xFFFF, Size.LONG);
+		cpu.bus.write(address, data, Size.LONG);
 	}
 	
 	@Override
 	public long getByte(Operation o) {
 		long addr = o.getAddress();
-		long data = (cpu.bus.read(addr)) & 0xFF;
+		long data = cpu.bus.read(addr, Size.BYTE) & 0xFF;
 		
 		return data;
 	}
@@ -48,8 +47,7 @@ public class AbsoluteLong implements AddressingMode {
 	@Override
 	public long getWord(Operation o) {
 		long addr = o.getAddress();
-		long data  = (cpu.bus.read(addr)) << 8;
-			 data |= cpu.bus.read(addr + 1);
+		long data = cpu.bus.read(addr, Size.WORD);
 		
 		return data;
 	}
@@ -57,10 +55,7 @@ public class AbsoluteLong implements AddressingMode {
 	@Override
 	public long getLong(Operation o) {
 		long addr = o.getAddress();
-		long data  = cpu.bus.read(addr) << 24;
-			 data |= cpu.bus.read(addr + 1) << 16;
-			 data |= cpu.bus.read(addr + 2) << 8;
-			 data |= cpu.bus.read(addr + 3);
+		long data = cpu.bus.read(addr, Size.LONG);
 		
 		return data;
 	}

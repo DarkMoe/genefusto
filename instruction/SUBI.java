@@ -133,71 +133,80 @@ public class SUBI implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 	
-		long data  = cpu.bus.read(cpu.PC + 2) << 8;
-	 	 	 data |= cpu.bus.read(cpu.PC + 3);
- 	 	data &= 0xFF;
-		
+		long toSub = cpu.bus.read(cpu.PC + 2, Size.WORD);
+ 	 	toSub &= 0xFF;	//	last byte
  	 	cpu.PC += 2;
  	 	
+ 	 	if ((toSub & 0x80) == 0x80) {
+ 	 		toSub |= 0xFFFF_FF00;
+ 	 	}
+ 	 	
 		Operation o = cpu.resolveAddressingMode(Size.BYTE, mode, register);
-		long toSub = o.getAddressingMode().getByte(o);
+		long data = o.getAddressingMode().getByte(o);
+		if ((data & 0x80) == 0x80) {
+ 	 		data |= 0xFFFF_FF00;
+ 	 	}
 		
-		long tot = toSub - data;
+		long tot = data - toSub;
 		cpu.writeKnownAddressingMode(o, tot, Size.BYTE);
 		
-		calcFlags(tot, Size.BYTE.getMsb(), Size.BYTE.getMax());
+		calcFlags(tot, data, toSub, Size.BYTE.getMsb(), Size.BYTE.getMax());
 	}
 
 	private void SUBIWord(int opcode) {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 
-		long data  = cpu.bus.read(cpu.PC + 2) << 8;
-		 	 data |= cpu.bus.read(cpu.PC + 3);
-		
+		long toSub = cpu.bus.read(cpu.PC + 2, Size.WORD);
 	 	cpu.PC += 2;
 
 		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
-		long toSub = o.getAddressingMode().getWord(o);
+		long data = o.getAddressingMode().getWord(o);
 
-		long tot = toSub - data;
+		long tot = data - toSub;
 		cpu.writeKnownAddressingMode(o, tot, Size.WORD);
 		
-		calcFlags(tot, Size.WORD.getMsb(), Size.WORD.getMax());
+		calcFlags(tot, data, toSub, Size.WORD.getMsb(), Size.WORD.getMax());
 	}
 	
 	private void SUBILong(int opcode) {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 
-		long data  = cpu.bus.read(cpu.PC + 2) << 24;
-		 	 data |= cpu.bus.read(cpu.PC + 3) << 16;
-		 	 data |= cpu.bus.read(cpu.PC + 4) << 8;
-		 	 data |= cpu.bus.read(cpu.PC + 5);
-		
+		long toSub = cpu.bus.read(cpu.PC + 2, Size.LONG);
 	 	cpu.PC += 4;
 
 		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
-		long toSub = o.getAddressingMode().getLong(o);
+		long data = o.getAddressingMode().getLong(o);
 
-		long tot = toSub - data;
+		long tot = data - toSub;
 		cpu.writeKnownAddressingMode(o, tot, Size.LONG);
 		
-		calcFlags(tot, Size.LONG.getMsb(), Size.LONG.getMax());
+		calcFlags(tot, data, toSub, Size.LONG.getMsb(), Size.LONG.getMax());
 	}
 	
-	void calcFlags(long tot, long msb, long maxSize) {//TODO  overflow
-		if ((tot & maxSize) == 0) {
+	void calcFlags(long r, long d, long s, long msb, long maxSize) {
+		if ((r & maxSize) == 0) {
 			cpu.setZ();
 		} else {
 			cpu.clearZ();
 		}
-		if ((tot & msb) > 0) {
+		if ((r & msb) > 0) {
 			cpu.setN();
 		} else {
 			cpu.clearN();
 		}
-		if (tot < 0) {
+		
+		boolean Dm = (d & msb) > 0;
+		boolean Sm = (s & msb) > 0;
+		boolean Rm = (r & msb) > 0;
+		if ((!Sm && Dm && !Rm) || (Sm && !Dm && Rm)) {
+			cpu.setV();
+		} else {
+			cpu.clearV();
+		}
+		
+		if ((Sm && !Dm) || (Rm && !Dm) || (Sm && Rm)) {
 			cpu.setC();
 			cpu.setX();
 		} else {

@@ -72,15 +72,23 @@ public class MOVE_TO_FROM_USP implements GenInstructionHandler {
 	}
 	
 	private void MOVEToUSP(int opcode) {
+		if ((cpu.SR & 0x2000) != 0x2000) {
+			throw new RuntimeException("NO PRIVI");
+		}
+		
 		int register = opcode & 0x7;
 
 		cpu.USP = cpu.getA(register);
 	}
 	
 	private void MOVEFromUSP(int opcode) {
+		if ((cpu.SR & 0x2000) != 0x2000) {
+			throw new RuntimeException("NO PRIVI");
+		}
+		
 		int register = opcode & 0x7;
 
-		cpu.setALong(register, cpu.USP);	// FIXME si es supervisor solo debe modificar el SSP, sino el USP
+		cpu.setALong(register, cpu.USP);
 	}
 	
 }

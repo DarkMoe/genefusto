@@ -110,19 +110,46 @@ public class MOVEP implements GenInstructionHandler {
 	}
 	
 	private void MOVEPMemToRegWord(int opcode) {
-		throw new RuntimeException();
+		int addrReg = opcode & 0x7;
+		int dataReg = (opcode >> 9) & 0x7;
+		
+		long offset = cpu.bus.read(cpu.PC + 2, Size.WORD);
+		
+		cpu.PC += 2;
+
+		long addr = cpu.getA(addrReg);
+		addr += offset;
+		
+		long data  = cpu.bus.read(addr, Size.BYTE) << 8;
+			 data |= cpu.bus.read(addr + 2, Size.BYTE);
+
+		 cpu.setDWord(dataReg, data);
 	}
 
 	private void MOVEPMemToRegLong(int opcode) {
-		throw new RuntimeException();
+		int addrReg = opcode & 0x7;
+		int dataReg = (opcode >> 9) & 0x7;
+		
+		long offset = cpu.bus.read(cpu.PC + 2, Size.WORD);
+		
+		cpu.PC += 2;
+
+		long addr = cpu.getA(addrReg);
+		addr += offset;
+		
+		long data  = cpu.bus.read(addr, Size.BYTE) << 24;
+			 data |= cpu.bus.read(addr + 2, Size.BYTE) << 16;
+			 data |= cpu.bus.read(addr + 4, Size.BYTE) << 8;
+			 data |= cpu.bus.read(addr + 6, Size.BYTE);
+
+		 cpu.setDLong(dataReg, data);
 	}
 	
 	private void MOVEPRegToMemWord(int opcode) {
 		int addrReg = opcode & 0x7;
 		int dataReg = (opcode >> 9) & 0x7;
 		
-		long offset  = cpu.bus.read(cpu.PC + 2) << 8;
-			 offset |= cpu.bus.read(cpu.PC + 3);
+		long offset = cpu.bus.read(cpu.PC + 2, Size.WORD);
 		
 		cpu.PC += 2;
 
@@ -135,7 +162,21 @@ public class MOVEP implements GenInstructionHandler {
 	}
 	
 	private void MOVEPRegToMemLong(int opcode) {
-		throw new RuntimeException();
+		int addrReg = opcode & 0x7;
+		int dataReg = (opcode >> 9) & 0x7;
+		
+		long offset = cpu.bus.read(cpu.PC + 2, Size.WORD);
+		
+		cpu.PC += 2;
+
+		long data = cpu.getD(dataReg);
+		long addr = cpu.getA(addrReg);
+		addr += offset;
+		
+		cpu.bus.write(addr, (data >> 24), Size.BYTE);
+		cpu.bus.write(addr + 2, (data >> 16) & 0xFF, Size.BYTE);
+		cpu.bus.write(addr + 4, (data >> 8) & 0xFF, Size.BYTE);
+		cpu.bus.write(addr + 6, data & 0xFF, Size.BYTE);
 	}
 	
 }

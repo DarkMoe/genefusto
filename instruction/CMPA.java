@@ -139,7 +139,8 @@ public class CMPA implements GenInstructionHandler {
 			cpu.clearC();
 		}
 		
-		calcFlags(res, Size.WORD.getMsb(), 0xFFFF);
+		// long for calculating flags
+		calcFlags(res, Size.LONG.getMsb(), 0xFFFF_FFFFL);
 	}
 	
 	private void CMPALong(int opcode) {

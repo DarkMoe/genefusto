@@ -33,7 +33,7 @@ public class AddressDisplacement implements AddressingMode {
 	@Override
 	public long getByte(Operation o) {
 		long addr = o.getAddress();
-		long data = cpu.bus.read(addr) & 0xFF;
+		long data = cpu.bus.read(addr, Size.BYTE) & 0xFF;
 		
 		return data;
 	}
@@ -41,7 +41,7 @@ public class AddressDisplacement implements AddressingMode {
 	@Override
 	public long getWord(Operation o) {
 		long addr = o.getAddress();
-		long data = cpu.bus.read(addr) & 0xFFFF;
+		long data = cpu.bus.read(addr, Size.WORD) & 0xFFFF;
 		
 		return data;
 	}

@@ -2,6 +2,7 @@ package gen.instruction;
 
 import gen.Gen68;
 import gen.GenInstruction;
+import gen.Size;
 
 public class ANDI_SR implements GenInstructionHandler {
 
@@ -56,8 +57,7 @@ public class ANDI_SR implements GenInstructionHandler {
 	}
 	
 	private void ANDISR(int opcode) {
-		long toAnd  = (cpu.bus.read(cpu.PC + 2)) << 8;
-		 	 toAnd |= (cpu.bus.read(cpu.PC + 3));
+		long toAnd = cpu.bus.read(cpu.PC + 2, Size.WORD);
 		
 	 	cpu.PC += 2;
 		 	 

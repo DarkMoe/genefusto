@@ -98,7 +98,7 @@ public class CMPM implements GenInstructionHandler {
 		
 		long res = data - toSub;
 		
-		calcFlags(res, Size.BYTE.getMsb(), Size.BYTE.getMax());
+		calcFlags(toSub, data, res, Size.BYTE.getMsb(), Size.BYTE.getMax());
 	}
 	
 	private void CMPMWord(int opcode) {
@@ -113,7 +113,7 @@ public class CMPM implements GenInstructionHandler {
 		
 		long res = data - toSub;
 		
-		calcFlags(res, Size.WORD.getMsb(), Size.WORD.getMax());
+		calcFlags(toSub, data, res, Size.WORD.getMsb(), Size.WORD.getMax());
 	}
 	
 	private void CMPMLong(int opcode) {
@@ -128,21 +128,31 @@ public class CMPM implements GenInstructionHandler {
 		
 		long res = data - toSub;
 		
-		calcFlags(res, Size.LONG.getMsb(), 0xFFFF_FFFFL);
+		calcFlags(toSub, data, res, Size.LONG.getMsb(), 0xFFFF_FFFFL);
 	}
 	
-	void calcFlags(long data, long msb, long maxSize) {	// TODO V
-		if ((data & maxSize) == 0) {
+	void calcFlags(long data, long toSub, long res, long msb, long maxSize) {
+		if ((res & maxSize) == 0) {
 			cpu.setZ();
 		} else {
 			cpu.clearZ();
 		}
-		if (((data & maxSize) & msb) > 0) {
+		if (((res & maxSize) & msb) > 0) {
 			cpu.setN();
 		} else {
 			cpu.clearN();
 		}
-		if (data < 0) {	// validar esto
+		
+		boolean Sm = (data & 0x8000_0000L) != 0;
+		boolean Dm = (toSub & 0x8000_0000L) != 0;
+		boolean Rm = (res & 0x8000_0000L) != 0;
+		if ((!Sm && Dm && !Rm) || (Sm && !Dm && Rm)) {
+			cpu.setV();
+		} else {
+			cpu.clearV();
+		}
+
+		if ((Sm && !Dm) || (Rm && !Dm) || (Sm && Rm)) {
 			cpu.setC();
 		} else {
 			cpu.clearC();

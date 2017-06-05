@@ -111,21 +111,21 @@ public class SUB implements GenInstructionHandler {
 				ins = new GenInstruction() {
 					@Override
 					public void run(int opcode) {
-						SUB_EASource_Byte(opcode);
+						SUB_DNDest_Byte(opcode);
 					}
 				};
 			} else if (opMode == 0b001) {
 				ins = new GenInstruction() {
 					@Override
 					public void run(int opcode) {
-						SUB_EASource_Word(opcode);
+						SUB_DNDest_Word(opcode);
 					}
 				};
 			} else if (opMode == 0b010) {
 				ins = new GenInstruction() {
 					@Override
 					public void run(int opcode) {
-						SUB_EASource_Long(opcode);
+						SUB_DNDest_Long(opcode);
 					}
 				};
 			} else if (opMode == 0b100) {
@@ -173,46 +173,72 @@ public class SUB implements GenInstructionHandler {
 		
 	}
 	
-	private void SUB_EASource_Byte(int opcode) {
+	private void SUB_DNDest_Byte(int opcode) {
 		int dataRegister = (opcode >> 9) & 0x7;
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 		
 		Operation o = cpu.resolveAddressingMode(Size.BYTE, mode, register);
-		long data = o.getAddressingMode().getByte(o);
+		long toSub = o.getAddressingMode().getByte(o);
+		if ((toSub & 0x80) == 0x80) {
+			toSub |= 0xFFFF_FF00L;
+		} else {
+			toSub &= 0x0000_00FF;
+		}
 		
-		long tot = ((cpu.getD(dataRegister) & 0xFF) - data);
+		long data = (cpu.getD(dataRegister) & 0xFF);
+		if ((toSub & 0x80) == 0x80) {
+			data  |= 0xFFFF_FF00L;
+		} else {
+			data &= 0x0000_00FF;
+		}
+		
+		long tot = (data - toSub);
 		cpu.setDByte(dataRegister, tot);
 		
-		calcFlags(tot, Size.BYTE.getMsb(), Size.BYTE.getMax());
+		calcFlags(tot, data, toSub, Size.BYTE.getMsb(), Size.BYTE.getMax());
 	}
 	
-	private void SUB_EASource_Word(int opcode) {
+	private void SUB_DNDest_Word(int opcode) {
 		int dataRegister = (opcode >> 9) & 0x7;
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 		
 		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
-		long data = o.getAddressingMode().getWord(o);
+		long toSub = o.getAddressingMode().getWord(o);
+		if ((toSub & 0x8000) == 0x8000) {
+			toSub |= 0xFFFF_0000;
+		} else {
+			toSub &= 0x0000_FFFF;
+		}
 		
-		long tot = ((cpu.getD(dataRegister) & 0xFFFF) - data);
+		long data = (cpu.getD(dataRegister) & 0xFFFF);
+		if ((data & 0x8000) == 0x8000) {
+			data |= 0xFFFF_0000;
+		} else {
+			data &= 0x0000_FFFF;
+		}
+		
+		long tot = (data - toSub);
 		cpu.setDWord(dataRegister, tot);
 		
-		calcFlags(tot, Size.WORD.getMsb(), Size.WORD.getMax());
+		calcFlags(tot, data, toSub, Size.WORD.getMsb(), Size.WORD.getMax());
 	}
 	
-	private void SUB_EASource_Long(int opcode) {
+	private void SUB_DNDest_Long(int opcode) {
 		int dataRegister = (opcode >> 9) & 0x7;
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 		
 		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
-		long data = o.getAddressingMode().getLong(o);
+		long toSub = o.getAddressingMode().getLong(o);
 		
-		long tot = (cpu.getD(dataRegister) - data);
+		long data = cpu.getD(dataRegister);
+		
+		long tot = (data - toSub);
 		cpu.setDLong(dataRegister, tot);
 		
-		calcFlags(tot, Size.LONG.getMsb(), Size.LONG.getMax());
+		calcFlags(tot, data, toSub, Size.LONG.getMsb(), Size.LONG.getMax());
 	}
 	
 	private void SUB_EADest_Byte(int opcode) {
@@ -222,13 +248,23 @@ public class SUB implements GenInstructionHandler {
 		
 		Operation o = cpu.resolveAddressingMode(Size.BYTE, mode, register);
 		long data = o.getAddressingMode().getByte(o);
+		if ((data & 0x80) == 0x80) {
+			data |= 0xFFFF_FF00L;
+		} else {
+			data &= 0x0000_00FF;
+		}
 		
 		long toSub = cpu.getD(dataRegister) & 0xFF;
+		if ((toSub & 0x80) == 0x80) {
+			toSub  |= 0xFFFF_FF00L;
+		} else {
+			toSub &= 0x0000_00FF;
+		}
+		
 		long tot = (data - toSub);
-	
 		cpu.writeKnownAddressingMode(o, tot, Size.BYTE);
 		
-		calcFlags(tot, Size.BYTE.getMsb(), Size.BYTE.getMax());
+		calcFlags(tot, data, toSub, Size.BYTE.getMsb(), Size.BYTE.getMax());
 	}
 	
 	private void SUB_EADest_Word(int opcode) {
@@ -238,13 +274,24 @@ public class SUB implements GenInstructionHandler {
 		
 		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
 		long data = o.getAddressingMode().getWord(o);
+		if ((data & 0x8000) == 0x8000) {
+			data |= 0xFFFF_0000;
+		} else {
+			data &= 0x0000_FFFF;
+		}
 		
 		long toSub = cpu.getD(dataRegister) & 0xFFFF;
+		if ((toSub & 0x8000) == 0x8000) {
+			toSub |= 0xFFFF_0000;
+		} else {
+			toSub &= 0x0000_FFFF;
+		}
+		
 		long tot = (data - toSub);
 	
 		cpu.writeKnownAddressingMode(o, tot, Size.WORD);
 		
-		calcFlags(tot, Size.WORD.getMsb(), Size.WORD.getMax());
+		calcFlags(tot, data, toSub, Size.WORD.getMsb(), Size.WORD.getMax());
 	}
 	
 	private void SUB_EADest_Long(int opcode) {
@@ -260,21 +307,31 @@ public class SUB implements GenInstructionHandler {
 	
 		cpu.writeKnownAddressingMode(o, tot, Size.LONG);
 		
-		calcFlags(tot, Size.LONG.getMsb(), Size.LONG.getMax());
+		calcFlags(tot, data, toSub, Size.LONG.getMsb(), Size.LONG.getMax());
 	}
 	
-	void calcFlags(long tot, long msb, long maxSize) {//TODO  overflow
-		if ((tot & maxSize) == 0) {
+	void calcFlags(long r, long d, long s, long msb, long maxSize) {
+		if ((r & maxSize) == 0) {
 			cpu.setZ();
 		} else {
 			cpu.clearZ();
 		}
-		if ((tot & msb) > 0) {
+		if ((r & msb) > 0) {
 			cpu.setN();
 		} else {
 			cpu.clearN();
 		}
-		if (tot < 0) {
+		
+		boolean Dm = (d & msb) > 0;
+		boolean Sm = (s & msb) > 0;
+		boolean Rm = (r & msb) > 0;
+		if ((!Sm && Dm && !Rm) || (Sm && !Dm && Rm)) {
+			cpu.setV();
+		} else {
+			cpu.clearV();
+		}
+		
+		if ((Sm && !Dm) || (Rm && !Dm) || (Sm && Rm)) {
 			cpu.setC();
 			cpu.setX();
 		} else {

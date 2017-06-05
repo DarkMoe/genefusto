@@ -33,14 +33,13 @@ public class AddressRegisterWithIndex implements AddressingMode {
 		long address = o.getAddress();
 		long data = o.getData();
 		
-		cpu.bus.write(address, (data >> 16), Size.LONG);
-		cpu.bus.write(address + 2, (data & 0xFFFF), Size.LONG);
+		cpu.bus.write(address, data, Size.LONG);
 	}
 
 	@Override
 	public long getByte(Operation o) {
 		long address = o.getAddress();
-		long data = cpu.bus.read(address);
+		long data = cpu.bus.read(address, Size.BYTE);
 		
 		return data;
 	}
@@ -48,18 +47,16 @@ public class AddressRegisterWithIndex implements AddressingMode {
 	@Override
 	public long getWord(Operation o) {
 		long address = o.getAddress();
-		long data  = cpu.bus.read(address) << 8;
-			 data |= cpu.bus.read(address + 1);
+		long data = cpu.bus.read(address, Size.WORD);
+		
 		return data;
 	}
 
 	@Override
 	public long getLong(Operation o) {
 		long address = o.getAddress();
-		long data  = cpu.bus.read(address) << 24;
-			 data |= cpu.bus.read(address + 1) << 16;
-			 data |= cpu.bus.read(address + 2) << 8;
-			 data |= cpu.bus.read(address + 3);
+		long data = cpu.bus.read(address, Size.LONG);
+
 		return data;
 	}
 

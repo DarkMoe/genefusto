@@ -117,8 +117,7 @@ public class ORI implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 		
-		long toOr  = (cpu.bus.read(cpu.PC + 2)) << 8;
-			 toOr |= (cpu.bus.read(cpu.PC + 3));
+		long toOr = cpu.bus.read(cpu.PC + 2, Size.WORD);
 		toOr = toOr & 0xFF;	//	ocupa 2 bytes, pero solo se toma el ultimo
 		
 	 	cpu.PC += 2;
@@ -136,8 +135,7 @@ public class ORI implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 		
-		long toOr  = (cpu.bus.read(cpu.PC + 2)) << 8;
-			 toOr |= (cpu.bus.read(cpu.PC + 3));
+		long toOr = cpu.bus.read(cpu.PC + 2, Size.WORD);
 		
 	 	cpu.PC += 2;
 	 	 
@@ -154,10 +152,7 @@ public class ORI implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 
-		long toOr  = (cpu.bus.read(cpu.PC + 2)) << 24;
-			 toOr |= (cpu.bus.read(cpu.PC + 3)) << 16;
-			 toOr |= (cpu.bus.read(cpu.PC + 4)) << 8;
-			 toOr |= (cpu.bus.read(cpu.PC + 5));
+		long toOr = cpu.bus.read(cpu.PC + 2, Size.LONG);
 		
 		cpu.PC += 4;
 		

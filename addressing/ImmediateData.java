@@ -1,6 +1,7 @@
 package gen.addressing;
 
 import gen.Gen68;
+import gen.Size;
 import gen.instruction.Operation;
 
 public class ImmediateData implements AddressingMode {
@@ -29,8 +30,7 @@ public class ImmediateData implements AddressingMode {
 	@Override
 	public long getByte(Operation o) {
 		long addr = o.getAddress();
-		long data  = (cpu.bus.read(addr) << 8);
-		 	 data |= (cpu.bus.read(addr + 1));
+		long data = cpu.bus.read(addr, Size.WORD);	//	lee 2 bytes
 		data = data & 0xFF;
 		
 		return data;
@@ -39,8 +39,7 @@ public class ImmediateData implements AddressingMode {
 	@Override
 	public long getWord(Operation o) {
 		long addr = o.getAddress();
-		long data  = (cpu.bus.read(addr) << 8);
-			 data |= (cpu.bus.read(addr + 1));
+		long data = cpu.bus.read(addr, Size.WORD);
 			 
 		return data;
 	}
@@ -48,10 +47,7 @@ public class ImmediateData implements AddressingMode {
 	@Override
 	public long getLong(Operation o) {
 		long addr = o.getAddress();
-		long data  = (cpu.bus.read(addr) << 24);
-			 data |= (cpu.bus.read(addr + 1) << 16);
-			 data |= (cpu.bus.read(addr + 2) << 8);
-			 data |= (cpu.bus.read(addr + 3));
+		long data = cpu.bus.read(addr, Size.LONG);
 		
 		return data;
 	}

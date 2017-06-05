@@ -142,7 +142,7 @@ public class ADDQ implements GenInstructionHandler {
 		
 		cpu.writeKnownAddressingMode(o, total, Size.BYTE);
 		
-		calcFlags(tot, Size.BYTE.getMsb(), 0xFF);
+		calcFlags(tot, data, dataToAdd, Size.BYTE.getMsb(), 0xFF);
 	}
 	
 	private void ADDQWord(int opcode) {
@@ -169,7 +169,7 @@ public class ADDQ implements GenInstructionHandler {
 			
 			cpu.writeKnownAddressingMode(o, total, Size.WORD);
 			
-			calcFlags(tot, Size.WORD.getMsb(), 0xFFFF);
+			calcFlags(tot, data, dataToAdd, Size.WORD.getMsb(), 0xFFFF);
 		}
 		
 	}
@@ -193,11 +193,11 @@ public class ADDQ implements GenInstructionHandler {
 		
 		// if destination is An no cambian los flags
 		if (mode != 1) {
-			calcFlags(tot, Size.LONG.getMsb(), 0xFFFF_FFFFL);
+			calcFlags(tot, data, dataToAdd, Size.LONG.getMsb(), 0xFFFF_FFFFL);
 		}
 	}
 	
-	void calcFlags(long tot, long msb, long maxSize) {//TODO  overflow
+	void calcFlags(long tot, long data, long toAdd, long msb, long maxSize) {
 		if ((tot & maxSize) == 0) {
 			cpu.setZ();
 		} else {
@@ -208,6 +208,16 @@ public class ADDQ implements GenInstructionHandler {
 		} else {
 			cpu.clearN();
 		}
+		
+		boolean Dm = (data & msb) > 0;
+		boolean Sm = (toAdd & msb) > 0;
+		boolean Rm = (tot & msb) > 0;
+		if((Sm && Dm && !Rm) || (!Sm && !Dm && Rm)) {
+			cpu.setV();
+		} else {
+			cpu.clearV();
+		}
+		
 		if (tot > maxSize) {
 			cpu.setC();
 			cpu.setX();

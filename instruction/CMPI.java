@@ -122,9 +122,8 @@ public class CMPI implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 
-		long data  = cpu.bus.read(cpu.PC + 2) << 8;
-		  	 data |= cpu.bus.read(cpu.PC + 3);
-		data = data & 0xFF;
+		long data = cpu.bus.read(cpu.PC + 2, Size.WORD);
+		data = data & 0xFF;	//	ultimo byte
 		
 		cpu.PC += 2;
 		
@@ -133,15 +132,14 @@ public class CMPI implements GenInstructionHandler {
 		
 		long res = toSub - data;
 		
-		calcFlags(res, Size.BYTE.getMsb(), 0xFF);
+		calcFlags(data, toSub, res, Size.BYTE.getMsb(), Size.BYTE.getMax());
 	}
 	
 	private void CMPIWord(int opcode) {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 
-		long data  = cpu.bus.read(cpu.PC + 2) << 8;
-			 data |= cpu.bus.read(cpu.PC + 3);
+		long data = cpu.bus.read(cpu.PC + 2, Size.WORD);
 		
 		cpu.PC += 2;
 		
@@ -150,17 +148,14 @@ public class CMPI implements GenInstructionHandler {
 
 		long res = toSub - data;
 		
-		calcFlags(res, Size.WORD.getMsb(), 0xFFFF);
+		calcFlags(data, toSub, res, Size.WORD.getMsb(), Size.WORD.getMax());
 	}
 	
 	private void CMPILong(int opcode) {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 
-		long data  = cpu.bus.read(cpu.PC + 2) << 24;
-  			 data |= cpu.bus.read(cpu.PC + 3) << 16;
-  			 data |= cpu.bus.read(cpu.PC + 4) << 8;
-  			 data |= cpu.bus.read(cpu.PC + 5);
+		long data = cpu.bus.read(cpu.PC + 2, Size.LONG);
 		
 		cpu.PC += 4;
 		
@@ -169,21 +164,31 @@ public class CMPI implements GenInstructionHandler {
 		
 		long res = toSub - data;
 		
-		calcFlags(res, Size.LONG.getMsb(), 0xFFFF_FFFFL);
+		calcFlags(data, toSub, res, Size.LONG.getMsb(), Size.LONG.getMax());
 	}
 	
-	void calcFlags(long data, long msb, long maxSize) {	// TODO V
-		if ((data & maxSize) == 0) {
+	void calcFlags(long data, long toSub, long res, long msb, long maxSize) {
+		if ((res & maxSize) == 0) {
 			cpu.setZ();
 		} else {
 			cpu.clearZ();
 		}
-		if (((data & maxSize) & msb) > 0) {
+		if (((res & maxSize) & msb) > 0) {
 			cpu.setN();
 		} else {
 			cpu.clearN();
 		}
-		if (data < 0) {	// validar esto
+		
+		boolean Sm = (data & 0x8000_0000L) != 0;
+		boolean Dm = (toSub & 0x8000_0000L) != 0;
+		boolean Rm = (res & 0x8000_0000L) != 0;
+		if ((!Sm && Dm && !Rm) || (Sm && !Dm && Rm)) {
+			cpu.setV();
+		} else {
+			cpu.clearV();
+		}
+
+		if ((Sm && !Dm) || (Rm && !Dm) || (Sm && Rm)) {
 			cpu.setC();
 		} else {
 			cpu.clearC();

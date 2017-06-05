@@ -112,6 +112,11 @@ public class ROXL implements GenInstructionHandler {
 	
 	@Override
 	public void generate() {
+		generateImmRegROXL();
+		generateMemoryROXL();
+	}
+	
+	private void generateImmRegROXL() {
 		int base = 0xE110;
 		GenInstruction ins = null;
 		
@@ -150,28 +155,58 @@ public class ROXL implements GenInstructionHandler {
 		}
 	}
 	
+	private void generateMemoryROXL() {
+		int base = 0xE5C0;
+		GenInstruction ins = new GenInstruction() {
+			@Override
+			public void run(int opcode) {
+				ROXLMemoryWord(opcode);
+			}
+		};
+		
+		for (int m = 0; m < 8; m++) {
+			for (int r = 0; r < 8; r++) {
+				int opcode = base | (m << 3) | r;
+				cpu.addInstruction(opcode, ins);
+			}
+		}
+	}
+
 	private void ROXLRegisterByte(int opcode) {
 		int register = (opcode & 0x7);
 		boolean ir = cpu.bitTest(opcode, 5);
 		int numRegister = (opcode >> 9) & 0x7;
 		
-		long toShift;
+		long shift;
 		if (!ir) {
 			if (numRegister == 0) {
 				numRegister = 8;
 			}
-			toShift = numRegister;
+			shift = numRegister;
 		} else {
-			toShift = cpu.getD(numRegister);
+			shift = cpu.getD(numRegister);
+			shift = shift & 63;
 		}
 		
-		int extended = cpu.isX() ? 1 : 0;
-		long res = ((cpu.getD(register) & 0xFF) << toShift) | extended;
-		cpu.setDByte(register, res);
+		long data = cpu.getD(register) & 0xFF;
 		
-		boolean carry = cpu.bitTest(res, 8);
+		int last_out = 0;
+		boolean extended = cpu.isX();
+		for (int s= 0; s < shift; s++) {
+			last_out = (int) (data & 0x80);                 // bit rotated out before ths shift
+			data <<= 1;
+			if (extended)
+				data |= 1;                             // if xflag was set before the shift, set LSB
+			if(last_out != 0)                       // bit goes to xflag
+				extended = true;
+			else
+				extended = false;
+		}
+		data &= 0xFF;
 		
-		calcFlags(res, Size.BYTE.getMsb(), 0xFF, carry);
+		cpu.setDByte(register, data);
+		
+		calcFlags(data, Size.BYTE.getMsb(), 0xFF, extended);
 	}
 	
 	private void ROXLRegisterWord(int opcode) {
@@ -179,23 +214,36 @@ public class ROXL implements GenInstructionHandler {
 		boolean ir = cpu.bitTest(opcode, 5);
 		int numRegister = (opcode >> 9) & 0x7;
 		
-		long toShift;
+		long shift;
 		if (!ir) {
 			if (numRegister == 0) {
 				numRegister = 8;
 			}
-			toShift = numRegister;
+			shift = numRegister;
 		} else {
-			toShift = cpu.getD(numRegister);
+			shift = cpu.getD(numRegister);
+			shift = shift & 63;
 		}
 		
-		int extended = cpu.isX() ? 1 : 0;
-		long res = ((cpu.getD(register) & 0xFFFF) << toShift) | extended;
-		cpu.setDWord(register, res);
+		long data = cpu.getD(register) & 0xFFFF;
 		
-		boolean carry = cpu.bitTest(res, 16);
+		int last_out = 0;
+		boolean extended = cpu.isX();
+		for (int s= 0; s < shift; s++) {
+			last_out = (int) (data & 0x8000);                 // bit rotated out before ths shift
+			data <<= 1;
+			if (extended)
+				data |= 1;                             // if xflag was set before the shift, set LSB
+			if(last_out != 0)                       // bit goes to xflag
+				extended = true;
+			else
+				extended = false;
+		}
+		data &= 0xFFFF;
 		
-		calcFlags(res, Size.WORD.getMsb(), 0xFFFF, carry);
+		cpu.setDWord(register, data);
+		
+		calcFlags(data, Size.WORD.getMsb(), 0xFFFF, extended);
 	}
 	
 	private void ROXLRegisterLong(int opcode) {
@@ -203,26 +251,58 @@ public class ROXL implements GenInstructionHandler {
 		boolean ir = cpu.bitTest(opcode, 5);
 		int numRegister = (opcode >> 9) & 0x7;
 		
-		long toShift;
+		long shift;
 		if (!ir) {
 			if (numRegister == 0) {
 				numRegister = 8;
 			}
-			toShift = numRegister;
+			shift = numRegister;
 		} else {
-			toShift = cpu.getD(numRegister);
+			shift = cpu.getD(numRegister);
+			shift = shift & 63;
 		}
 		
-		int extended = cpu.isX() ? 1 : 0;
-		long res = (cpu.getD(register) << toShift) | extended;
-		cpu.setDLong(register, res);
+		long data = cpu.getD(register);
 		
-		boolean carry = cpu.bitTest(res, 32);
+		int last_out = 0;
+		boolean extended = cpu.isX();
+		for (int s= 0; s < shift; s++) {
+			last_out = (int) (data & 0x8000_0000);                 // bit rotated out before ths shift
+			data <<= 1;
+			if (extended)
+				data |= 1;                             // if xflag was set before the shift, set LSB
+			if(last_out != 0)                       // bit goes to xflag
+				extended = true;
+			else
+				extended = false;
+		}
 		
-		calcFlags(res, Size.LONG.getMsb(), 0xFFFF_FFFFL, carry);
+		cpu.setDLong(register, data);
+		
+		calcFlags(data, Size.LONG.getMsb(), 0xFFFF_FFFFL, extended);
 	}
 	
-	void calcFlags(long data, long msb, long maxSize, boolean carry) {
+	private void ROXLMemoryWord(int opcode) {
+		int mode = (opcode >> 3) & 0x7;
+		int register = (opcode & 0x7);
+		
+		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
+		long data = o.getData() & 0xFFFF;
+		
+		int last_out = (int) (data & 0x8000);
+		boolean extended = cpu.isX();
+		data <<= 1;
+		if (extended) {
+			data |= 0x01;
+		}
+		data &= 0xFFFF;
+		
+		cpu.setDWord(register, data);
+		
+		calcFlags(data, Size.WORD.getMsb(), 0xFFFF, last_out != 0);
+	}
+	
+	void calcFlags(long data, long msb, long maxSize, boolean ext) {
 		long wrapped = data & maxSize;
 		if (wrapped == 0) {
 			cpu.setZ();
@@ -237,7 +317,7 @@ public class ROXL implements GenInstructionHandler {
 
 		cpu.clearV();
 		
-		if (carry) {
+		if (ext) {
 			cpu.setC();
 			cpu.setX();
 		} else {
