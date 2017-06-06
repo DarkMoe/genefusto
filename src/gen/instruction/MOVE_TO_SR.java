@@ -98,10 +98,13 @@ public class MOVE_TO_SR implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int register = opcode & 0x7;
 
+		int oldSR = cpu.SR;
+		
 		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
 		long data = o.getAddressingMode().getWord(o);
+		cpu.SR = (int) data;
 		
-		if (((cpu.SR & 0x2000) ^ (data & 0x2000)) != 0) {	//	si cambio el supervisor bit
+		if (((oldSR & 0x2000) ^ (data & 0x2000)) != 0) {	//	si cambio el supervisor bit
 			if ((data & 0x2000) == 0x2000) {
 				cpu.setALong(7, cpu.SSP);
 			} else {
@@ -109,7 +112,6 @@ public class MOVE_TO_SR implements GenInstructionHandler {
 			}	
 		}
 		
-		cpu.SR = (int) data;
 	}
 	
 }

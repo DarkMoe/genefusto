@@ -1,7 +1,5 @@
 package gen;
 
-import java.util.HashSet;
-
 import gen.addressing.AddressingMode;
 import gen.instruction.Operation;
 
@@ -114,13 +112,13 @@ public class Gen68 {
 			
 		}
 		
-		if (PC == 0xa040) {
-//			print = true;
-		}
-		
 //		if ((SSP & 0xFFFF_FFFFL) != getA(7) && (SR & 0x2000) == 0x2000) {
 //			System.out.println();
 //		}
+
+		if (PC == 0xa040) {
+//			print = true;
+		}
 		
 		GenInstruction instruction = getInstruction((int) opcode);
 		instruction.run((int) opcode);
