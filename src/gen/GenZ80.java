@@ -4300,6 +4300,13 @@ public class GenZ80 {
 			cycles = 14;
 			break;
 			
+		case 0x46:	//	IM 0
+			interruptMode = 0;
+
+			PC = (PC + 1) & 0xFFFF;
+			cycles = 8;
+			break;
+			
 		//	LD I,A
 		case 0x47:
 			I = A;	// TODO agregarle cycles
@@ -4457,6 +4464,12 @@ public class GenZ80 {
 	        PC = (PC + 1) & 0xFFFF;
 			cycles = 15;
 			break;
+		case 0x66:	//	IM 0
+			interruptMode = 0;
+
+			PC = (PC + 1) & 0xFFFF;
+			cycles = 8;
+			break;
 		//	rrd
 		case 0x67:
 			tmp = readMemory(HL());
@@ -4535,6 +4548,12 @@ public class GenZ80 {
 			
 			PC = (PC + 3) & 0xFFFF;
 			cycles = 20;
+			break;
+		case 0x76:	//	IM 1
+			interruptMode = 1;
+
+			PC = (PC + 1) & 0xFFFF;
+			cycles = 8;
 			break;
 		//	in a,(c)
 		case 0x78:

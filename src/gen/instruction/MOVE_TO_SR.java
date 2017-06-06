@@ -101,6 +101,14 @@ public class MOVE_TO_SR implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
 		long data = o.getAddressingMode().getWord(o);
 		
+		if (((cpu.SR & 0x2000) ^ (data & 0x2000)) != 0) {	//	si cambio el supervisor bit
+			if ((data & 0x2000) == 0x2000) {
+				cpu.setALong(7, cpu.SSP);
+			} else {
+				cpu.setALong(7, cpu.USP);
+			}	
+		}
+		
 		cpu.SR = (int) data;
 	}
 	

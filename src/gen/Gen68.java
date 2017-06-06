@@ -114,7 +114,7 @@ public class Gen68 {
 			
 		}
 		
-		if (PC == 0x366) {
+		if (PC == 0xa040) {
 //			print = true;
 		}
 		

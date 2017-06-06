@@ -63,6 +63,14 @@ public class EORI_SR implements GenInstructionHandler {
 	 	long res = cpu.SR ^ data;
 		res &= 0xFFFF;
 	 	
+		if (((cpu.SR & 0x2000) ^ (res & 0x2000)) != 0) {	//	si cambio el supervisor bit
+			if ((res & 0x2000) == 0x2000) {
+				cpu.setALong(7, cpu.SSP);
+			} else {
+				cpu.setALong(7, cpu.USP);
+			}	
+		}
+		
 		cpu.SR = (int) res;
 	}
 	
