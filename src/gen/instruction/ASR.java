@@ -212,9 +212,10 @@ public class ASR implements GenInstructionHandler {
 		}
 		
 		long data = cpu.getD(register) & 0xFF;
+		
 		long msb = data & 0x80;
 		long last_out = 0;
-		for(int s= 0; s < shift; s++)
+		for(int s = 0; s < shift; s++)
 		{
 			last_out = data & 0x01;
 			data >>>= 1;
@@ -246,7 +247,7 @@ public class ASR implements GenInstructionHandler {
 		
 		long msb = data & 0x8000;
 		long last_out = 0;
-		for(int s= 0; s < shift; s++)
+		for(int s = 0; s < shift; s++)
 		{
 			last_out = data & 0x01;
 			data >>>= 1;

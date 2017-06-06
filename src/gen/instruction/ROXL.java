@@ -197,7 +197,7 @@ public class ROXL implements GenInstructionHandler {
 			data <<= 1;
 			if (extended)
 				data |= 1;                             // if xflag was set before the shift, set LSB
-			if(last_out != 0)                       // bit goes to xflag
+			if (last_out != 0)                       // bit goes to xflag
 				extended = true;
 			else
 				extended = false;

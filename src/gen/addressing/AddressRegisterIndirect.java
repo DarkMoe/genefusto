@@ -60,4 +60,11 @@ public class AddressRegisterIndirect implements AddressingMode {
 		return data;
 	}
 
+	@Override
+	public void calculateAddress(Operation o, Size size) {
+		long addr = cpu.getA(o.getRegister());
+		
+		o.setAddress(addr);
+	}
+
 }

@@ -328,27 +328,27 @@ public class ROR implements GenInstructionHandler {
 		boolean ir = cpu.bitTest(opcode, 5);
 		int numRegister = (opcode >> 9) & 0x7;
 		
-		long toShift;
+		long shift;
 		if (!ir) {
 			if (numRegister == 0) {
 				numRegister = 8;
 			}
-			toShift = numRegister;
+			shift = numRegister;
 		} else {
-			toShift = cpu.getD(numRegister);
-			toShift = toShift & 63;
+			shift = cpu.getD(numRegister);
+			shift = shift & 63;
 		}
 		
 		long data = cpu.getD(register) & 0xFFFF;
-		long rot = (data >> toShift);
+		long rot = (data >> shift);
 		
 		long res = rot;
-		for (int i = 0; i < toShift; i++) {		// rotacion de bits
-			res = res | ((data & (1 << i)) << (16 - toShift));
+		for (int i = 0; i < shift; i++) {		// rotacion de bits
+			res = res | ((data & (1 << i)) << (16 - shift));
 		}
 		boolean carry = false;
-		if (toShift != 0) {
-			if (((data >> toShift - 1) & 1) > 0) {
+		if (shift != 0) {
+			if (((data >> shift - 1) & 1) > 0) {
 				carry = true;
 			}
 		}
@@ -363,27 +363,27 @@ public class ROR implements GenInstructionHandler {
 		boolean ir = cpu.bitTest(opcode, 5);
 		int numRegister = (opcode >> 9) & 0x7;
 		
-		long toShift;
+		long shift;
 		if (!ir) {
 			if (numRegister == 0) {
 				numRegister = 8;
 			}
-			toShift = numRegister;
+			shift = numRegister;
 		} else {
-			toShift = cpu.getD(numRegister);
-			toShift = toShift & 63;
+			shift = cpu.getD(numRegister);
+			shift = shift & 63;
 		}
 		
 		long data = cpu.getD(register);
-		long rot = (data >> toShift);
+		long rot = (data >> shift);
 		
 		long res = rot;
-		for (int i = 0; i < toShift; i++) {		// rotacion de bits
-			res = res | ((data & (1 << i)) << (32 - toShift));
+		for (int i = 0; i < shift; i++) {		// rotacion de bits
+			res = res | ((data & (1 << i)) << (32 - shift));
 		}
 		boolean carry = false;
-		if (toShift != 0) {
-			if (((data >> toShift - 1) & 1) > 0) {	// -1 para validar el ultimo bit que se roto
+		if (shift != 0) {
+			if (((data >> shift - 1) & 1) > 0) {	// -1 para validar el ultimo bit que se roto
 				carry = true;
 			}
 		}

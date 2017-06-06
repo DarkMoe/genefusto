@@ -51,4 +51,20 @@ public class PCWithDisplacement implements AddressingMode {
 		return data;
 	}
 
+	@Override
+	public void calculateAddress(Operation o, Size size) {
+		long displacement = cpu.bus.read(cpu.PC + 2, Size.WORD);
+		long addr;
+		if ((displacement & 0x8000) > 0) {
+			displacement = -displacement;
+			displacement &= 0xFFFF;
+			addr = cpu.PC + 2 - displacement;
+		} else {
+			addr = cpu.PC + 2 + displacement;
+		}
+		o.setAddress(addr);
+		
+		cpu.PC += 2;
+	}
+
 }

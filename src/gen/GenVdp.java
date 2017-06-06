@@ -1296,7 +1296,7 @@ public class GenVdp {
 			}
 		}
 	}
-
+	
 //Register 02 - Plane A Name Table Location
 //7	6		5		4		3		2	1	0
 //x	SA16	SA15	SA14	SA13	x	x	x

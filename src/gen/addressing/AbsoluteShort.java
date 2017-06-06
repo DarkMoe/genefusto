@@ -56,5 +56,16 @@ public class AbsoluteShort implements AddressingMode {
 		
 		return data;
 	}
+	
+	@Override
+	public void calculateAddress(Operation o, Size size) {
+		long addr = cpu.bus.read(cpu.PC + 2, Size.WORD);
+		if ((addr & 0x8000) > 0) {
+			addr |= 0xFFFF_0000L;
+		}
+		o.setAddress(addr);
+		
+		cpu.PC += 2;
+	}
 
 }

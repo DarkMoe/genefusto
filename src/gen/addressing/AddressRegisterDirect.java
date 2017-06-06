@@ -1,6 +1,7 @@
 package gen.addressing;
 
 import gen.Gen68;
+import gen.Size;
 import gen.instruction.Operation;
 
 public class AddressRegisterDirect implements AddressingMode {
@@ -58,6 +59,11 @@ public class AddressRegisterDirect implements AddressingMode {
 		int register = o.getRegister();
 		
 		return cpu.getA(register);
+	}
+
+	@Override
+	public void calculateAddress(Operation o, Size size) {
+//		throw new RuntimeException("No address");
 	}
 
 }

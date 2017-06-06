@@ -60,4 +60,12 @@ public class AbsoluteLong implements AddressingMode {
 		return data;
 	}
 
+	@Override
+	public void calculateAddress(Operation o, Size size) {
+		long addr = cpu.bus.read(cpu.PC + 2, Size.LONG);
+		o.setAddress(addr);
+		
+		cpu.PC += 4;
+	}
+
 }

@@ -60,4 +60,20 @@ public class AddressRegisterWithDisplacement implements AddressingMode {
 		return data;
 	}
 
+	@Override
+	public void calculateAddress(Operation o, Size size) {
+		long base = cpu.getA(o.getRegister());
+		long displac = cpu.bus.read(cpu.PC + 2, Size.WORD);
+		
+		cpu.PC += 2;
+		
+		long displacement = (long) displac;
+		if ((displacement & 0x8000) > 0) {
+			displacement |= 0xFFFF_0000L;	// sign extend 32 bits
+		}
+		long addr = (int) (base + displacement);	// TODO verificar esto, al pasarlo a int hace el wrap bien parece
+		
+		o.setAddress(addr);	
+	}
+
 }

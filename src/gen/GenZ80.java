@@ -1,7 +1,5 @@
 package gen;
 
-import org.omg.Messaging.SyncScopeHelper;
-
 //Start	End	Description
 //0000h	1FFFh	Z80 RAM
 //2000h	3FFFh	Reserved
@@ -111,20 +109,14 @@ public class GenZ80 {
 		
 		String fullOpcode = hex(opcode);
         if (toPrint) {
-//            lineLog.setLength(0);
-//            String video = "";
-//            int[] vRegs = this.video.vRegs;
-//            for (int i = 0; i < vRegs.length; i++) {
-//				video += " - V" + i + ": " + hex(vRegs[i]);
-//			}
-//            lineLog.append("\naf: ").append(hex(A)).append(hex(F)).append(" - bc: ").append(hex(B))
-//                .append(hex(C)).append(" - de: ").append(hex(D)).append(hex(E)).append(" - hl: ")
-//                .append(hex(H)).append(hex(L)).append(" - IX:").append(hex4(IX)).append(" - IY:").append(hex4(IY)).append(" - R: ").append(hex(R)).append(" - bank1: " + hex(memory.bank1)).append(" - bank2: " + hex(memory.bank2)).append(" - bank3: " + hex(memory.bank3))
-//                .append("\npc: ").append(hex4(PC - 1)).append(" - sp: ").append(hex4(SP)).append(" - opcode: ").append(fullOpcode).append(" - VAddress: " + hex4(io.getControlWord()))
-//                .append(" - vCounter: ").append(io.getVCounter()).append(" - vdpStatus: ").append(hex(io.getStatus())).append("\n")
-//                .append(video);
-//                
-//            System.out.println(lineLog.toString());
+            lineLog.setLength(0);
+            lineLog.append("\nAF: ").append(hex(A)).append(hex(F)).append(" - BC: ").append(hex(B))
+                .append(hex(C)).append(" - DE: ").append(hex(D)).append(hex(E)).append(" - HL: ")
+                .append(hex(H)).append(hex(L)).append(" - IX:").append(hex4(IX)).append(" - IY:").append(hex4(IY)).append(" - R: ").append(hex(R)).append(" - bank68k: " + hex(romBank68kSerial))
+                .append("\npc: ").append(hex4(PC - 1)).append(" - sp: ").append(hex4(SP)).append(" - opcode: ").append(fullOpcode);
+                
+                
+            System.out.println(lineLog.toString());
         }
         
 //		for (int i = 0; i < lastInstr.length - 1; i++) {
@@ -5712,7 +5704,8 @@ public class GenZ80 {
 			address = address - 0x8000 + (romBank68kSerial << 15);
 			bus.write(address, data, Size.BYTE);
 		} else {
-			throw new RuntimeException("NOT - PC: " + Integer.toHexString(PC) + " - " + Integer.toHexString(address));
+			System.out.println("NOT - PC: " + Integer.toHexString(PC) + " - " + Integer.toHexString(address));
+//			throw new RuntimeException("NOT - PC: " + Integer.toHexString(PC) + " - " + Integer.toHexString(address));
 		}
 	}
 
@@ -5721,15 +5714,19 @@ public class GenZ80 {
 //    switching.   BANK select data create 68K address
 //    from A15 to A23.  You must write these 9 bits
 //    one at a time into 6000H serially, byte units, using the LSB.
+//    To specify which 32k section you want to access, write the upper nine
+//    bits of the complete 24-bit address into bit 0 of the bank address
+//    register, which is at 6000h (Z80) or A06000h (68000), starting with
+//    bit 15 and ending with bit 23.
     private void romBanking(int data) {
 		if (romBankPointer == 9) {
 			romBank68kSerial = 0;
 			romBankPointer = 0;
 		}
-		romBank68kSerial = (romBank68kSerial << 1) | (data & 1);
+		romBank68kSerial = ((data & 1) << romBankPointer) | romBank68kSerial;
 		romBankPointer++;
 		
-		System.out.println("PC : " + Integer.toHexString(PC));
+//		System.out.println("PC : " + Integer.toHexString(PC));
 		
 		if (romBankPointer == 9) {
 			System.out.println("Z80 RomBank: " + Integer.toHexString(romBank68kSerial));

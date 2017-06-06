@@ -52,4 +52,20 @@ public class ImmediateData implements AddressingMode {
 		return data;
 	}
 
+	@Override
+	public void calculateAddress(Operation o, Size size) {
+		o.setAddress(cpu.PC + 2);
+		
+		if (size == Size.BYTE) {		//	aunque sea byte, siempre ocupa 2 bytes y cuenta el de la derecha
+			cpu.PC += 2;
+			
+		} else if (size == Size.WORD) {
+			cpu.PC += 2;
+			
+		} else if (size == Size.LONG) {	// long
+			cpu.PC += 4;
+			
+		}
+	}
+
 }
