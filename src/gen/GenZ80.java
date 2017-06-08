@@ -5748,7 +5748,7 @@ public class GenZ80 {
 //		System.out.println("PC : " + Integer.toHexString(PC));
 		
 		if (romBankPointer == 9) {
-			System.out.println("Z80 RomBank: " + Integer.toHexString(romBank68kSerial));
+//			System.out.println("Z80 RomBank: " + Integer.toHexString(romBank68kSerial));
 		}
 	}
 

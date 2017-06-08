@@ -1,7 +1,5 @@
 package gen;
 
-import java.util.HashSet;
-
 import gen.addressing.AddressingMode;
 import gen.instruction.Operation;
 
@@ -114,7 +112,7 @@ public class Gen68 {
 			
 		}
 		
-		if (PC == 0xa040) {
+		if (PC == 0x3bec) {
 //			print = true;
 		}
 		

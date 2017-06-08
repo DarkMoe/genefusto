@@ -18,13 +18,13 @@ public class GenMemory {
 	
 	long readCartridgeWord(long address) {
 		long data = 0;
-		if (address <= 0x3FFFFF) {
+//		if (address <= 0x3FFFFF) {
 			if (address >= cartridge.length) {	//	wrapping ? TODO confirmar
 				address -= cartridge.length;
 			}
 			data  = cartridge[(int) address] << 8;
 			data |= cartridge[(int) address + 1];
-		}
+//		}
 		return data;
 	}
 	

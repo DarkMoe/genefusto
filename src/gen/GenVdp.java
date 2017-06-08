@@ -824,11 +824,12 @@ public class GenVdp {
 	}
 	
 	private void vsramWriteWord(int data) {
-//			int word = (vsramWriteData << 16) | data;
 		int word = data;
 			
 		int index = nextFIFOReadEntry;
 		int address = addressPort;
+		
+		address = address & 0xFF;	//	no decodifica todo, arregla scroll vertical en 16 zhang mahjong intro
 		
 		long first =  all >> 16;
 		long second = all & 0xFFFF;
@@ -837,7 +838,6 @@ public class GenVdp {
 		int addr = (int) ((first & 0x3FFF) | ((second & 0x3) << 13));
 		
 		int offset = address + autoIncrementTotal;
-		offset = offset & 0x4F;
 		
 		int data1 = (word >> 8) & 0xFF;
 		int data2 = word & 0xFF;
