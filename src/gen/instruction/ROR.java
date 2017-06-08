@@ -207,11 +207,11 @@ public class ROR implements GenInstructionHandler {
 			}
 			toShift = numRegister;
 		} else {
-			toShift = cpu.getD(numRegister);
+			toShift = cpu.getDLong(numRegister);
 			toShift &= 63;	//	wrap
 		}
 		
-		long data = cpu.getD(register) & 0xFF;
+		long data = cpu.getDByte(register);
 		long rot = (data << toShift);
 		
 		long res = rot & 0xFF;
@@ -238,11 +238,11 @@ public class ROR implements GenInstructionHandler {
 			}
 			toShift = numRegister;
 		} else {
-			toShift = cpu.getD(numRegister);
+			toShift = cpu.getDLong(numRegister);
 			toShift &= 63;	//	wrap
 		}
 		
-		long data = cpu.getD(register) & 0xFFFF;
+		long data = cpu.getDWord(register);
 		long rot = (data << toShift);
 		
 		long res = rot & 0xFFFF;
@@ -269,11 +269,11 @@ public class ROR implements GenInstructionHandler {
 			}
 			toShift = numRegister;
 		} else {
-			toShift = cpu.getD(numRegister);
+			toShift = cpu.getDLong(numRegister);
 			toShift &= 63;	//	wrap
 		}
 		
-		long data = cpu.getD(register);
+		long data = cpu.getDLong(register);
 		long rot = (data << toShift);
 		
 		long res = rot & 0xFFFF_FFFFL;
@@ -300,11 +300,11 @@ public class ROR implements GenInstructionHandler {
 			}
 			shift = numRegister;
 		} else {
-			shift = cpu.getD(numRegister);
+			shift = cpu.getDLong(numRegister);
 			shift = shift & 63;
 		}
 		
-		long data = cpu.getD(register) & 0xFF;
+		long data = cpu.getDByte(register);
 		long rot = (data >> shift);
 		
 		long res = rot;
@@ -335,11 +335,11 @@ public class ROR implements GenInstructionHandler {
 			}
 			shift = numRegister;
 		} else {
-			shift = cpu.getD(numRegister);
+			shift = cpu.getDLong(numRegister);
 			shift = shift & 63;
 		}
 		
-		long data = cpu.getD(register) & 0xFFFF;
+		long data = cpu.getDWord(register);
 		long rot = (data >> shift);
 		
 		long res = rot;
@@ -370,11 +370,11 @@ public class ROR implements GenInstructionHandler {
 			}
 			shift = numRegister;
 		} else {
-			shift = cpu.getD(numRegister);
+			shift = cpu.getDLong(numRegister);
 			shift = shift & 63;
 		}
 		
-		long data = cpu.getD(register);
+		long data = cpu.getDLong(register);
 		long rot = (data >> shift);
 		
 		long res = rot;

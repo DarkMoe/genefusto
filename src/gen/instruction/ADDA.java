@@ -120,7 +120,8 @@ public class ADDA implements GenInstructionHandler {
 			data = 0xFFFF_0000 | data;
 		}
 		
-		long tot = (cpu.getA(addrRegister) + data);
+		long toAdd = cpu.getALong(addrRegister);
+		long tot = (toAdd + data);
 		cpu.setALong(addrRegister, tot);	// setLong porque afecta a todo el registro
 	}
 	
@@ -132,7 +133,8 @@ public class ADDA implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
 		long data = o.getAddressingMode().getLong(o);
 		
-		long tot = (cpu.getA(addrRegister) + data);
+		long toAdd = cpu.getALong(addrRegister);
+		long tot = (toAdd + data);
 		cpu.setALong(addrRegister, tot);
 	}
 	

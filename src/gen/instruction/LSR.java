@@ -205,11 +205,11 @@ public class LSR implements GenInstructionHandler {
 			}
 			toShift = numRegister;
 		} else {
-			toShift = cpu.getD(numRegister);
+			toShift = cpu.getDLong(numRegister);
 			toShift = toShift & 63;
 		}
 
-		long data = cpu.getD(register) & 0xFF;
+		long data = cpu.getDByte(register);
 		long res = data >> toShift;
 		
 		boolean carry = false;
@@ -235,11 +235,11 @@ public class LSR implements GenInstructionHandler {
 			}
 			toShift = numRegister;
 		} else {
-			toShift = cpu.getD(numRegister);
+			toShift = cpu.getDLong(numRegister);
 			toShift = toShift & 63;
 		}
 
-		long data = cpu.getD(register) & 0xFFFF;
+		long data = cpu.getDWord(register);
 		long res = data >> toShift;
 						
 		boolean carry = false;
@@ -266,11 +266,11 @@ public class LSR implements GenInstructionHandler {
 			}
 			toShift = numRegister;
 		} else {
-			toShift = cpu.getD(numRegister);
+			toShift = cpu.getDLong(numRegister);
 			toShift = toShift & 63;
 		}
 
-		long data = cpu.getD(register);
+		long data = cpu.getDLong(register);
 		long res = data >> toShift;
 		
 		boolean carry = false;

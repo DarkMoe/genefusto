@@ -114,10 +114,13 @@ public class MOVEP implements GenInstructionHandler {
 		int dataReg = (opcode >> 9) & 0x7;
 		
 		long offset = cpu.bus.read(cpu.PC + 2, Size.WORD);
+		if ((offset & 0x8000) > 0) {
+			offset = offset | 0xFFFF_0000L;
+		}
 		
 		cpu.PC += 2;
 
-		long addr = cpu.getA(addrReg);
+		long addr = cpu.getALong(addrReg);
 		addr += offset;
 		
 		long data  = cpu.bus.read(addr, Size.BYTE) << 8;
@@ -131,10 +134,13 @@ public class MOVEP implements GenInstructionHandler {
 		int dataReg = (opcode >> 9) & 0x7;
 		
 		long offset = cpu.bus.read(cpu.PC + 2, Size.WORD);
+		if ((offset & 0x8000) > 0) {
+			offset = offset | 0xFFFF_0000L;
+		}
 		
 		cpu.PC += 2;
 
-		long addr = cpu.getA(addrReg);
+		long addr = cpu.getALong(addrReg);
 		addr += offset;
 		
 		long data  = cpu.bus.read(addr, Size.BYTE) << 24;
@@ -150,11 +156,14 @@ public class MOVEP implements GenInstructionHandler {
 		int dataReg = (opcode >> 9) & 0x7;
 		
 		long offset = cpu.bus.read(cpu.PC + 2, Size.WORD);
+		if ((offset & 0x8000) > 0) {
+			offset = offset | 0xFFFF_0000L;
+		}
 		
 		cpu.PC += 2;
 
-		long data = cpu.getD(dataReg) & 0xFFFF;
-		long addr = cpu.getA(addrReg);
+		long data = cpu.getDWord(dataReg);
+		long addr = cpu.getALong(addrReg);
 		addr += offset;
 		
 		cpu.bus.write(addr, data >> 8, Size.BYTE);
@@ -166,11 +175,14 @@ public class MOVEP implements GenInstructionHandler {
 		int dataReg = (opcode >> 9) & 0x7;
 		
 		long offset = cpu.bus.read(cpu.PC + 2, Size.WORD);
+		if ((offset & 0x8000) > 0) {
+			offset = offset | 0xFFFF_0000L;
+		}
 		
 		cpu.PC += 2;
 
-		long data = cpu.getD(dataReg);
-		long addr = cpu.getA(addrReg);
+		long data = cpu.getDLong(dataReg);
+		long addr = cpu.getALong(addrReg);
 		addr += offset;
 		
 		cpu.bus.write(addr, (data >> 24), Size.BYTE);

@@ -115,7 +115,7 @@ public class SUBA implements GenInstructionHandler {
 			data = 0xFFFF_0000 | data;
 		}
 		
-		long toSub = cpu.getA(addrRegister);
+		long toSub = cpu.getALong(addrRegister);
 		
 		long tot = toSub - data;
 		cpu.setALong(addrRegister, tot);	// setLong porque afecta a todo el registro
@@ -129,7 +129,7 @@ public class SUBA implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
 		long data = o.getAddressingMode().getLong(o);
 		
-		long toSub = cpu.getA(addrRegister);
+		long toSub = cpu.getALong(addrRegister);
 		
 		long tot = toSub - data;
 		cpu.setALong(addrRegister, tot);

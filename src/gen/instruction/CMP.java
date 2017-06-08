@@ -125,7 +125,7 @@ public class CMP implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(Size.BYTE, mode, register);
 		long data = o.getAddressingMode().getByte(o);
 		
-		long toSub = (cpu.getD(dataRegister) & 0xFF);
+		long toSub = cpu.getDByte(dataRegister);
 		long res = toSub - data;
 		
 		boolean Sm = (data & 0x80) != 0;
@@ -155,7 +155,7 @@ public class CMP implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
 		long data = o.getAddressingMode().getWord(o);
 		
-		long toSub = (cpu.getD(dataRegister) & 0xFFFF);
+		long toSub = cpu.getDWord(dataRegister);
 		long res = toSub - data;
 		
 		boolean Sm = (data & 0x8000) != 0;
@@ -185,7 +185,7 @@ public class CMP implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
 		long data = o.getAddressingMode().getLong(o);
 		
-		long toSub = cpu.getD(dataRegister);
+		long toSub = cpu.getDLong(dataRegister);
 		long res = toSub - data;
 		
 		boolean Sm = (data & 0x8000_0000L) != 0;
@@ -204,7 +204,7 @@ public class CMP implements GenInstructionHandler {
 			cpu.clearC();
 		}
 		
-		calcFlags(res, Size.LONG.getMsb(), 0xFFFF_FFFFL);
+		calcFlags(res, Size.LONG.getMsb(), Size.LONG.getMax());
 	}
 	
 	void calcFlags(long data, long msb, long maxSize) {	// TODO merge con los flags de arriba

@@ -11,6 +11,7 @@ import gen.addressing.AddressRegisterIndirectPreDecrement;
 import gen.addressing.AddressRegisterWithDisplacement;
 import gen.addressing.AddressRegisterWithIndex;
 import gen.addressing.PCWithDisplacement;
+import gen.addressing.PCWithIndex;
 
 public class MOVEM implements GenInstructionHandler {
 
@@ -248,7 +249,8 @@ public class MOVEM implements GenInstructionHandler {
 						|| o.getAddressingMode() instanceof AddressRegisterIndirect
 						|| o.getAddressingMode() instanceof AddressRegisterWithDisplacement
 						|| o.getAddressingMode() instanceof AddressRegisterWithIndex
-						|| o.getAddressingMode() instanceof PCWithDisplacement) {
+						|| o.getAddressingMode() instanceof PCWithDisplacement
+						|| o.getAddressingMode() instanceof PCWithIndex) {
 					o.setAddress(o.getAddress() + 2);
 				} else {
 					throw new RuntimeException(o.getAddressingMode().getClass().getSimpleName());
@@ -273,7 +275,8 @@ public class MOVEM implements GenInstructionHandler {
 						|| o.getAddressingMode() instanceof AddressRegisterIndirect
 						|| o.getAddressingMode() instanceof AddressRegisterWithDisplacement
 						|| o.getAddressingMode() instanceof AddressRegisterWithIndex
-						|| o.getAddressingMode() instanceof PCWithDisplacement) {
+						|| o.getAddressingMode() instanceof PCWithDisplacement
+						|| o.getAddressingMode() instanceof PCWithIndex) {
 					o.setAddress(o.getAddress() + 2);
 				} else {
 					throw new RuntimeException("D");
@@ -362,7 +365,11 @@ public class MOVEM implements GenInstructionHandler {
 			
 			for (int i = 7; i >= 0; i--) {
 				if (((registerListMaskA) & (1 << i)) != 0) {
-					data = cpu.getA(i);
+					data = cpu.getAWord(i);
+					
+					if (i == 7) {
+						throw new RuntimeException("CASO EDGE !!!! IMPL");
+					}
 					
 					cpu.writeKnownAddressingMode(o, data, Size.WORD);
 					
@@ -371,7 +378,7 @@ public class MOVEM implements GenInstructionHandler {
 			}
 			for (int i = 7; i >= 0; i--) {
 				if (((registerListMaskD) & (1 << i)) != 0) {
-					data = cpu.getD(i);
+					data = cpu.getDWord(i);
 					
 					cpu.writeKnownAddressingMode(o, data, Size.WORD);
 					
@@ -390,7 +397,7 @@ public class MOVEM implements GenInstructionHandler {
 			
 			for (int i = 0; i < 8; i++) {
 				if (((registerListMaskD) & (1 << i)) != 0) {
-					data = cpu.getD(i);
+					data = cpu.getDWord(i);
 					
 					cpu.writeKnownAddressingMode(o, data, Size.WORD);
 					
@@ -399,7 +406,7 @@ public class MOVEM implements GenInstructionHandler {
 			}
 			for (int i = 0; i < 8; i++) {
 				if (((registerListMaskA) & (1 << i)) != 0) {
-					data = cpu.getA(i);
+					data = cpu.getAWord(i);
 					
 					cpu.writeKnownAddressingMode(o, data, Size.WORD);
 					
@@ -438,7 +445,11 @@ public class MOVEM implements GenInstructionHandler {
 			
 			for (int i = 7; i >= 0; i--) {
 				if (((registerListMaskA) & (1 << i)) != 0) {
-					data = cpu.getA(i);
+					data = cpu.getALong(i);
+					
+					if (i == 7) {
+						throw new RuntimeException("CASO EDGE !!!! IMPL");
+					}
 					
 					cpu.writeKnownAddressingMode(o, data, Size.LONG);
 					
@@ -447,7 +458,7 @@ public class MOVEM implements GenInstructionHandler {
 			}
 			for (int i = 7; i >= 0; i--) {
 				if (((registerListMaskD) & (1 << i)) != 0) {
-					data = cpu.getD(i);
+					data = cpu.getDLong(i);
 					
 					cpu.writeKnownAddressingMode(o, data, Size.LONG);
 					
@@ -466,7 +477,7 @@ public class MOVEM implements GenInstructionHandler {
 			
 			for (int i = 0; i < 8; i++) {
 				if (((registerListMaskD) & (1 << i)) != 0) {
-					data = cpu.getD(i);
+					data = cpu.getDLong(i);
 					
 					cpu.writeKnownAddressingMode(o, data, Size.LONG);
 					
@@ -475,7 +486,7 @@ public class MOVEM implements GenInstructionHandler {
 			}
 			for (int i = 0; i < 8; i++) {
 				if (((registerListMaskA) & (1 << i)) != 0) {
-					data = cpu.getA(i);
+					data = cpu.getALong(i);
 					
 					cpu.writeKnownAddressingMode(o, data, Size.LONG);
 					

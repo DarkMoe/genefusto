@@ -220,7 +220,8 @@ public class AND implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(Size.BYTE, mode, register);
 		long data = o.getAddressingMode().getByte(o);
 		
-		long res = (cpu.getD(destRegister) & 0xFF) & data;
+		long toAnd = cpu.getDByte(destRegister);
+		long res = toAnd & data;
 		cpu.setDByte(destRegister, res);
 		
 		calcFlags(res, Size.BYTE.getMsb());
@@ -234,7 +235,8 @@ public class AND implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
 		long data = o.getAddressingMode().getWord(o);
 		
-		long res = (cpu.getD(destRegister) & 0xFFFF) & data;
+		long toAnd = cpu.getDWord(destRegister);
+		long res = toAnd & data;
 		cpu.setDWord(destRegister, res);
 		
 		calcFlags(res, Size.WORD.getMsb());
@@ -248,7 +250,8 @@ public class AND implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
 		long data = o.getAddressingMode().getLong(o);
 		
-		long res = cpu.getD(destRegister) & data;
+		long toAnd = cpu.getDLong(destRegister);
+		long res = toAnd & data;
 		cpu.setDLong(destRegister, res);
 		
 		calcFlags(res, Size.LONG.getMsb());
@@ -259,7 +262,7 @@ public class AND implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int sourceRegister = (opcode >> 9) & 0x7;
 		
-		long toAnd = cpu.getD(sourceRegister) & 0xFF;
+		long toAnd = cpu.getDByte(sourceRegister);
 		
 		Operation o = cpu.resolveAddressingMode(Size.BYTE, mode, register);
 		long data = o.getAddressingMode().getByte(o);
@@ -276,7 +279,7 @@ public class AND implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int sourceRegister = (opcode >> 9) & 0x7;
 		
-		long toAnd = cpu.getD(sourceRegister) & 0xFFFF;
+		long toAnd = cpu.getDWord(sourceRegister);
 		
 		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
 		long data = o.getAddressingMode().getWord(o);
@@ -293,7 +296,7 @@ public class AND implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int sourceRegister = (opcode >> 9) & 0x7;
 		
-		long toAnd = cpu.getD(sourceRegister);
+		long toAnd = cpu.getDLong(sourceRegister);
 		
 		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
 		long data = o.getAddressingMode().getLong(o);

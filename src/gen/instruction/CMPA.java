@@ -112,7 +112,7 @@ public class CMPA implements GenInstructionHandler {
 		int register = (opcode & 0x7);
 		int addressRegister = (opcode >> 9) & 0x7;
 		
-		long data = cpu.getA(addressRegister);
+		long data = cpu.getALong(addressRegister);
 
 		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
 		long toSub = o.getAddressingMode().getWord(o);
@@ -148,7 +148,7 @@ public class CMPA implements GenInstructionHandler {
 		int register = (opcode & 0x7);
 		int addressRegister = (opcode >> 9) & 0x7;
 		
-		long data = cpu.getA(addressRegister);
+		long data = cpu.getALong(addressRegister);
 
 		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
 		long toSub = o.getAddressingMode().getLong(o);

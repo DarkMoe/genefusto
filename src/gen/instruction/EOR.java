@@ -131,7 +131,7 @@ public class EOR implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int dataReg = (opcode >> 9) & 0x7;
 		
-		long toEor = cpu.getD(dataReg) & 0xFF;
+		long toEor = cpu.getDByte(dataReg);
 		
 		Operation o = cpu.resolveAddressingMode(Size.BYTE, mode, register);
 		long data = o.getAddressingMode().getByte(o);
@@ -147,7 +147,7 @@ public class EOR implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int dataReg = (opcode >> 9) & 0x7;
 		
-		long toEor = cpu.getD(dataReg) & 0xFFFF;
+		long toEor = cpu.getDWord(dataReg);
 		
 		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
 		long data = o.getAddressingMode().getWord(o);
@@ -163,7 +163,7 @@ public class EOR implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int dataReg = (opcode >> 9) & 0x7;
 		
-		long toEor = cpu.getD(dataReg);
+		long toEor = cpu.getDLong(dataReg);
 		
 		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
 		long data = o.getAddressingMode().getLong(o);

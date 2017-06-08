@@ -60,13 +60,10 @@ public class ORI_SR implements GenInstructionHandler {
 		long toOr = cpu.bus.read(cpu.PC + 2, Size.WORD);
 		
 	 	cpu.PC += 2;
-		
-	 	int oldSR = cpu.SR;
-	 	
+		 	 
 		long res = cpu.SR | toOr;
-		cpu.SR = (int) res;
 		
-		if (((oldSR & 0x2000) ^ (res & 0x2000)) != 0) {	//	si cambio el supervisor bit
+		if (((cpu.SR & 0x2000) ^ (res & 0x2000)) != 0) {	//	si cambio el supervisor bit
 			if ((res & 0x2000) == 0x2000) {
 				cpu.setALong(7, cpu.SSP);
 			} else {
@@ -74,6 +71,7 @@ public class ORI_SR implements GenInstructionHandler {
 			}	
 		}
 		
+		cpu.SR = (int) res;
 	}
 	
 }

@@ -102,7 +102,7 @@ public class LINK implements GenInstructionHandler {
 		
 		cpu.PC += 2;
 			 
-		long data = cpu.getA(register);
+		long data = cpu.getALong(register);
 
 		if ((cpu.SR & 0x2000) == 0x2000) {
 			cpu.SSP--;

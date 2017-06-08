@@ -192,11 +192,11 @@ public class ROXR implements GenInstructionHandler {
 			}
 			toShift = numRegister;
 		} else {
-			toShift = cpu.getD(numRegister);
+			toShift = cpu.getDLong(numRegister);
 			toShift = toShift & 63;
 		}
 		
-		long data = cpu.getD(register) & 0xFF;
+		long data = cpu.getDByte(register);
 		
 		int extended = cpu.isX() ? 0x80 : 0;
 		long res = (data >> toShift) | extended;
@@ -224,11 +224,11 @@ public class ROXR implements GenInstructionHandler {
 			}
 			toShift = numRegister;
 		} else {
-			toShift = cpu.getD(numRegister);
+			toShift = cpu.getDLong(numRegister);
 			toShift = toShift & 63;
 		}
 		
-		long data = cpu.getD(register) & 0xFFFF;
+		long data = cpu.getDWord(register);
 		
 		int extended = cpu.isX() ? 0x8000 : 0;
 		long res = (data >> toShift) | extended;
@@ -256,11 +256,11 @@ public class ROXR implements GenInstructionHandler {
 			}
 			toShift = numRegister;
 		} else {
-			toShift = cpu.getD(numRegister);
+			toShift = cpu.getDLong(numRegister);
 			toShift = toShift & 63;
 		}
 		
-		long data = cpu.getD(register);
+		long data = cpu.getDLong(register);
 		
 		long extended = cpu.isX() ? 0x8000_0000L : 0;
 		long res = (data >> toShift) | extended;

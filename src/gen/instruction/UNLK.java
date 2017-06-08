@@ -47,7 +47,7 @@ public class UNLK implements GenInstructionHandler {
 		ins = new GenInstruction() {
 			@Override
 			public void run(int opcode) {
-				UNLINKWord(opcode);
+				UNLINK(opcode);
 			}
 			
 		};
@@ -59,11 +59,10 @@ public class UNLK implements GenInstructionHandler {
 		
 	}
 	
-	private void UNLINKWord(int opcode) {
+	private void UNLINK(int opcode) {
 		int register = opcode & 0x7;
 		
-		long addr = cpu.getA(register);
-
+		long addr = cpu.getALong(register);
 		long fromSP = cpu.bus.read(addr, Size.LONG);
 		
 		cpu.setALong(register, fromSP);

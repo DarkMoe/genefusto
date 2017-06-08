@@ -122,7 +122,7 @@ public class DIVS implements GenInstructionHandler {
 			s |= 0xFFFF_0000L;
 		}
 		
-		int d = (int) cpu.getD(dataRegister);
+		int d = (int) cpu.getDLong(dataRegister);
 
 		if (s == 0) {
 			throw new RuntimeException("div por 0");

@@ -166,7 +166,7 @@ public class SUBQ implements GenInstructionHandler {
 			calcFlags(tot, data, toSub, Size.WORD.getMsb(), Size.WORD.getMax());
 			
 		} else {		//	address register, siempre guarda longword y no calcula flags
-			long data = cpu.getA(register);
+			long data = cpu.getALong(register);
 			
 			long tot = (data - toSub);
 			cpu.setALong(register, tot);

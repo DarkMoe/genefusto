@@ -132,7 +132,7 @@ public class MULS implements GenInstructionHandler {
 			data |= 0xFFFF_0000;
 		}
 		
-		int mult = (int) (cpu.getD(dataRegister) & 0xFFFF);
+		int mult = (int) cpu.getDWord(dataRegister);
 		if ((mult & 0x8000) > 0) {
 			mult |= 0xFFFF_0000;
 		}
@@ -144,7 +144,7 @@ public class MULS implements GenInstructionHandler {
 		calcFlags(tot);
 	}
 	
-	void calcFlags(int tot) {//TODO  overflow siempre clear ?
+	void calcFlags(int tot) {	//TODO  overflow siempre clear ?
 		if (tot < 0) {
 			cpu.setN();
 		} else {

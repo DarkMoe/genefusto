@@ -96,8 +96,8 @@ public class EXG implements GenInstructionHandler {
 		int rxRegister = (opcode >> 9) & 0x7;
 		int ryRegister = opcode & 0x7;
 		
-		long rx = cpu.getD(rxRegister);
-		long ry = cpu.getD(ryRegister);
+		long rx = cpu.getDLong(rxRegister);
+		long ry = cpu.getDLong(ryRegister);
 
 		cpu.setDLong(rxRegister, ry);
 		cpu.setDLong(ryRegister, rx);
@@ -107,8 +107,8 @@ public class EXG implements GenInstructionHandler {
 		int rxRegister = (opcode >> 9) & 0x7;
 		int ryRegister = opcode & 0x7;
 		
-		long rx = cpu.getA(rxRegister);
-		long ry = cpu.getA(ryRegister);
+		long rx = cpu.getALong(rxRegister);
+		long ry = cpu.getALong(ryRegister);
 
 		cpu.setALong(rxRegister, ry);
 		cpu.setALong(ryRegister, rx);
@@ -118,8 +118,8 @@ public class EXG implements GenInstructionHandler {
 		int rxRegister = (opcode >> 9) & 0x7;
 		int ryRegister = opcode & 0x7;
 		
-		long rx = cpu.getD(rxRegister);
-		long ry = cpu.getA(ryRegister);
+		long rx = cpu.getDLong(rxRegister);
+		long ry = cpu.getALong(ryRegister);
 
 		cpu.setDLong(rxRegister, ry);
 		cpu.setALong(ryRegister, rx);

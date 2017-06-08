@@ -208,7 +208,7 @@ public class OR implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(Size.BYTE, mode, register);
 		long data = o.getAddressingMode().getByte(o);
 		
-		long toOr = cpu.getD(destRegister) & 0xFF;
+		long toOr = cpu.getDByte(destRegister);
 		
 		long res = toOr | data;
 		cpu.setDByte(destRegister, res);
@@ -224,7 +224,9 @@ public class OR implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
 		long data = o.getAddressingMode().getWord(o);
 		
-		long res = (cpu.getD(destRegister) & 0xFFFF) | data;
+		long toOr = cpu.getDWord(destRegister);
+		
+		long res = toOr | data;
 		cpu.setDWord(destRegister, res);
 		
 		calcFlags(res, Size.WORD.getMsb());
@@ -235,7 +237,7 @@ public class OR implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int destRegister = (opcode >> 9) & 0x7;
 		
-		long data = cpu.getD(destRegister);
+		long data = cpu.getDLong(destRegister);
 		
 		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
 		long toOr = o.getAddressingMode().getLong(o);
@@ -251,7 +253,7 @@ public class OR implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int sourceRegister = (opcode >> 9) & 0x7;
 		
-		long toOr = cpu.getD(sourceRegister) & 0xFF;
+		long toOr = cpu.getDByte(sourceRegister);
 		
 		Operation o = cpu.resolveAddressingMode(Size.BYTE, mode, register);
 		long data = o.getAddressingMode().getByte(o);
@@ -268,7 +270,7 @@ public class OR implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int sourceRegister = (opcode >> 9) & 0x7;
 		
-		long toOr = cpu.getD(sourceRegister) & 0xFFFF;
+		long toOr = cpu.getDWord(sourceRegister);
 		
 		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
 		long data = o.getAddressingMode().getWord(o);
@@ -285,7 +287,7 @@ public class OR implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int sourceRegister = (opcode >> 9) & 0x7;
 		
-		long toOr = cpu.getD(sourceRegister);
+		long toOr = cpu.getDLong(sourceRegister);
 		
 		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
 		long data = o.getAddressingMode().getLong(o);

@@ -63,7 +63,7 @@ public class AddressRegisterIndirectPostIncrement implements AddressingMode {
 	@Override
 	public void calculateAddress(Operation o, Size size) {
 		int register = o.getRegister();
-		long addr = cpu.getA(register);
+		long addr = cpu.getALong(register);
 		o.setAddress(addr);
 		
 		if (size == Size.BYTE) {	//	byte

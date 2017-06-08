@@ -152,8 +152,8 @@ public class ADDX implements GenInstructionHandler {
 		int rx = (opcode >> 9) & 0x7;
 		int ry = (opcode & 0x7);
 		
-		long data = cpu.getD(ry) & 0xFF;
-		long toAdd = cpu.getD(rx) & 0xFF;
+		long data = cpu.getDByte(ry);
+		long toAdd = cpu.getDByte(rx);
 		
 		int extended = cpu.isX() ? 1 : 0;
 		
@@ -167,8 +167,8 @@ public class ADDX implements GenInstructionHandler {
 		int rx = (opcode >> 9) & 0x7;
 		int ry = (opcode & 0x7);
 		
-		long data = cpu.getD(ry) & 0xFFFF;
-		long toAdd = cpu.getD(rx) & 0xFFFF;
+		long data = cpu.getDWord(ry);
+		long toAdd = cpu.getDWord(rx);
 		
 		int extended = cpu.isX() ? 1 : 0;
 		
@@ -182,8 +182,8 @@ public class ADDX implements GenInstructionHandler {
 		int rx = (opcode >> 9) & 0x7;
 		int ry = (opcode & 0x7);
 		
-		long data = cpu.getD(ry);
-		long toAdd = cpu.getD(rx);
+		long data = cpu.getDLong(ry);
+		long toAdd = cpu.getDLong(rx);
 		
 		int extended = cpu.isX() ? 1 : 0;
 		

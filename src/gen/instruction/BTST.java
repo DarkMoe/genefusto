@@ -202,7 +202,7 @@ public class BTST implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(Size.BYTE, destMode, destReg);
 		long data = o.getAddressingMode().getByte(o);
 		
-		long bitNumber = cpu.getD(dataRegister) & 0xFF;
+		long bitNumber = cpu.getDByte(dataRegister);
 		bitNumber &= 7;
 		
 		calcFlags(data, (int) bitNumber);
@@ -216,7 +216,7 @@ public class BTST implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(Size.LONG, destMode, destReg);
 		long data = o.getAddressingMode().getLong(o);
 		
-		long bitNumber = cpu.getD(dataRegister);
+		long bitNumber = cpu.getDLong(dataRegister);
 		bitNumber &= 31;
 		
 		calcFlags(data, (int) bitNumber);
@@ -244,7 +244,7 @@ public class BTST implements GenInstructionHandler {
 		
 		long bitNumber = cpu.bus.read(cpu.PC + 2, Size.WORD);
 		bitNumber = bitNumber & 0xFF;
-		bitNumber &= 63;
+		bitNumber &= 31;
 		
 		cpu.PC += 2;
 		

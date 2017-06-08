@@ -175,7 +175,8 @@ public class BCLR implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(Size.BYTE, destMode, destReg);
 		long data = o.getAddressingMode().getByte(o);
 		
-		long bitNumber = cpu.getD(dataRegister) & 0xFF;		// TODO no seria & 0x7 si son 8 bits ?
+		long bitNumber = cpu.getDLong(dataRegister);
+		bitNumber &= 7;
 		
 		calcFlags(data, (int) bitNumber);
 	
@@ -193,7 +194,8 @@ public class BCLR implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(Size.LONG, destMode, destReg);
 		long data = o.getAddressingMode().getLong(o);
 		
-		long bitNumber = cpu.getD(dataRegister);
+		long bitNumber = cpu.getDLong(dataRegister);
+		bitNumber &= 31;
 		
 		calcFlags(data, (int) bitNumber);
 	
@@ -208,7 +210,7 @@ public class BCLR implements GenInstructionHandler {
 		int destMode = (opcode >> 3) & 0x7;
 		
 		long numberBit = cpu.bus.read(cpu.PC + 2, Size.WORD);
-		numberBit = numberBit & 0xFF;
+		numberBit &= 7;
 		
 		cpu.PC += 2;
 		
@@ -228,7 +230,7 @@ public class BCLR implements GenInstructionHandler {
 		int destMode = (opcode >> 3) & 0x7;
 		
 		long numberBit = cpu.bus.read(cpu.PC + 2, Size.WORD);
-		numberBit = numberBit & 0xFF;
+		numberBit &= 31;
 		
 		cpu.PC += 2;
 		

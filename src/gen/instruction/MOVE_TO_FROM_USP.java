@@ -72,17 +72,17 @@ public class MOVE_TO_FROM_USP implements GenInstructionHandler {
 	}
 	
 	private void MOVEToUSP(int opcode) {
-		if ((cpu.SR & 0x2000) != 0x2000) {
+		if ((cpu.SR & 0x2000) == 0) {
 			throw new RuntimeException("NO PRIVI");
 		}
 		
 		int register = opcode & 0x7;
 
-		cpu.USP = cpu.getA(register);
+		cpu.USP = cpu.getALong(register);
 	}
 	
 	private void MOVEFromUSP(int opcode) {
-		if ((cpu.SR & 0x2000) != 0x2000) {
+		if ((cpu.SR & 0x2000) == 0) {
 			throw new RuntimeException("NO PRIVI");
 		}
 		

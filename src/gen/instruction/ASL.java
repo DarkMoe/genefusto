@@ -201,11 +201,11 @@ public class ASL implements GenInstructionHandler {
 				shift = numRegister;
 			}
 		} else {
-			shift = cpu.getD(numRegister);
+			shift = cpu.getDLong(numRegister);
 			shift = shift & 63;
 		}
 		
-		int data = (int) (cpu.getD(register) & 0xFF);
+		int data = (int) (cpu.getDByte(register));
 		
 		int msb;
 		int last_out = 0;
@@ -238,11 +238,11 @@ public class ASL implements GenInstructionHandler {
 				shift = numRegister;
 			}
 		} else {
-			shift = cpu.getD(numRegister);
+			shift = cpu.getDLong(numRegister);
 			shift = shift & 63;
 		}
 		
-		int data = (int) (cpu.getD(register) & 0xFFFF);
+		int data = (int) (cpu.getDWord(register));
 		
 		int msb;
 		int last_out = 0;
@@ -275,11 +275,11 @@ public class ASL implements GenInstructionHandler {
 				shift = numRegister;
 			}
 		} else {
-			shift = cpu.getD(numRegister);
+			shift = cpu.getDLong(numRegister);
 			shift = shift & 63;
 		}
 		
-		long data = cpu.getD(register);
+		long data = cpu.getDLong(register);
 		
 		long msb;
 		long last_out = 0;
@@ -308,7 +308,7 @@ public class ASL implements GenInstructionHandler {
 		int msb_changed = 0;
 
 		data <<= 1;
-		if((data & 0x8000) != last_out) {
+		if ((data & 0x8000) != last_out) {
 			msb_changed = 1;
 		}
 		

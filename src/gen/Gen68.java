@@ -1,5 +1,7 @@
 package gen;
 
+import java.util.HashSet;
+
 import gen.addressing.AddressingMode;
 import gen.instruction.Operation;
 
@@ -112,13 +114,13 @@ public class Gen68 {
 			
 		}
 		
-//		if ((SSP & 0xFFFF_FFFFL) != getA(7) && (SR & 0x2000) == 0x2000) {
-//			System.out.println();
-//		}
-
 		if (PC == 0xa040) {
 //			print = true;
 		}
+		
+//		if ((SSP & 0xFFFF_FFFFL) != getA(7) && (SR & 0x2000) == 0x2000) {
+//			System.out.println();
+//		}
 		
 		GenInstruction instruction = getInstruction((int) opcode);
 		instruction.run((int) opcode);
@@ -184,9 +186,9 @@ public class Gen68 {
 		
 		if (register == 7) {
 			if ((SR & 0x2000) == 0x2000) {
-				SSP = getA(register);
+				SSP = getALong(register);
 			} else {
-				USP = getA(register);
+				USP = getALong(register);
 			}
 		}
 	}
@@ -205,11 +207,27 @@ public class Gen68 {
 		D[register] = data & 0xFFFF_FFFFL;
 	}
 	
-	public long getA(int register) {
+	public long getAByte(int register) {
+		return A[register] & 0xFF;
+	}
+	
+	public long getAWord(int register) {
+		return A[register] & 0xFFFF;
+	}
+	
+	public long getALong(int register) {
 		return A[register] & 0xFFFF_FFFFL;
 	}
 	
-	public long getD(int register) {
+	public long getDByte(int register) {
+		return D[register] & 0xFF;
+	}
+	
+	public long getDWord(int register) {
+		return D[register] & 0xFFFF;
+	}
+	
+	public long getDLong(int register) {
 		return D[register] & 0xFFFF_FFFFL;
 	}
 

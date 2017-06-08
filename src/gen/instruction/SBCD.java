@@ -107,8 +107,8 @@ public class SBCD implements GenInstructionHandler {
 		int rx = (opcode >> 9) & 0x7;
 		int ry = (opcode & 0x7);
 		
-		long data = cpu.getD(ry) & 0xFF;
-		long toAdd = cpu.getD(rx) & 0xFF;
+		long data = cpu.getDByte(ry);
+		long toAdd = cpu.getDByte(rx);
 		
 		long tot = doCalc(data, toAdd);
 		cpu.setDByte(rx, tot);
@@ -118,8 +118,8 @@ public class SBCD implements GenInstructionHandler {
 		int rx = (opcode >> 9) & 0x7;
 		int ry = (opcode & 0x7);
 		
-		long source = cpu.getA(ry);
-		long dest = cpu.getA(rx);
+		long source = cpu.getALong(ry);
+		long dest = cpu.getALong(rx);
 		
 		source--;
 		dest--;

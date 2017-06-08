@@ -184,11 +184,11 @@ public class ROXL implements GenInstructionHandler {
 			}
 			shift = numRegister;
 		} else {
-			shift = cpu.getD(numRegister);
+			shift = cpu.getDLong(numRegister);
 			shift = shift & 63;
 		}
 		
-		long data = cpu.getD(register) & 0xFF;
+		long data = cpu.getDByte(register);
 		
 		int last_out = 0;
 		boolean extended = cpu.isX();
@@ -221,11 +221,11 @@ public class ROXL implements GenInstructionHandler {
 			}
 			shift = numRegister;
 		} else {
-			shift = cpu.getD(numRegister);
+			shift = cpu.getDLong(numRegister);
 			shift = shift & 63;
 		}
 		
-		long data = cpu.getD(register) & 0xFFFF;
+		long data = cpu.getDWord(register);
 		
 		int last_out = 0;
 		boolean extended = cpu.isX();
@@ -258,11 +258,11 @@ public class ROXL implements GenInstructionHandler {
 			}
 			shift = numRegister;
 		} else {
-			shift = cpu.getD(numRegister);
+			shift = cpu.getDLong(numRegister);
 			shift = shift & 63;
 		}
 		
-		long data = cpu.getD(register);
+		long data = cpu.getDLong(register);
 		
 		int last_out = 0;
 		boolean extended = cpu.isX();

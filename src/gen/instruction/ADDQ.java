@@ -156,7 +156,7 @@ public class ADDQ implements GenInstructionHandler {
 		
 		//	direct address lo maneja distinto
 		if (mode == 1) {
-			long data = cpu.getA(register);
+			long data = cpu.getALong(register);
 			long tot = (data + dataToAdd);
 			cpu.setALong(register, tot);
 			

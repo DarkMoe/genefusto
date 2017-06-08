@@ -61,13 +61,13 @@ public class SWAP implements GenInstructionHandler {
 	
 	private void SWAPWord(int opcode) {
 		int register = (opcode & 0x7);
-		long data = cpu.getD(register);
+		long data = cpu.getDLong(register);
 		
-		data = ((data & 0xFFFF) << 16) | ((data & 0xFFFF_0000L) >> 16);
+		long res = ((data & 0xFFFF) << 16) | ((data & 0xFFFF_0000L) >> 16);
 				
-		cpu.setDLong(register, data);
+		cpu.setDLong(register, res);
 				
-		calcFlags(data);
+		calcFlags(res);
 	}
 
 	void calcFlags(long data) {

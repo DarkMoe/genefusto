@@ -5775,6 +5775,7 @@ public class GenZ80 {
 //			return YMD1;
 			return 0;
 		} else if (address == 0x6000) {		//	BankSwitching
+			System.out.println("Read bank mapping ?");
 			return 0xFF;	// confirmar que devuelve
 			
 		} else if (address >= 0x6001 && address <= 0x7F10) {	//	Reserved
@@ -5785,8 +5786,9 @@ public class GenZ80 {
 			return 0;
 			
 		} else if (address >= 0x8000 && address <= 0xFFFF) {		//	8000h	FFFFh	M68k memory bank
-//			System.out.println("LECTURA 68k ! " + Integer.toHexString(PC - 1));
+			System.out.println("LECTURA 68k ! " + Integer.toHexString(PC - 1));
 			address = address - 0x8000 + (romBank68kSerial << 15);
+//			address = address & 0x3F_FFFF;
 			return (int) bus.read(address, Size.BYTE);
 		} else {
 //			throw new RuntimeException("MEMORY READ, PC: " + Integer.toHexString(PC) + ": " + Integer.toHexString(address));

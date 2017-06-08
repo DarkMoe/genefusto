@@ -171,7 +171,7 @@ public class BSET implements GenInstructionHandler {
 		int register = opcode & 0x7;
 		
 		long numberBit = cpu.bus.read(cpu.PC + 2, Size.WORD);
-		numberBit = numberBit & 0xFF;
+		numberBit &= 7;
 		
 		cpu.PC += 2;
 		
@@ -191,7 +191,7 @@ public class BSET implements GenInstructionHandler {
 		int register = opcode & 0x7;
 		
 		long numberBit = cpu.bus.read(cpu.PC + 2, Size.WORD);
-		numberBit = numberBit & 0xFF;
+		numberBit &= 31;
 		
 		cpu.PC += 2;
 		
@@ -211,7 +211,8 @@ public class BSET implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int register = opcode & 0x7;
 		
-		int numberBit = (int) cpu.getD(dataRegister) & 0x7;
+		int numberBit = (int) cpu.getDLong(dataRegister);
+		numberBit &= 7;
 		
 		Operation o = cpu.resolveAddressingMode(Size.BYTE, mode, register);
 		long data = o.getAddressingMode().getByte(o);
@@ -229,7 +230,8 @@ public class BSET implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int register = opcode & 0x7;
 		
-		int numberBit = (int) cpu.getD(dataRegister);
+		int numberBit = (int) cpu.getDLong(dataRegister);
+		numberBit &= 31;
 		
 		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
 		long data = o.getAddressingMode().getLong(o);

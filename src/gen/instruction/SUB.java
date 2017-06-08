@@ -186,7 +186,7 @@ public class SUB implements GenInstructionHandler {
 			toSub &= 0x0000_00FF;
 		}
 		
-		long data = (cpu.getD(dataRegister) & 0xFF);
+		long data = cpu.getDByte(dataRegister);
 		if ((toSub & 0x80) == 0x80) {
 			data  |= 0xFFFF_FF00L;
 		} else {
@@ -212,7 +212,7 @@ public class SUB implements GenInstructionHandler {
 			toSub &= 0x0000_FFFF;
 		}
 		
-		long data = (cpu.getD(dataRegister) & 0xFFFF);
+		long data = cpu.getDWord(dataRegister);
 		if ((data & 0x8000) == 0x8000) {
 			data |= 0xFFFF_0000;
 		} else {
@@ -233,7 +233,7 @@ public class SUB implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
 		long toSub = o.getAddressingMode().getLong(o);
 		
-		long data = cpu.getD(dataRegister);
+		long data = cpu.getDLong(dataRegister);
 		
 		long tot = (data - toSub);
 		cpu.setDLong(dataRegister, tot);
@@ -254,7 +254,7 @@ public class SUB implements GenInstructionHandler {
 			data &= 0x0000_00FF;
 		}
 		
-		long toSub = cpu.getD(dataRegister) & 0xFF;
+		long toSub = cpu.getDByte(dataRegister);
 		if ((toSub & 0x80) == 0x80) {
 			toSub  |= 0xFFFF_FF00L;
 		} else {
@@ -280,7 +280,7 @@ public class SUB implements GenInstructionHandler {
 			data &= 0x0000_FFFF;
 		}
 		
-		long toSub = cpu.getD(dataRegister) & 0xFFFF;
+		long toSub = cpu.getDWord(dataRegister);
 		if ((toSub & 0x8000) == 0x8000) {
 			toSub |= 0xFFFF_0000;
 		} else {
@@ -302,7 +302,7 @@ public class SUB implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
 		long data = o.getAddressingMode().getLong(o);
 		
-		long toSub = cpu.getD(dataRegister);
+		long toSub = cpu.getDLong(dataRegister);
 		long tot = (data - toSub);
 	
 		cpu.writeKnownAddressingMode(o, tot, Size.LONG);

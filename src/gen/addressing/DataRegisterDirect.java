@@ -40,21 +40,21 @@ public class DataRegisterDirect implements AddressingMode {
 	public long getByte(Operation o) {
 		int register = o.getRegister();
 		
-		return cpu.getD(register) & 0xFF;
+		return cpu.getDByte(register);
 	}
 
 	@Override
 	public long getWord(Operation o) {
 		int register = o.getRegister();
 		
-		return cpu.getD(register) & 0xFFFF;
+		return cpu.getDWord(register);
 	}
 
 	@Override
 	public long getLong(Operation o) {
 		int register = o.getRegister();
 		
-		return cpu.getD(register);
+		return cpu.getDLong(register);
 	}
 
 	@Override

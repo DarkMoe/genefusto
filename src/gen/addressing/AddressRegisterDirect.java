@@ -44,21 +44,21 @@ public class AddressRegisterDirect implements AddressingMode {
 	public long getByte(Operation o) {
 		int register = o.getRegister();
 		
-		return cpu.getA(register) & 0xFF;
+		return cpu.getAByte(register);
 	}
 
 	@Override
 	public long getWord(Operation o) {
 		int register = o.getRegister();
 		
-		return cpu.getA(register) & 0xFFFF;
+		return cpu.getAWord(register);
 	}
 
 	@Override
 	public long getLong(Operation o) {
 		int register = o.getRegister();
 		
-		return cpu.getA(register);
+		return cpu.getALong(register);
 	}
 
 	@Override

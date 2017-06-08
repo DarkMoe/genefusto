@@ -62,7 +62,7 @@ public class AddressRegisterWithDisplacement implements AddressingMode {
 
 	@Override
 	public void calculateAddress(Operation o, Size size) {
-		long base = cpu.getA(o.getRegister());
+		long base = cpu.getALong(o.getRegister());
 		long displac = cpu.bus.read(cpu.PC + 2, Size.WORD);
 		
 		cpu.PC += 2;

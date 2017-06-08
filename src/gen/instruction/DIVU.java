@@ -123,13 +123,13 @@ public class DIVU implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
 		long div = o.getAddressingMode().getWord(o);
 		
-		long data = cpu.getD(dataRegister);
+		long data = cpu.getDLong(dataRegister);
 		if (div == 0) {
 			throw new RuntimeException("DIV by 0");
 		} else {
 			long quot = data / div;
 
-			if (quot > 0x0000FFFFL) {
+			if (quot > 0x0000_FFFFL) {
 				//Overflow
 				cpu.setV();
 				cpu.setN();   // the n flag seems to be set every time an overflow is generated

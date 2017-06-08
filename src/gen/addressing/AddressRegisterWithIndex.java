@@ -78,25 +78,25 @@ public class AddressRegisterWithIndex implements AddressingMode {
 		long data;
 		if (idxIsAddressReg) {
 			if (idxSize == Size.WORD) {
-				data = cpu.getA(idxRegNumber) & 0xFFFF;	// confirmar este wrap aca
+				data = cpu.getAWord(idxRegNumber);
 				if ((data & 0x8000) > 0) {
 					data = 0xFFFF_0000 | data;
 				}
 			} else {
-				data = cpu.getA(idxRegNumber);
+				data = cpu.getALong(idxRegNumber);
 			}
 		} else {
 			if (idxSize == Size.WORD) {
-				data = cpu.getD(idxRegNumber) & 0xFFFF;
+				data = cpu.getDWord(idxRegNumber);
 				if ((data & 0x8000) > 0) {
 					data = 0xFFFF_0000 | data;
 				}
 			} else {
-				data = cpu.getD(idxRegNumber);
+				data = cpu.getDLong(idxRegNumber);
 			}
 		}
 		
-		long result = cpu.getA(register) + displacement + data;
+		long result = cpu.getALong(register) + displacement + data;
 		o.setAddress(result);		
 	}
 

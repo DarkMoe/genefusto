@@ -212,7 +212,7 @@ public class ADD implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(Size.BYTE, mode, register);
 		long data = o.getAddressingMode().getByte(o);
 		
-		long toAdd = cpu.getD(dataRegister) & 0xFF;
+		long toAdd = cpu.getDByte(dataRegister);
 		
 		long tot = (toAdd + data);
 		cpu.setDByte(dataRegister, tot);
@@ -238,7 +238,7 @@ public class ADD implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
 		long data = o.getAddressingMode().getWord(o);
 		
-		long toAdd = (cpu.getD(dataRegister) & 0xFFFF);
+		long toAdd = cpu.getDWord(dataRegister);
 		
 		long tot = (toAdd + data);
 		cpu.setDWord(dataRegister, tot);
@@ -261,7 +261,7 @@ public class ADD implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 		
-		long data = cpu.getD(dataRegister);
+		long data = cpu.getDLong(dataRegister);
 		
 		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
 		long toAdd = o.getAddressingMode().getLong(o);
@@ -287,7 +287,7 @@ public class ADD implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 		
-		long toAdd = cpu.getD(dataRegister) & 0xFF;
+		long toAdd = cpu.getDByte(dataRegister);
 		
 		Operation o = cpu.resolveAddressingMode(Size.BYTE, mode, register);
 		long data = o.getAddressingMode().getByte(o);
@@ -314,7 +314,7 @@ public class ADD implements GenInstructionHandler {
 		int mode = (opcode >> 3) & 0x7;
 		int register = (opcode & 0x7);
 		
-		long toAdd = cpu.getD(dataRegister) & 0xFFFF;
+		long toAdd = cpu.getDWord(dataRegister);
 		
 		Operation o = cpu.resolveAddressingMode(Size.WORD, mode, register);
 		long data = o.getAddressingMode().getWord(o);
@@ -334,7 +334,7 @@ public class ADD implements GenInstructionHandler {
 		Operation o = cpu.resolveAddressingMode(Size.LONG, mode, register);
 		long data = o.getAddressingMode().getLong(o);
 
-		long toAdd = cpu.getD(dataRegister);
+		long toAdd = cpu.getDLong(dataRegister);
 		
 		long tot = (data + toAdd);
 		cpu.writeKnownAddressingMode(o, tot, Size.LONG);

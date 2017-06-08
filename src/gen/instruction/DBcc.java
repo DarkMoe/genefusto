@@ -83,7 +83,7 @@ public class DBcc implements GenInstructionHandler {
 	
 //		cpu.PC += 2;
 		
-		long counter = cpu.getD(register) & 0xFFFF;
+		long counter = cpu.getDWord(register);
 		
 		if (condition == 0b0001) {	//	override para que no haga un jump
 			if (counter != 0) {
