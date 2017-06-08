@@ -53,12 +53,12 @@ public class TRAP implements GenInstructionHandler {
 	}
 	
 	private void TRAP_OP(int opcode) {
-		int trap = opcode & 0x7;
+int trap = opcode & 0x7;
 		
 		long oldPC = cpu.PC + 2;
+		int oldSR = cpu.SR;
 		
-		if ((cpu.SR & 0x2000) != 0x2000) {
-			cpu.setALong(7, cpu.SSP);
+		if ((cpu.SR & 0x2000) == 0) {
 			cpu.SR = cpu.SR | 0x2000;
 		}
 		
@@ -72,9 +72,9 @@ public class TRAP implements GenInstructionHandler {
 		cpu.bus.write(cpu.SSP, (oldPC >> 24), Size.BYTE);
 		
 		cpu.SSP--;
-		cpu.bus.write(cpu.SSP, (cpu.SR & 0xFF), Size.BYTE);
+		cpu.bus.write(cpu.SSP, (oldSR & 0xFF), Size.BYTE);
 		cpu.SSP--;
-		cpu.bus.write(cpu.SSP, (cpu.SR >> 8), Size.BYTE);
+		cpu.bus.write(cpu.SSP, (oldSR >> 8), Size.BYTE);
 		
 		cpu.setALong(7, cpu.SSP);
 		
