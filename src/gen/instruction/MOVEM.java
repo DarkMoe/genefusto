@@ -367,8 +367,8 @@ public class MOVEM implements GenInstructionHandler {
 				if (((registerListMaskA) & (1 << i)) != 0) {
 					data = cpu.getAWord(i);
 					
-					if (i == 7) {
-						throw new RuntimeException("CASO EDGE !!!! IMPL");
+					if (i == register) {
+						data += 2;	//	 if the EA register itself is also moved, use initial value, antes de predecrementar
 					}
 					
 					cpu.writeKnownAddressingMode(o, data, Size.WORD);
@@ -447,8 +447,8 @@ public class MOVEM implements GenInstructionHandler {
 				if (((registerListMaskA) & (1 << i)) != 0) {
 					data = cpu.getALong(i);
 					
-					if (i == 7) {
-						throw new RuntimeException("CASO EDGE !!!! IMPL");
+					if (i == register) {
+						data += 4;	//	 if the EA register itself is also moved, use initial value, antes de predecrementar
 					}
 					
 					cpu.writeKnownAddressingMode(o, data, Size.LONG);

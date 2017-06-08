@@ -112,7 +112,7 @@ public class Gen68 {
 			
 		}
 		
-		if (PC == 0x3bec) {
+		if (PC == 0x239c) {
 //			print = true;
 		}
 		
