@@ -408,26 +408,24 @@ public class GenVdp {
 			
 			destAddr += autoIncrementTotal;
 			
-			int data1 = (dataPort >> 8) & 0xFF;
-			int data2 = dataPort & 0xFF;
+			int data1 = dataPort & 0xFF;
 			
 //			int data1 = (int) bus.read(sourceTrue);
 //			int data2 = (int) bus.read(sourceTrue + 1);
 			
 			if (vramMode == VramMode.vramWrite) {
 				writeVramByte(destAddr, data1);
-				writeVramByte(destAddr + 1, data2);
 			} else {
 				throw new RuntimeException("SOLO ESCRIBE EN VRAM !! pasa este caso ?");
 			}
 			
-			dmaLength = (dmaLength - 2);	// idem FIXME no es fijo
+			dmaLength = (dmaLength - 1);	// idem FIXME no es fijo
 			if (dmaLength <= 0) {
 				dma = 0;
 				return;
 			}
 			
-			autoIncrementTotal += 2;
+			autoIncrementTotal += registers[0xF];
 			
 			dmaLength = dmaLength & 0xFFFF;
 			dmaLengthCounterHi = dmaLength >> 8;
@@ -471,11 +469,19 @@ public class GenVdp {
 
 		if (size == Size.BYTE) {
 			if (vramFill) {
+				if (vramMode == VramMode.vramWrite) {
+					vramWriteByte(data);
+				} else {
+					System.out.println("que hace ? otros modos ?");
+				}
+				
+				autoIncrementTotal = 1;
+				
 				if (m1) {
 					dma = 1;
 					vramFill = false;
 					
-					dataPort = data;
+					dataPort = (data << 8) | data;
 					
 					return;
 				} else {
@@ -496,6 +502,15 @@ public class GenVdp {
 			
 		} else if (size == Size.WORD) {
 			if (vramFill) {
+//				Performing a DMA fill does perform a normal VRAM write. After the VRAM write has been processed however, a DMA fill operation is triggered immediately after. Normal VRAM writes are always 16-bit, so the first write that is carried out when you try and start a DMA fill will always be 16-bit. The DMA fill operation that follows will perform 8-bit writes.
+				if (vramMode == VramMode.vramWrite) {
+					vramWriteWord(data);
+				} else {
+					System.out.println("que hace ? otros modos ?");
+				}
+				
+				autoIncrementTotal = 1;
+				
 				if (m1) {
 					dma = 1;
 					vramFill = false;
