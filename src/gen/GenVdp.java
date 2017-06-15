@@ -910,6 +910,7 @@ public class GenVdp {
     
 	public int[][] planeA = new int[320][256];
 	public int[][] planeB = new int[320][256];
+	public int[][] planeBack = new int[320][256];
 	
 	public boolean[][] planePrioA = new boolean[320][256];
 	public boolean[][] planePrioB = new boolean[320][256];
@@ -936,6 +937,7 @@ public class GenVdp {
 				if (line < 0xE0) {
 					spritesLine = 0;
 					
+					renderBack();
 					renderPlaneA();
 					renderPlaneB();
 					renderWindow();
@@ -1231,17 +1233,6 @@ public class GenVdp {
 	//Sprites with priority bit set
 	//Window Plane with priority bit set
 	private void compaginateImage() {
-		int backLine = (registers[7] >> 4) & 0x3;
-		int backEntry = (registers[7]) & 0xF;
-		int backIndex = (backLine * 32) + (backEntry * 2);
-		int backColor = cram[backIndex] << 8 | cram[backIndex + 1];
-		
-		int r = (backColor >> 1) & 0x7;
-		int g = (backColor >> 5) & 0x7;
-		int b = (backColor >> 9) & 0x7;
-		
-		backColor = getColour(r, g, b);
-		
 		int regC = registers[0xC];
 		boolean rs0 = bitTest(regC, 7);
 		boolean rs1 = bitTest(regC, 0);
@@ -1252,9 +1243,11 @@ public class GenVdp {
 		} else {
 			limitHorTiles = 32;
 		}
-
-		for (int j = 0; j < 224; j++) {		//	TODO 256 en modo pal
+		//	TODO 256 en modo pal
+		for (int j = 0; j < 224; j++) {
 			for (int i = 0; i < limitHorTiles * 8; i++) {
+				int backColor = planeBack[i][j];
+				
 				boolean aPrio = planePrioA[i][j];
 				boolean bPrio = planePrioB[i][j];
 				boolean sPrio = spritesPrio[i][j];
@@ -1292,7 +1285,8 @@ public class GenVdp {
 						sprites[i][j] = 0;
 						spritesIndex[i][j] = 0;
 					} else {
-						boolean A = (aDraw && ((!bPrio) || (!bDraw)));
+						boolean A = (aDraw && aPrio)
+								|| (aDraw && ((!bPrio) || (!bDraw)));
 						if (A) {
 							pix = planeA[i][j];
 						} else if (bDraw) {
@@ -1308,6 +1302,40 @@ public class GenVdp {
 				windowIndex[i][j] = 0;
 				sprites[i][j] = 0;
 				spritesIndex[i][j] = 0;
+			}
+		}
+	}
+	
+	private void renderBack() {
+		int line = this.line;
+		
+		int regC = registers[0xC];
+		boolean rs0 = bitTest(regC, 7);
+		boolean rs1 = bitTest(regC, 0);
+		
+		int limitHorTiles;
+		if (rs0 && rs1) {
+			limitHorTiles = 40;
+		} else {
+			limitHorTiles = 32;
+		}
+		
+		int backLine = (registers[7] >> 4) & 0x3;
+		int backEntry = (registers[7]) & 0xF;
+		int backIndex = (backLine * 32) + (backEntry * 2);
+		int backColor = cram[backIndex] << 8 | cram[backIndex + 1];
+		
+		int r = (backColor >> 1) & 0x7;
+		int g = (backColor >> 5) & 0x7;
+		int b = (backColor >> 9) & 0x7;
+		
+		backColor = getColour(r, g, b);
+		
+		for (int pixel = 0; pixel < (limitHorTiles * 8); pixel++) {
+			if (!disp) {
+				planeBack[pixel][line] = 0;
+			} else {
+				planeBack[pixel][line] = backColor;
 			}
 		}
 	}
@@ -1507,7 +1535,6 @@ public class GenVdp {
 					vertOffset += ((scrollMap / 8) * 0x100);
 				}
 			}
-			
 			
 			loc = tileLocator + (loc * 2);
 			loc += vertOffset;

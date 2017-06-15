@@ -654,7 +654,7 @@ public class Genefusto {
 		} else if (eurBios.isSelected()) {
 			return 0xC1;
 		} else {
-			return 0xA1;
+			return 0xA0;
 		}
 	}
 
