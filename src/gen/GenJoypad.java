@@ -9,7 +9,7 @@ public class GenJoypad {
 	long control3 = 0xFF;
 	
 	int D, U, L, R, A, B, C, S;
-	int D2, U2, L2, R2, A2, B2, C2, S2 = 1;
+	int D2, U2, L2, R2, A2, B2, C2, S2;
 	
 	boolean asserted1;
 	boolean asserted2;
@@ -32,10 +32,13 @@ public class GenJoypad {
 		B2 = 1;
 		C2 = 1;
 		S2 = 1;
+		
+		writeDataRegister1(0x40);
+		writeDataRegister2(0x40);
 	}
 	
 	void writeDataRegister1(long data) {
-		if (data == 0) {
+		if ((data & 0x40) == 0) {
 //			System.out.println("Deassert TH " + Long.toHexString(data));
 			asserted1 = true;
 		} else {
@@ -55,7 +58,7 @@ public class GenJoypad {
 	}
 	
 	void writeDataRegister2(long data) {
-		if (data == 0) {
+		if ((data & 0x40) == 0) {
 //			System.out.println("Assert TH " + Long.toHexString(data));
 			asserted2 = true;
 		} else {
