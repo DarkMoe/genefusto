@@ -83,11 +83,11 @@ public class Gen68 {
 		sb.append(pad4((int) PC) + " - Opcode: " + pad4((int) opcode) + " - SR: " + pad4(SR) + " - SSP: "
 				+ pad4((int) SSP) + " - USP: " + pad4((int) USP) + "\r\n");
 		for (int j = 0; j < 8; j++) {
-			sb.append(" D" + j + ":" + Integer.toHexString((int) D[j]));
+			sb.append(" A" + j + ":" + Integer.toHexString((int) A[j]));
 		}
 		sb.append("\r\n");
 		for (int j = 0; j < 8; j++) {
-			sb.append(" A" + j + ":" + Integer.toHexString((int) A[j]));
+			sb.append(" D" + j + ":" + Integer.toHexString((int) D[j]));
 		}
 		sb.append("\r\n");
 		if (print) {
@@ -116,7 +116,7 @@ public class Gen68 {
 //			System.out.println();
 //		}
 		
-		if (PC == 0x78f0) {
+		if (PC == 0x3da) {
 //			print = true;
 		}
 		

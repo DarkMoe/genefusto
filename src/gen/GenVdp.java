@@ -413,6 +413,8 @@ public class GenVdp {
 //			int data1 = (int) bus.read(sourceTrue);
 //			int data2 = (int) bus.read(sourceTrue + 1);
 			
+			destAddr = destAddr & 0xFFFF;	//	16 Zhang Majhong hace DMA length 0xFFFF que es el doble del limite (hace el doble de operaciones)
+			
 			if (vramMode == VramMode.vramWrite) {
 				writeVramByte(destAddr, data1);
 			} else {

@@ -29,6 +29,13 @@ public class GenBus {
 		this.z80 = z80;
 		this.joypad = joypad;
 		this.cpu = cpu;
+		
+		initializeSram();
+	}
+	
+	void initializeSram() {
+//		sram[]	// TODO inicializar, e implementar bien la lectura/escritura (direccion / 2, y despues incrementa
+		// de a 2 bytes desde la direccion inicial (porque aumenta de a 4, dividido 2 = 2)
 	}
 	
 	public long read(long address, Size size) {
@@ -55,7 +62,11 @@ public class GenBus {
 			if (size == Size.BYTE) {
 				if (address >= 0x200000 && address <= 0x20FFFF && writeSram) {
 					address = address - 0x200000;
-					data = sram[(int) address];
+					if (address < 0x200) {
+						data = sram[(int) address];
+					} else {
+						data = 0;
+					}
 					
 				} else {
 					data = memory.readCartridgeByte(address);
@@ -92,7 +103,11 @@ public class GenBus {
 			if (size == Size.BYTE) {
 				if (address >= 0x200000 && address <= 0x20FFFF && writeSram) {
 					address = address - 0x200000;
-					data = sram[(int) address];
+					if (address < 0x200) {
+						data = sram[(int) address];
+					} else {
+						data = 0;
+					}
 					
 				} else {
 					data = memory.readCartridgeByte(address);
@@ -251,7 +266,10 @@ public class GenBus {
 				addressL = addressL - 0x200000;
 				
 				if (size == Size.BYTE) {
-					sram[(int) addressL] = (int) data;
+					if (address < 0x200) {
+						sram[(int) addressL] = (int) data;
+					}
+					
 				} else if (size == Size.WORD) {
 					sram[(int) addressL] = (int) (data >> 8) & 0xFF;
 					sram[(int) addressL + 1] = (int) data & 0xFF;
